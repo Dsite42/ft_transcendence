@@ -18,3 +18,6 @@ def login(request):
 
 def learn_view(request):
     return render(request, 'learn.html')
+
+def root_view(request):
+    return render(request, 'root.html')
