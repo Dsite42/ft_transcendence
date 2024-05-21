@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 def home(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -15,7 +16,7 @@ def tournament(request):
 
 def login(request):
     return render(request, 'login.html')
-
+@login_required
 def learn_view(request):
     return render(request, 'learn.html')
 
