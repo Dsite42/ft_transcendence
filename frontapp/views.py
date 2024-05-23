@@ -20,5 +20,9 @@ def login(request):
 def learn_view(request):
     return render(request, 'learn.html')
 
+@login_required
+def profile_view(request):
+    return render(request, 'profile.html')
+
 def root_view(request):
     return render(request, 'root.html')
