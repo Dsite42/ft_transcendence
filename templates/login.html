@@ -1,12 +1,14 @@
-{% block content %} <!-- Add this line -->
-{% load socialaccount %}
-
-<h2>Login</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-  </form>
-  <p>Or</p>
-  <a href="{% provider_login_url 'google' %}">Sign in with Google</a>
-{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'page.css' %}">
+    </head>
+    <body>
+        you wanna login using the 42 api? 🤪<br/>
+        your data is safe with us! 😇<br/>
+        <br/>
+        <a href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-eef92caa3aba1123bfc9b2fdbaf87812ce1975ca53fc0bf3eaeaee5b1aae137b&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Fauth&response_type=code">Login</a>
+        <script type="text/javascript" src="{% static 'page.js' %}"></script>
+    </body>
+</html>

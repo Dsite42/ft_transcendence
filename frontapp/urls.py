@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import learn_view, root_view, profile_view
+from .views import learn_view, root_view, profile_view, auth, get_user_info
 
 
 urlpatterns = [
@@ -11,4 +11,6 @@ urlpatterns = [
     path('learn.html', learn_view, name='learn'),
     path('.html', root_view, name='root'),
     path('profile.html', profile_view, name ='profile'),
+    path('auth', auth),
+    path('get_user_info', get_user_info),
 ]
