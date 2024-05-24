@@ -13,4 +13,5 @@ urlpatterns = [
     path('profile.html', profile_view, name ='profile'),
     path('auth', auth),
     path('get_user_info', get_user_info),
+    path('logout/', views.logout, name='logout'),
 ]

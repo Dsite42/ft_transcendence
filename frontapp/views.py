@@ -81,3 +81,8 @@ def profile_view(request, data):
 
 def root_view(request):
     return render(request, 'root.html')
+
+def logout(request):
+    response = redirect('home')
+    response.delete_cookie('session') 
+    return response
