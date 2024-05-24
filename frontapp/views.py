@@ -11,11 +11,13 @@ def play_pong(request):
         return render(request, 'play_pong.html')
     return render(request, 'base.html')
 
+@login_required
 def tournament(request):
     return render(request, 'tournament.html')
 
 def login(request):
     return render(request, 'login.html')
+
 @login_required
 def learn_view(request):
     return render(request, 'learn.html')
