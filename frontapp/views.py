@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-import jwt, requests
+from django.contrib.auth.models import User
+import jwt, requests, json
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
@@ -42,6 +43,11 @@ def get_user_info(request: HttpRequest, data: dict) -> HttpResponse:
     })
     return JsonResponse(response.json(), safe=False)
 
+@login_required
+def get_user_info_dict(request: HttpRequest, data: dict) -> dict:
+    user_info = get_user_info(request)
+    user_info_dict = json.loads(user_info.content.decode('utf-8'))
+    return user_info_dict
 
 def home(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -89,9 +95,14 @@ def logout(request):
 
 @login_required
 def enable_otp(request, data):
-    user_info = get_user_info(request)
-    intra_name = user_info.get('login')
-    user = User.objects.get(username=intra_name)
-    device = TOTPDevice.objects.create(user=intra_name, name='default')
-    uri = device.config_url()
-    return JsonResponse({'uri': uri})
+ 
+    user_info = get_user_info_dict(request)
+
+    return HttpResponse(user_info['login'])
+    if intra_name:
+        user = User.objects.create_user(username=intra_name)
+        device = TOTPDevice.objects.create(user=user, name='default')
+        uri = device.config_url()
+        return JsonResponse({'uri': uri})
+    else:
+        return JsonResponse({'error': 'Username is not provided'}, status=400)
