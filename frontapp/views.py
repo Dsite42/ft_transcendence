@@ -4,7 +4,7 @@ import jwt, requests
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
-
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 def login_required(callable):
     def wrapper(request: HttpRequest) -> HttpResponse:
@@ -86,3 +86,12 @@ def logout(request):
     response = redirect('home')
     response.delete_cookie('session') 
     return response
+
+@login_required
+def enable_otp(request, data):
+    user_info = get_user_info(request)
+    intra_name = user_info.get('login')
+    user = User.objects.get(username=intra_name)
+    device = TOTPDevice.objects.create(user=intra_name, name='default')
+    uri = device.config_url()
+    return JsonResponse({'uri': uri})

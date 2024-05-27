@@ -14,4 +14,5 @@ urlpatterns = [
     path('auth', auth),
     path('get_user_info', get_user_info),
     path('logout/', views.logout, name='logout'),
+    path('enable_otp/', views.enable_otp, name='enable_otp'),
 ]
