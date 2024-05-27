@@ -31,10 +31,18 @@ def auth(request: HttpRequest) -> HttpResponse:
         'client_secret': settings.OAUTH2_SECRET,
         'redirect_uri': 'http://127.0.0.1:8000/auth'
     }).json()
-    response = HttpResponseRedirect('/')
+    response = HttpResponseRedirect('landing')
     response.headers['Content-Type'] = 'text/html'
     response.set_cookie('session', jwt.encode(oauth_response, settings.JWT_SECRET, algorithm='HS256'))
     return response
+
+@login_required
+def create_user(request, data):
+    user_info = get_user_info_dict(request)
+    intra_name = user_info['login']
+    if intra_name:
+        user = User.objects.get_or_create(username=intra_name)
+    return HttpResponseRedirect('/')
 
 @login_required
 def get_user_info(request: HttpRequest, data: dict) -> HttpResponse:
@@ -93,16 +101,23 @@ def logout(request):
     response.delete_cookie('session') 
     return response
 
+
 @login_required
 def enable_otp(request, data):
- 
-    user_info = get_user_info_dict(request)
+    return 
 
-    return HttpResponse(user_info['login'])
-    if intra_name:
-        user = User.objects.create_user(username=intra_name)
-        device = TOTPDevice.objects.create(user=user, name='default')
-        uri = device.config_url()
-        return JsonResponse({'uri': uri})
-    else:
-        return JsonResponse({'error': 'Username is not provided'}, status=400)
+
+# @login_required
+# def enable_otp(request, data):
+#     user_info = get_user_info_dict(request)
+#     intra_name = user_info['login']
+#     if intra_name:
+#         user, created = User.objects.get_or_create(username=intra_name)
+#         device, created = TOTPDevice.objects.get_or_create(user=user, name='default')
+#         if created:
+#             uri = device.config_url()
+#             return JsonResponse({'uri': uri})
+#         else:
+#             return JsonResponse({'error': 'TOTPDevice already exists for this user'}, status=400)
+#     else:
+#         return JsonResponse({'error': 'Username is not provided'}, status=400)
