@@ -145,9 +145,20 @@ def remove_all_otp_devices(request, data):
         
 @login_required
 def verify_otp(request, data):
-    otp = request.POST.get('otp')
-    user = request.user
+    user_info = get_user_info_dict(request)
+    intra_name = user_info['login']
+
+    body_unicode = request.body.decode('utf-8')
+    body_data = json.loads(body_unicode)
+    otp = body_data.get('otp')
+    
+    user = User.objects.get(username=intra_name)
     device = user.totpdevice_set.first()
+    print(otp)
+    print(user)
+    
+    if device is None:
+        return HttpResponse('No TOTPDevice associated with this user')
     if device.verify_token(otp):
         # OTP is valid
         return HttpResponse('OTP is valid')
