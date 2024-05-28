@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import learn_view, root_view, profile_view, auth, get_user_info, create_user
+from .views import learn_view, root_view, profile_view, auth, get_user_info, create_user, remove_all_otp_devices
 
 
 urlpatterns = [
@@ -15,5 +15,6 @@ urlpatterns = [
     path('get_user_info', get_user_info),
     path('logout/', views.logout, name='logout'),
     path('enable_otp/', views.enable_otp, name='enable_otp'),
+    path('remove_all_otp/', views.remove_all_otp_devices, name='remove_otp'),
     path('landing/', views.create_user, name='create_user'),
 ]

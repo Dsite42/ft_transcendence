@@ -102,22 +102,46 @@ def logout(request):
     return response
 
 
-@login_required
-def enable_otp(request, data):
-    return 
-
-
 # @login_required
 # def enable_otp(request, data):
-#     user_info = get_user_info_dict(request)
-#     intra_name = user_info['login']
-#     if intra_name:
-#         user, created = User.objects.get_or_create(username=intra_name)
-#         device, created = TOTPDevice.objects.get_or_create(user=user, name='default')
-#         if created:
-#             uri = device.config_url()
-#             return JsonResponse({'uri': uri})
-#         else:
-#             return JsonResponse({'error': 'TOTPDevice already exists for this user'}, status=400)
-#     else:
-#         return JsonResponse({'error': 'Username is not provided'}, status=400)
+#     return 
+
+
+@login_required
+def enable_otp(request, data):
+    user_info = get_user_info_dict(request)
+    intra_name = user_info['login']
+    if intra_name:
+        user, created = User.objects.get_or_create(username=intra_name)
+        device, created = TOTPDevice.objects.get_or_create(user=user, name='default')
+        if created:
+            uri = device.config_url
+            return JsonResponse({'uri': uri})
+        else:
+            return JsonResponse({'error': 'TOTPDevice already exists for this user'}, status=400)
+    else:
+        return JsonResponse({'error': 'Username is not provided'}, status=400)
+    
+@login_required
+def remove_all_otp_devices(request, data):
+    user_info = get_user_info_dict(request)
+    intra_name = user_info['login']
+    if intra_name:
+        try:
+            user = User.objects.get(username=intra_name)
+            TOTPDevice.objects.filter(user=user).delete()
+            return JsonResponse({'message': "All OTP devices for user {} have been removed.".format(intra_name)})
+        except User.DoesNotExist:
+            return JsonResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
+        
+@login_required
+def verify_otp(request, data):
+    otp = request.POST.get('otp')
+    user = request.user
+    device = user.totpdevice_set.first()
+    if device.verify_token(otp):
+        # OTP is valid
+        return HttpResponse('OTP is valid')
+    else:
+        # OTP is invalid
+        return HttpResponse('OTP is invalid')
