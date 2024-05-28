@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 import jwt, requests, json
@@ -104,11 +103,6 @@ def logout(request):
     response = redirect('home')
     response.delete_cookie('session') 
     return response
-
-
-# @login_required
-# def enable_otp(request, data):
-#     return 
 
 
 @login_required
