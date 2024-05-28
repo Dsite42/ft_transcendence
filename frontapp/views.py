@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 import jwt, requests, json
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -137,8 +137,10 @@ def remove_all_otp_devices(request, data):
     intra_name = user_info['login']
     if intra_name:
         try:
+            group = Group.objects.get(name='2FA-activated')  
             user = User.objects.get(username=intra_name)
             TOTPDevice.objects.filter(user=user).delete()
+            group.user_set.remove(user)
             return JsonResponse({'message': "All OTP devices for user {} have been removed.".format(intra_name)})
         except User.DoesNotExist:
             return JsonResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
@@ -156,11 +158,12 @@ def verify_otp(request, data):
     device = user.totpdevice_set.first()
     print(otp)
     print(user)
-    
+    group = Group.objects.get(name='2FA-activated')  
     if device is None:
         return HttpResponse('No TOTPDevice associated with this user')
     if device.verify_token(otp):
         # OTP is valid
+        group.user_set.add(user)
         return HttpResponse('OTP is valid')
     else:
         # OTP is invalid
