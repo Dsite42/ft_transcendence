@@ -44,7 +44,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
         .then(response => response.text())
         .then(data => {
             console.log('Received data', data);
-            // Handle the response data here
+            alert(data);
+            if (data === 'OTP is valid') {
+                window.location.href = '/';
+            }
         })
         .catch(error => {
             console.error('Error:', error);
