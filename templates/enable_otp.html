@@ -1,0 +1,26 @@
+<br>
+<button id="enable-otp">Enable OTP</button>
+<img id="qr-code" style="display: none;">
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const button = document.getElementById('enable-otp');
+    console.log('Button:', button);
+    button.addEventListener('click', function() {
+        console.log('Button clicked');
+        fetch('/enable_otp/')
+            .then(response => {
+                console.log('Received response', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data', data);
+                const img = document.getElementById('qr-code');
+                img.src = 'data:image/png;base64,' + data.qr_code;
+                img.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+});
+</script>

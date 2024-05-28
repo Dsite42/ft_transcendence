@@ -15,6 +15,7 @@ urlpatterns = [
     path('get_user_info', get_user_info),
     path('logout/', views.logout, name='logout'),
     path('enable_otp/', views.enable_otp, name='enable_otp'),
+    path('enable_otp_page/', views.enable_otp_page, name='enable_otp_page'),
     path('remove_all_otp/', views.remove_all_otp_devices, name='remove_otp'),
     path('landing/', views.create_user, name='create_user'),
 ]

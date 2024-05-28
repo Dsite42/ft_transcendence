@@ -6,6 +6,10 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
 from django_otp.plugins.otp_totp.models import TOTPDevice
+import qrcode
+import base64
+from io import BytesIO
+
 
 def login_required(callable):
     def wrapper(request: HttpRequest) -> HttpResponse:
@@ -116,12 +120,17 @@ def enable_otp(request, data):
         device, created = TOTPDevice.objects.get_or_create(user=user, name='default')
         if created:
             uri = device.config_url
-            return JsonResponse({'uri': uri})
+            qr = qrcode.make(uri)
+            buf = BytesIO()
+            qr.save(buf, format='PNG')
+            image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+            return JsonResponse({'uri': uri, 'qr_code': image_base64})
         else:
             return JsonResponse({'error': 'TOTPDevice already exists for this user'}, status=400)
     else:
         return JsonResponse({'error': 'Username is not provided'}, status=400)
     
+
 @login_required
 def remove_all_otp_devices(request, data):
     user_info = get_user_info_dict(request)
@@ -145,3 +154,7 @@ def verify_otp(request, data):
     else:
         # OTP is invalid
         return HttpResponse('OTP is invalid')
+    
+@login_required
+def enable_otp_page(request, data):
+    return render(request, 'enable_otp.html')
