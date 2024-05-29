@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 import jwt, requests, json
+from django.utils import timezone
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
@@ -8,6 +9,7 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 import qrcode
 import base64
 from io import BytesIO
+from django.core.exceptions import ObjectDoesNotExist
 
 
 def login_required(callable):
@@ -24,6 +26,21 @@ def login_required(callable):
 def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'index.html')
 
+# def auth(request: HttpRequest) -> HttpResponse:
+#     if (code := request.GET.get('code')) == None:
+#         return HttpResponseBadRequest()
+#     oauth_response = requests.post('https://api.intra.42.fr/oauth/token', data={
+#         'code': code,
+#         'grant_type': 'authorization_code',
+#         'client_id': settings.OAUTH2_CLIENT_ID,
+#         'client_secret': settings.OAUTH2_SECRET,
+#         'redirect_uri': 'http://127.0.0.1:8000/auth'
+#     }).json()
+#     response = HttpResponseRedirect('landing')
+#     response.headers['Content-Type'] = 'text/html'
+#     response.set_cookie('session', jwt.encode(oauth_response, settings.JWT_SECRET, algorithm='HS256'))
+#     return response
+
 def auth(request: HttpRequest) -> HttpResponse:
     if (code := request.GET.get('code')) == None:
         return HttpResponseBadRequest()
@@ -37,7 +54,36 @@ def auth(request: HttpRequest) -> HttpResponse:
     response = HttpResponseRedirect('landing')
     response.headers['Content-Type'] = 'text/html'
     response.set_cookie('session', jwt.encode(oauth_response, settings.JWT_SECRET, algorithm='HS256'))
-    return response
+    
+    user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
+        'Authorization': 'Bearer ' + oauth_response['access_token']
+    }).json()
+
+    intra_name = user_info['login']
+    if intra_name:
+        user, created = User.objects.get_or_create(username=intra_name)
+        group = Group.objects.get(name='2FA-activated')
+        is_member = user.groups.filter(id=group.id).exists()
+        if is_member:
+            try:
+                # Try to get the user's default TOTPDevice
+                device = TOTPDevice.objects.get(user=user, name='default')
+            except ObjectDoesNotExist:
+                return HttpResponse('Error: No 2FA device')
+            # Check if the device has been verified in the last 5 minutes
+            five_minutes_ago = timezone.now() - timezone.timedelta(minutes=5)
+            was_verified = device.last_used_at >= five_minutes_ago
+            if was_verified:
+                return response
+            else:
+                return HttpResponse('Error: Verify OTP')
+        else:
+            return response
+    else:
+        return HttpResponse({'error': 'Username is not provided'}, status=400)
+
+def auth_otp(request: HttpRequest) -> HttpResponse:
+    return HttpResponse('test')
 
 @login_required
 def create_user(request, data):
@@ -87,6 +133,9 @@ def tournament(request, data):
 
 def login(request):
     return render(request, 'login.html')
+
+def login_with_2FA(request):
+    return render(request, 'login_with_2FA.html')
 
 @login_required
 def learn_view(request, data):
@@ -163,6 +212,7 @@ def verify_otp(request, data):
         # OTP is invalid
         return HttpResponse('OTP is invalid')
     
+
 @login_required
 def enable_otp_page(request, data):
     return render(request, 'enable_otp.html')
