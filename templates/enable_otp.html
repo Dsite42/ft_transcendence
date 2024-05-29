@@ -1,6 +1,12 @@
+{% load static %}
+
 <br>
 <button id="enable-otp" onclick="generate_otp_QR()">Enable OTP</button>
 <img id="qr-code" style="display: none;">
 
 <button id="verify-otp" onclick="send_otp_code()">Verify OTP</button>
 <input id="otp-input" type="text" placeholder="Enter OTP">
+
+
+<script src="{% static 'js/spa.js' %}"></script>
+

@@ -114,6 +114,32 @@ function send_otp_code()
 
 }
 
+function send_otp_code_login()
+{
+    const otp = document.getElementById('otp-input').value;
+        
+    fetch('/login_with_otp/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ otp: otp })
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Received data', data);
+        alert(data);
+        if (data === 'OTP is valid') {
+            window.location.href = '/';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+}
+
 function getCookie(name){
 
     let cookieValue = null;

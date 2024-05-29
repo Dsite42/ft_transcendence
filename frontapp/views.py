@@ -10,6 +10,7 @@ import qrcode
 import base64
 from io import BytesIO
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.csrf import csrf_exempt
 
 
 def login_required(callable):
@@ -20,6 +21,8 @@ def login_required(callable):
             data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
         except:
             return HttpResponseBadRequest('Invalid session')
+        if data['2FA_Activated'] and not data['2FA_Passed']:
+            return render(request, 'otp_login.html')
         return callable(request, data)
     return wrapper
 
@@ -51,47 +54,37 @@ def auth(request: HttpRequest) -> HttpResponse:
         'client_secret': settings.OAUTH2_SECRET,
         'redirect_uri': 'http://127.0.0.1:8000/auth'
     }).json()
-    response = HttpResponseRedirect('landing')
-    response.headers['Content-Type'] = 'text/html'
-    response.set_cookie('session', jwt.encode(oauth_response, settings.JWT_SECRET, algorithm='HS256'))
-    
+
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
         'Authorization': 'Bearer ' + oauth_response['access_token']
     }).json()
 
+    session_token = {
+        'access_token': oauth_response['access_token'],
+        '2FA_Activated': False,
+        '2FA_Passed': False,
+    }
     intra_name = user_info['login']
     if intra_name:
         user, created = User.objects.get_or_create(username=intra_name)
         group = Group.objects.get(name='2FA-activated')
         is_member = user.groups.filter(id=group.id).exists()
         if is_member:
-            try:
-                # Try to get the user's default TOTPDevice
-                device = TOTPDevice.objects.get(user=user, name='default')
-            except ObjectDoesNotExist:
-                return HttpResponse('Error: No 2FA device')
-            # Check if the device has been verified in the last 5 minutes
-            five_minutes_ago = timezone.now() - timezone.timedelta(minutes=5)
-            was_verified = device.last_used_at >= five_minutes_ago
-            if was_verified:
-                return response
-            else:
-                return HttpResponse('Error: Verify OTP')
+            response = HttpResponseRedirect('/') # redirect to otp login page
+            response.headers['Content-Type'] = 'text/html'
+            session_token['2FA_Activated'] = True
+            response.set_cookie('session', jwt.encode(session_token, settings.JWT_SECRET, algorithm='HS256'))
+            return response
         else:
+            response = HttpResponseRedirect('/')
+            response.headers['Content-Type'] = 'text/html'
+            response.set_cookie('session', jwt.encode(session_token, settings.JWT_SECRET, algorithm='HS256'))
             return response
     else:
         return HttpResponse({'error': 'Username is not provided'}, status=400)
 
-def auth_otp(request: HttpRequest) -> HttpResponse:
-    return HttpResponse('test')
-
-@login_required
-def create_user(request, data):
-    user_info = get_user_info_dict(request)
-    intra_name = user_info['login']
-    if intra_name:
-        user = User.objects.get_or_create(username=intra_name)
-    return HttpResponseRedirect('/')
+def otp_login(request: HttpRequest) -> HttpResponse:
+    return render(request, 'otp_login.html')
 
 @login_required
 def get_user_info(request: HttpRequest, data: dict) -> HttpResponse:
@@ -212,7 +205,41 @@ def verify_otp(request, data):
         # OTP is invalid
         return HttpResponse('OTP is invalid')
     
+@csrf_exempt
+def login_with_otp(request):
+    
+    encoded_session = request.COOKIES['session']
+    session = jwt.decode(encoded_session, settings.JWT_SECRET, algorithms=['HS256'])
+    user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
+        'Authorization': 'Bearer ' + session['access_token']
+    }).json()
 
+    if not user_info:
+        return HttpResponse('No user info found')
+    intra_name = user_info['login']
+  
+
+    body_unicode = request.body.decode('utf-8')
+    body_data = json.loads(body_unicode)
+    otp = body_data.get('otp')
+    
+    user = User.objects.get(username=intra_name)
+    device = user.totpdevice_set.first()
+    print(otp)
+    print(user)
+    group = Group.objects.get(name='2FA-activated')  
+    if device is None:
+        return HttpResponse('No TOTPDevice associated with this user')
+    if device.verify_token(otp):
+        # OTP is valid
+        response = HttpResponse('OTP is valid')
+        session['2FA_Passed'] = True
+        response.set_cookie('session', jwt.encode(session, settings.JWT_SECRET, algorithm='HS256'))
+        return response
+    else: 
+        # OTP is invalid
+        return HttpResponse('OTP is invalid')
+    
 @login_required
 def enable_otp_page(request, data):
     return render(request, 'enable_otp.html')
