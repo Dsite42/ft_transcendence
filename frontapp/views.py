@@ -13,6 +13,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
 
+
+
 def login_required(callable):
     def wrapper(request: HttpRequest) -> HttpResponse:
         if (session := request.COOKIES.get('session', None)) == None:
@@ -26,8 +28,50 @@ def login_required(callable):
         return callable(request, data)
     return wrapper
 
+#Simple Website Renderer Functions
+def otp_login(request: HttpRequest) -> HttpResponse:
+    return render(request, 'otp_login.html')
+
 def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'index.html')
+
+@login_required
+def tournament(request, data):
+    return render(request, 'tournament.html')
+
+def login(request):
+    return render(request, 'login.html')
+
+def play_pong(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'play_pong.html')
+    return render(request, 'base.html')
+
+def login_with_2FA(request):
+    return render(request, 'login_with_2FA.html')
+
+@login_required
+def learn_view(request, data):
+    return render(request, 'learn.html')
+
+@login_required
+def profile_view(request, data):
+    return render(request, 'profile.html')
+
+def root_view(request):
+    return render(request, 'root.html')
+
+@login_required
+def enable_otp_page(request, data):
+    return render(request, 'enable_otp.html')
+
+def logout(request):
+    response = redirect('home')
+    response.delete_cookie('session') 
+    return response
+
+
+#Authentication/API related Functions
 
 def auth(request: HttpRequest) -> HttpResponse:
     if (code := request.GET.get('code')) == None:
@@ -68,9 +112,6 @@ def auth(request: HttpRequest) -> HttpResponse:
     else:
         return HttpResponse({'error': 'Username is not provided'}, status=400)
 
-def otp_login(request: HttpRequest) -> HttpResponse:
-    return render(request, 'otp_login.html')
-
 @login_required
 def get_user_info(request: HttpRequest, data: dict) -> HttpResponse:
     response = requests.get('https://api.intra.42.fr/v2/me', headers={
@@ -100,37 +141,8 @@ def home(request):
         }
     })
 
-def play_pong(request):
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'play_pong.html')
-    return render(request, 'base.html')
 
-@login_required
-def tournament(request, data):
-    return render(request, 'tournament.html')
-
-def login(request):
-    return render(request, 'login.html')
-
-def login_with_2FA(request):
-    return render(request, 'login_with_2FA.html')
-
-@login_required
-def learn_view(request, data):
-    return render(request, 'learn.html')
-
-@login_required
-def profile_view(request, data):
-    return render(request, 'profile.html')
-
-def root_view(request):
-    return render(request, 'root.html')
-
-def logout(request):
-    response = redirect('home')
-    response.delete_cookie('session') 
-    return response
-
+#OTP Functions
 
 @login_required
 def enable_otp(request, data):
@@ -155,22 +167,7 @@ def enable_otp(request, data):
             return JsonResponse({'uri': uri, 'qr_code': image_base64})
     else:
         return JsonResponse({'error': 'Username is not provided'}, status=400)
-    
-
-@login_required
-def remove_all_otp_devices(request, data):
-    user_info = get_user_info_dict(request)
-    intra_name = user_info['login']
-    if intra_name:
-        try:
-            group = Group.objects.get(name='2FA-activated')  
-            user = User.objects.get(username=intra_name)
-            TOTPDevice.objects.filter(user=user).delete()
-            group.user_set.remove(user)
-            return HttpResponse({"All OTP devices have been removed.".format(intra_name)})
-        except User.DoesNotExist:
-            return HttpResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
-        
+      
 @login_required
 def verify_otp(request, data):
     user_info = get_user_info_dict(request)
@@ -195,6 +192,20 @@ def verify_otp(request, data):
         # OTP is invalid
         return HttpResponse('OTP is invalid')
     
+@login_required
+def remove_all_otp_devices(request, data):
+    user_info = get_user_info_dict(request)
+    intra_name = user_info['login']
+    if intra_name:
+        try:
+            group = Group.objects.get(name='2FA-activated')  
+            user = User.objects.get(username=intra_name)
+            TOTPDevice.objects.filter(user=user).delete()
+            group.user_set.remove(user)
+            return HttpResponse({"All OTP devices have been removed.".format(intra_name)})
+        except User.DoesNotExist:
+            return HttpResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
+        
 @csrf_exempt
 def login_with_otp(request):
     
@@ -230,6 +241,3 @@ def login_with_otp(request):
         # OTP is invalid
         return HttpResponse('OTP is invalid')
     
-@login_required
-def enable_otp_page(request, data):
-    return render(request, 'enable_otp.html')
