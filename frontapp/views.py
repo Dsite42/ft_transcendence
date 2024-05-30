@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
-
+#Login Required Wrapper
 def login_required(callable):
     def wrapper(request: HttpRequest) -> HttpResponse:
         if (session := request.COOKIES.get('session', None)) == None:
