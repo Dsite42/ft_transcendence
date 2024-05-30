@@ -29,21 +29,6 @@ def login_required(callable):
 def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'index.html')
 
-# def auth(request: HttpRequest) -> HttpResponse:
-#     if (code := request.GET.get('code')) == None:
-#         return HttpResponseBadRequest()
-#     oauth_response = requests.post('https://api.intra.42.fr/oauth/token', data={
-#         'code': code,
-#         'grant_type': 'authorization_code',
-#         'client_id': settings.OAUTH2_CLIENT_ID,
-#         'client_secret': settings.OAUTH2_SECRET,
-#         'redirect_uri': 'http://127.0.0.1:8000/auth'
-#     }).json()
-#     response = HttpResponseRedirect('landing')
-#     response.headers['Content-Type'] = 'text/html'
-#     response.set_cookie('session', jwt.encode(oauth_response, settings.JWT_SECRET, algorithm='HS256'))
-#     return response
-
 def auth(request: HttpRequest) -> HttpResponse:
     if (code := request.GET.get('code')) == None:
         return HttpResponseBadRequest()
@@ -161,8 +146,13 @@ def enable_otp(request, data):
             qr.save(buf, format='PNG')
             image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
             return JsonResponse({'uri': uri, 'qr_code': image_base64})
-        else:
-            return JsonResponse({'error': 'TOTPDevice already exists for this user'}, status=400)
+        elif device:
+            uri = device.config_url
+            qr = qrcode.make(uri)
+            buf = BytesIO()
+            qr.save(buf, format='PNG')
+            image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+            return JsonResponse({'uri': uri, 'qr_code': image_base64})
     else:
         return JsonResponse({'error': 'Username is not provided'}, status=400)
     
@@ -177,9 +167,9 @@ def remove_all_otp_devices(request, data):
             user = User.objects.get(username=intra_name)
             TOTPDevice.objects.filter(user=user).delete()
             group.user_set.remove(user)
-            return JsonResponse({'message': "All OTP devices for user {} have been removed.".format(intra_name)})
+            return HttpResponse({"All OTP devices have been removed.".format(intra_name)})
         except User.DoesNotExist:
-            return JsonResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
+            return HttpResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
         
 @login_required
 def verify_otp(request, data):

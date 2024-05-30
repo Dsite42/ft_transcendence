@@ -2,14 +2,8 @@
 
 <a href="{% url 'logout' %}">Logout</a>
 <br>
-<a href="{% url 'enable_otp' %}">Enable OTP</a>
+<a href="#enable_otp_page" >Enable OTP with QR-Code </a>
 <br>
-<a href="{% url 'remove_otp' %}">Remove all OTP</a>
+<a href="#remove_all_otp_devices">Remove current OTP-Device</a>
 <br>
-<a href="{% url 'enable_otp_page' %}">Enable OTP with QR-Code</a>
-<br>
-<li class="nav-item profile-icon">
-    <a href="#enable_otp_page" class="nav-link">
-        <i class="fas fa-user-circle"></i> enable otp with QR-Code
-    </a>
     {% endblock %}
