@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
+from frontapp.models import User
 import jwt, requests, json
 from django.utils import timezone
 from django.conf import settings
@@ -96,9 +96,9 @@ def auth(request: HttpRequest) -> HttpResponse:
     intra_name = user_info['login']
     if intra_name:
         user, created = User.objects.get_or_create(username=intra_name)
-        group = Group.objects.get(name='2FA-activated')
-        is_member = user.groups.filter(id=group.id).exists()
-        if is_member:
+        #group = Group.objects.get(name='2FA-activated') Replace with user boolean field
+        #is_member = user.groups.filter(id=group.id).exists()
+        if False: #is_member:
             response = HttpResponseRedirect('/') # redirect to otp login page
             response.headers['Content-Type'] = 'text/html'
             session_token['2FA_Activated'] = True
@@ -181,12 +181,12 @@ def verify_otp(request, data):
     device = user.totpdevice_set.first()
     print(otp)
     print(user)
-    group = Group.objects.get(name='2FA-activated')  
+    #group = Group.objects.get(name='2FA-activated')  replace with boolean field
     if device is None:
         return HttpResponse('No TOTPDevice associated with this user')
     if device.verify_token(otp):
         # OTP is valid
-        group.user_set.add(user)
+        #group.user_set.add(user) replace with boolean field
         return HttpResponse('OTP is valid')
     else:
         # OTP is invalid
@@ -198,10 +198,10 @@ def remove_all_otp_devices(request, data):
     intra_name = user_info['login']
     if intra_name:
         try:
-            group = Group.objects.get(name='2FA-activated')  
+            #group = Group.objects.get(name='2FA-activated')  Replace with boolean field
             user = User.objects.get(username=intra_name)
             TOTPDevice.objects.filter(user=user).delete()
-            group.user_set.remove(user)
+            #group.user_set.remove(user) Replace with boolean field
             return HttpResponse({"All OTP devices have been removed.".format(intra_name)})
         except User.DoesNotExist:
             return HttpResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
@@ -228,7 +228,7 @@ def login_with_otp(request):
     device = user.totpdevice_set.first()
     print(otp)
     print(user)
-    group = Group.objects.get(name='2FA-activated')  
+    #group = Group.objects.get(name='2FA-activated')  Replace with boolean field
     if device is None:
         return HttpResponse('No TOTPDevice associated with this user')
     if device.verify_token(otp):
