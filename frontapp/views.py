@@ -15,9 +15,30 @@ from django.core.files.storage import default_storage
 from django.core.files.images import ImageFile
 import os
 from django.contrib import messages
+from typing import Callable
 
+class APIError(Exception):
+    pass
 
-
+# JSON POST request Wrapper
+def json_request(callable: Callable[[HttpRequest, dict], dict]):
+    def wrapper(request: HttpRequest) -> JsonResponse:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'reason': 'Method not allowed'}, status=405)
+        if not request.headers.get('Content-Type') == 'application/json':
+            return JsonResponse({'success': False, 'reason': 'Invalid content type'}, status=415)
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except:
+            return JsonResponse({'success': False, 'reason': 'Malformed JSON'}, status=400)
+        try:
+            data = callable(request, data)
+        except APIError as error:
+            return JsonResponse({'success': False, 'reason': str(error)}, status=400)
+        except:
+            return JsonResponse({'success': False, 'reason': 'Internal server error'}, status=500)
+        return JsonResponse({'success': True, 'data': data})
+    return wrapper
 
 #Login Required Wrapper
 def login_required(callable):
@@ -278,8 +299,24 @@ def login_with_otp(request):
     
 #Profile Editing Functions
 
-def change_info(request):
+@json_request
+def change_info(request: HttpRequest, data: dict) -> dict:
+    if 'displayName' in data:
+        print('has display name')
+    if 'avatarUrl' in data:
+        print('has avatar url')
+    if 'avatarFile' in data:
+        print('has avatar file')
+    return None
     if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        if 'displayName' in data:
+            pass
+        if 'avatarUrl' in data:
+            pass
+        if 'avatarFile' in data:
+            pass
+        return HttpResponse('POST request received')
         display_name = request.POST.get('display_name')
         avatar_url = request.POST.get('avatar_url')
         avatar_file = request.FILES.get('avatar_file')

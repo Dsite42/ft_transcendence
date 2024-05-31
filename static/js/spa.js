@@ -155,3 +155,26 @@ function getCookie(name){
     }
     return cookieValue;
 }
+
+function changeInfoSave() {
+    const avatarUrlField = document.getElementById('avatarUrl');
+    const avatarFileField = document.getElementById('avatarFile');
+    fetch('/change_info/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            'displayName': document.getElementById('displayName').value,
+        })
+    })
+    .then(response => response.json())
+    .then(response => {
+        if (response.success) {
+            alert('you cool :)');
+        } else {
+            alert('you not cool :(');
+        }
+    });
+}
