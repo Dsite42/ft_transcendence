@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.images import ImageFile
 import os
+from django.contrib import messages
 
 
 
@@ -287,7 +288,13 @@ def change_info(request):
         user = CustomUser.objects.get(username=data['intra_name'])
 
         if display_name:
+            if CustomUser.objects.filter(display_name=display_name).exists():
+                messages.error(request, 'Display name is already in use.')
+                return render(request, 'change_info_site.html', {
+                    'user': user
+                })
             user.display_name = display_name #need to check if display name is unique/allowed
+            
 
         if avatar_file:
             # Save the uploaded file and get its URL
