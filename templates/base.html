@@ -53,8 +53,7 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item profile-icon">
                         <a href="#profile" class="nav-link">
-                            <i class="fas fa-user-circle"></i> Profile
-                        </a>
+                            <img src="{{ user.avatar }}" alt="User Avatar" class="profile-avatar" style="width: 30px; height: 30px;">                        </a>
                     </li>
                     {% endif %}
                 </ul>

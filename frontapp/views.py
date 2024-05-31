@@ -29,6 +29,28 @@ def login_required(callable):
     return wrapper
 
 #Simple Website Renderer Functions
+
+def home(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'home.html')
+    session = request.COOKIES.get('session', None)   
+    isAuthenticated = False
+    try:
+        data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
+        isAuthenticated = True
+    except:
+        isAuthenticated = False
+        avatar = None
+    if (isAuthenticated):
+        user = CustomUser.objects.get(username=data['intra_name'])
+        avatar = user.avatar
+    return render(request, 'base.html', {
+        'user': {
+            'is_authenticated': isAuthenticated,
+            'avatar': avatar
+        }
+    })
+
 def otp_login(request: HttpRequest) -> HttpResponse:
     return render(request, 'otp_login.html')
 
@@ -92,12 +114,15 @@ def auth(request: HttpRequest) -> HttpResponse:
         'access_token': oauth_response['access_token'],
         '2FA_Activated': False,
         '2FA_Passed': False,
+        'intra_name': user_info['login'],
     }
     intra_name = user_info['login']
     if intra_name:
         user, created = CustomUser.objects.get_or_create(username=intra_name)
-        
-        if user.two_factor_auth_enabled: #is_member:
+        if created or not user.display_name or not user.avatar or not user.stats:
+            print(user_info)
+            initialize_user(user, user_info)
+        if user.two_factor_auth_enabled:
             response = HttpResponseRedirect('/') # redirect to otp login page
             response.headers['Content-Type'] = 'text/html'
             session_token['2FA_Activated'] = True
@@ -124,21 +149,18 @@ def get_user_info_dict(request: HttpRequest, data: dict) -> dict:
     user_info_dict = json.loads(user_info.content.decode('utf-8'))
     return user_info_dict
 
-def home(request):
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'home.html')
-    session = request.COOKIES.get('session', None)   
-    isAuthenticated = False
-    try:
-        data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
-        isAuthenticated = True
-    except:
-        isAuthenticated = False
-    return render(request, 'base.html', {
-        'user': {
-            'is_authenticated': isAuthenticated
-        }
-    })
+
+def initialize_user(user: CustomUser, user_info) -> None:
+    user.display_name = user.username
+    user.avatar = user_info['image']['versions']['medium']
+    user.stats = {
+        "games_played": 0,
+        "games_won": 0,
+        "games_lost": 0,
+        "games_draw": 0,
+        "highest_score": 0
+    }
+    user.save()
 
 
 #OTP Functions

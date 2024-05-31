@@ -39,5 +39,3 @@ class CustomUserGroup(models.Model):
 class CustomUserPermission(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
-# You may need to add this in your settings.py
-# AUTH_USER_MODEL = 'yourapp.CustomUser'
