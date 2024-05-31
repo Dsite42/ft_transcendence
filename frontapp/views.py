@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from frontapp.models import User
+from frontapp.models import CustomUser
 import jwt, requests, json
 from django.utils import timezone
 from django.conf import settings
@@ -95,7 +95,7 @@ def auth(request: HttpRequest) -> HttpResponse:
     }
     intra_name = user_info['login']
     if intra_name:
-        user, created = User.objects.get_or_create(username=intra_name)
+        user, created = CustomUser.objects.get_or_create(username=intra_name)
         #group = Group.objects.get(name='2FA-activated') Replace with user boolean field
         #is_member = user.groups.filter(id=group.id).exists()
         if False: #is_member:
@@ -149,7 +149,7 @@ def enable_otp(request, data):
     user_info = get_user_info_dict(request)
     intra_name = user_info['login']
     if intra_name:
-        user, created = User.objects.get_or_create(username=intra_name)
+        user, created = CustomUser.objects.get_or_create(username=intra_name)
         device, created = TOTPDevice.objects.get_or_create(user=user, name='default')
         if created:
             uri = device.config_url
@@ -177,7 +177,7 @@ def verify_otp(request, data):
     body_data = json.loads(body_unicode)
     otp = body_data.get('otp')
     
-    user = User.objects.get(username=intra_name)
+    user = CustomUser.objects.get(username=intra_name)
     device = user.totpdevice_set.first()
     print(otp)
     print(user)
@@ -199,11 +199,11 @@ def remove_all_otp_devices(request, data):
     if intra_name:
         try:
             #group = Group.objects.get(name='2FA-activated')  Replace with boolean field
-            user = User.objects.get(username=intra_name)
+            user = CustomUser.objects.get(username=intra_name)
             TOTPDevice.objects.filter(user=user).delete()
             #group.user_set.remove(user) Replace with boolean field
             return HttpResponse({"All OTP devices have been removed.".format(intra_name)})
-        except User.DoesNotExist:
+        except CustomUser.DoesNotExist:
             return HttpResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
         
 @csrf_exempt
@@ -224,7 +224,7 @@ def login_with_otp(request):
     body_data = json.loads(body_unicode)
     otp = body_data.get('otp')
     
-    user = User.objects.get(username=intra_name)
+    user = CustomUser.objects.get(username=intra_name)
     device = user.totpdevice_set.first()
     print(otp)
     print(user)
