@@ -1,0 +1,20 @@
+<div class="container">
+    <h2>Profile Settings</h2>
+    <form method="POST" action="/change_info/" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="displayName">Display Name</label>
+            <input type="text" class="form-control" id="displayName" name="display_name" value="{{ user.display_name }}">
+        </div>
+        <div class="form-group">
+            <label for="avatar">Avatar</label>
+            <div>
+                <img src="{{ user.avatar }}" alt="Current Avatar" style="width: 100px; height: 100px;">
+            </div>
+            <input type="url" class="form-control" id="avatarUrl" name="avatar_url" placeholder="Enter new avatar URL">
+            <input type="file" class="form-control" id="avatarFile" name="avatar_file">
+            <small class="form-text text-muted">You can either upload a new avatar or provide a URL.</small>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+</div>

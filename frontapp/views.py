@@ -11,6 +11,10 @@ import base64
 from io import BytesIO
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.images import ImageFile
+import os
+
 
 
 
@@ -91,6 +95,17 @@ def logout(request):
     response = redirect('home')
     response.delete_cookie('session') 
     return response
+
+@login_required
+def change_info_site(request, data):
+    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    user = CustomUser.objects.get(username=data['intra_name'])
+    return render(request, 'change_info_site.html', {
+        'user' : user,
+        'display_name': user.display_name,
+        'avatar': user.avatar
+
+    })
 
 
 #Authentication/API related Functions
@@ -260,3 +275,32 @@ def login_with_otp(request):
         # OTP is invalid
         return HttpResponse('OTP is invalid')
     
+#Profile Editing Functions
+
+def change_info(request):
+    if request.method == 'POST':
+        display_name = request.POST.get('display_name')
+        avatar_url = request.POST.get('avatar_url')
+        avatar_file = request.FILES.get('avatar_file')
+
+        data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+        user = CustomUser.objects.get(username=data['intra_name'])
+
+        if display_name:
+            user.display_name = display_name #need to check if display name is unique/allowed
+
+        if avatar_file:
+            # Save the uploaded file and get its URL
+            file_name = default_storage.save(os.path.join('avatars', user.username, avatar_file.name), avatar_file)
+            avatar_url = os.path.join(settings.MEDIA_URL, file_name)
+
+        if avatar_url:
+            user.avatar = avatar_url
+
+        user.save()
+
+        return redirect('/')
+
+    return render(request, 'change_info_site.html', {
+        'user': user
+    })

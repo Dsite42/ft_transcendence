@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
-from .views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices
+from .views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices, change_info_site, change_info
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -20,4 +22,9 @@ urlpatterns = [
     path('verify_otp/', views.verify_otp, name='verify_otp'),
     path('otp_login/', views.otp_login, name='otp_login'),
     path('login_with_otp/', views.login_with_otp, name='login_with_otp'),
+    path('change_info_site.html', views.change_info_site, name='change_info_site'),
+    path('change_info/', views.change_info, name='change_info'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
