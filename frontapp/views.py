@@ -301,50 +301,36 @@ def login_with_otp(request):
 
 @json_request
 def change_info(request: HttpRequest, data: dict) -> dict:
-    if 'displayName' in data:
-        print('has display name')
-    if 'avatarUrl' in data:
-        print('has avatar url')
-    if 'avatarFile' in data:
-        print('has avatar file')
-    return None
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        if 'displayName' in data:
-            pass
-        if 'avatarUrl' in data:
-            pass
-        if 'avatarFile' in data:
-            pass
-        return HttpResponse('POST request received')
-        display_name = request.POST.get('display_name')
-        avatar_url = request.POST.get('avatar_url')
-        avatar_file = request.FILES.get('avatar_file')
 
+    avatar_file = None
+    display_name = None
+    avatar_url = None
+    print(data)
+    if request.method == 'POST':
+        if 'displayName' in data:
+            display_name = data['displayName']
+        if 'avatarUrl' in data:
+            avatar_url = data['avatarUrl']
+        if 'avatarFile' in data:
+            avatar_file = data['avatarFile']
+        
+        
         data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
         user = CustomUser.objects.get(username=data['intra_name'])
-
         if display_name:
             if CustomUser.objects.filter(display_name=display_name).exists():
                 messages.error(request, 'Display name is already in use.')
-                return render(request, 'change_info_site.html', {
-                    'user': user
-                })
+                return {'success': False, 'reason': 'Display name is already in use.'}
             user.display_name = display_name #need to check if display name is unique/allowed
             
-
         if avatar_file:
             # Save the uploaded file and get its URL
             file_name = default_storage.save(os.path.join('avatars', user.username, avatar_file.name), avatar_file)
             avatar_url = os.path.join(settings.MEDIA_URL, file_name)
-
         if avatar_url:
             user.avatar = avatar_url
-
+        
         user.save()
-
-        return redirect('/')
-
-    return render(request, 'change_info_site.html', {
-        'user': user
-    })
+        return {'success': True}
+    else:
+        return {'success': False, 'reason': 'Method not allowed'}

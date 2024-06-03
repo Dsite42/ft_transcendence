@@ -159,22 +159,28 @@ function getCookie(name){
 function changeInfoSave() {
     const avatarUrlField = document.getElementById('avatarUrl');
     const avatarFileField = document.getElementById('avatarFile');
+    const displayNameField = document.getElementById('displayName');
+
+    let formData = new FormData();
+    formData.append('displayName', displayNameField.value);
+    formData.append('avatarUrl', avatarUrlField.value);
+    if (avatarFileField.files[0]) {
+        formData.append('avatarFile', avatarFileField.files[0]);
+    }
+
     fetch('/change_info/', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({
-            'displayName': document.getElementById('displayName').value,
-        })
+        body: formData
     })
     .then(response => response.json())
     .then(response => {
         if (response.success) {
-            alert('you cool :)');
+            alert('Data sucessfully changed!');
         } else {
-            alert('you not cool :(');
+            alert('Error changing data!');
         }
     });
 }
