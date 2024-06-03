@@ -156,18 +156,18 @@ function getCookie(name){
     return cookieValue;
 }
 
+
 function changeInfoSave() {
     const avatarUrlField = document.getElementById('avatarUrl');
     const avatarFileField = document.getElementById('avatarFile');
-    const displayNameField = document.getElementById('displayName');
-
-    let formData = new FormData();
-    formData.append('displayName', displayNameField.value);
-    formData.append('avatarUrl', avatarUrlField.value);
+    const formData = new FormData();
+    formData.append('displayName', document.getElementById('displayName').value);
     if (avatarFileField.files[0]) {
         formData.append('avatarFile', avatarFileField.files[0]);
     }
-
+    if (avatarUrlField.value) {
+        formData.append('avatarUrl', avatarUrlField.value);
+    }
     fetch('/change_info/', {
         method: 'POST',
         headers: {
@@ -178,9 +178,9 @@ function changeInfoSave() {
     .then(response => response.json())
     .then(response => {
         if (response.success) {
-            alert('Data sucessfully changed!');
+            alert('Info changed successfully, refresh site for avatar changes to take effect!');
         } else {
-            alert('Error changing data!');
+            alert('Error changing info! : ' +response.reason);
         }
     });
 }

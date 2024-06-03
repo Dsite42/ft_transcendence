@@ -16,6 +16,7 @@ from django.core.files.images import ImageFile
 import os
 from django.contrib import messages
 from typing import Callable
+from PIL import Image
 
 class APIError(Exception):
     pass
@@ -299,38 +300,57 @@ def login_with_otp(request):
     
 #Profile Editing Functions
 
-@json_request
-def change_info(request: HttpRequest, data: dict) -> dict:
-
+@login_required
+def change_info(request: HttpRequest, data) -> JsonResponse:
+    print("change_info called")
+    print(request.POST)
     avatar_file = None
     display_name = None
     avatar_url = None
-    print(data)
+    
     if request.method == 'POST':
-        if 'displayName' in data:
-            display_name = data['displayName']
-        if 'avatarUrl' in data:
-            avatar_url = data['avatarUrl']
-        if 'avatarFile' in data:
-            avatar_file = data['avatarFile']
-        
-        
+        avatar_file = request.FILES.get('avatarFile', None)
+        display_name = request.POST.get('displayName', '')
+        avatar_url = request.POST.get('avatarUrl', '')
+
         data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
         user = CustomUser.objects.get(username=data['intra_name'])
         if display_name:
-            if CustomUser.objects.filter(display_name=display_name).exists():
+            if CustomUser.objects.filter(display_name=display_name).exists() and user.display_name != display_name:
                 messages.error(request, 'Display name is already in use.')
-                return {'success': False, 'reason': 'Display name is already in use.'}
-            user.display_name = display_name #need to check if display name is unique/allowed
+                return JsonResponse({'success': False, 'reason': 'Display name is already in use.'})
+            user.display_name = display_name
             
         if avatar_file:
             # Save the uploaded file and get its URL
+            if not is_image(avatar_file):
+                return JsonResponse({'success': False, 'reason': 'File is not an image.'})
             file_name = default_storage.save(os.path.join('avatars', user.username, avatar_file.name), avatar_file)
             avatar_url = os.path.join(settings.MEDIA_URL, file_name)
-        if avatar_url:
+            user.avatar = avatar_url
+        elif avatar_url:
+            if not is_image_url(avatar_url):
+                return JsonResponse({'success': False, 'reason': 'File is not an image.'})
             user.avatar = avatar_url
         
         user.save()
-        return {'success': True}
+        return JsonResponse({'success': True})
     else:
-        return {'success': False, 'reason': 'Method not allowed'}
+        return JsonResponse({'success': False, 'reason': 'Method not allowed'}, status=405)
+    
+
+#Helper Functions
+
+def is_image(file_path):
+    try:
+        Image.open(file_path)
+        return True
+    except IOError:
+        return False
+    
+def is_image_url(url):
+    try:
+        response = requests.head(url)
+        return response.headers['Content-Type'].startswith('image/')
+    except:
+        return False
