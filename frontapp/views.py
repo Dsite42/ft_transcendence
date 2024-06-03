@@ -317,7 +317,6 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
         user = CustomUser.objects.get(username=data['intra_name'])
         if display_name:
             if CustomUser.objects.filter(display_name=display_name).exists() and user.display_name != display_name:
-                messages.error(request, 'Display name is already in use.')
                 return JsonResponse({'success': False, 'reason': 'Display name is already in use.'})
             user.display_name = display_name
             
