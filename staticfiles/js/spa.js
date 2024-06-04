@@ -1,31 +1,226 @@
 document.addEventListener('DOMContentLoaded', function() {
+    var chart;
+
     document.querySelectorAll('a.nav-link').forEach(function(link) {
         link.addEventListener('click', function(event) {
-            event.preventDefault();
-            const url = link.getAttribute('data-url');
-            fetch(url, {
+            event.preventDefault(); // Prevent the default link behavior
+            
+            const url = link.getAttribute('href'); // Get the URL from the link's href attribute
+            console.log("Fetching data from:", url);
+            
+            // Fetch the content of the page using the URL
+            urlnew = url.replace("#", "");
+            urlnew = urlnew + ".html"
+            fetch(urlnew, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('main-content').innerHTML = data;
+                console.log("Received data:", data);
+                
+
+                // Update the desired object with the fetched content
+                const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
+                if (targetObject) {
+                    targetObject.innerHTML = data;
+                } else {
+                    console.error("Target object not found");
+                }
+                
+                // Optionally, update the URL in the address bar
                 history.pushState(null, '', url);
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
             });
         });
     });
 
-    window.addEventListener('popstate', function() {
-        const url = window.location.pathname;
-        fetch(url, {
+      // Event listener for when the user navigates backward or forward
+      window.addEventListener('popstate', function(event) {
+        console.log("Popstate event triggered.");
+        
+        // Fetch the content of the previous or next page
+        const url = window.location.href;
+
+        urlnew = url.replace("#", "");
+        urlnew = urlnew + ".html";
+        console.log("Fetching data from:", urlnew);
+        fetch(urlnew, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.text())
         .then(data => {
-            document.getElementById('main-content').innerHTML = data;
+            console.log("Received data:", data);
+            
+            // Update the desired object with the fetched content
+            const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
+            if (targetObject) {
+                targetObject.innerHTML = data;
+            } else {
+                console.error("Target object not found");
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching data:", error);
         });
     });
+    
 });
+
+function generate_otp_QR()
+{
+    console.log('Button clicked');
+    fetch('/enable_otp/')
+        .then(response => {
+            console.log('Received response', response);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received data', data);
+            const img = document.getElementById('qr-code');
+            img.src = 'data:image/png;base64,' + data.qr_code;
+            img.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function send_otp_code()
+{
+    const otp = document.getElementById('otp-input').value;
+        
+    fetch('/verify_otp/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ otp: otp })
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Received data', data);
+        alert(data);
+        if (data === 'OTP is valid') {
+            window.location.href = '/';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+}
+
+function send_otp_code_login()
+{
+    const otp = document.getElementById('otp-input').value;
+        
+    fetch('/login_with_otp/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ otp: otp })
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Received data', data);
+        alert(data);
+        if (data === 'OTP is valid') {
+            window.location.href = '/';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+}
+
+function getCookie(name){
+
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+    // Function to fetch data from the backend
+    function fetchPlayerRanking() {
+        return fetch('/fetch_players/')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched Dataaaa:', data);
+                populateTable(data);
+                return data;
+            });
+    }
+
+    // Function to populate the table
+    function populateTable(data) {
+        // Initialize Bootstrap Table with data
+        $('#player-table').bootstrapTable('destroy').bootstrapTable({
+            data: data,
+            sortable: true,
+            onClickRow: function(row, $element, field) {
+                createDetailChart(row);
+            }
+        });
+    }
+
+    // Function to create the detail chart
+    function createDetailChart(player) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        const names = ['Wins', 'Losses'];
+        const wins = [player.wins, player.losses];
+
+        var options = {
+            title: {
+                text: 'Wins',
+                align: 'center',
+                style: {
+                    fontSize: '30px',
+                    fontWeight: 'bold',
+                    fontFamily: undefined,
+                    color: '#263238'
+                }
+            },
+            chart: {
+                type: 'pie'
+            },
+            series: wins,
+            labels: names,
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 10
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+
+        chart = new ApexCharts(document.querySelector("#chart-details"), options);
+        chart.render();
+    }

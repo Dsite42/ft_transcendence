@@ -20,4 +20,7 @@ urlpatterns = [
     path('verify_otp/', views.verify_otp, name='verify_otp'),
     path('otp_login/', views.otp_login, name='otp_login'),
     path('login_with_otp/', views.login_with_otp, name='login_with_otp'),
+    
+    path('rank_list.html', views.rank_list, name='rank_list'),
+    path('fetch_players/', views.PlayerRanking.as_view(), name='fetch_players'),
 ]
