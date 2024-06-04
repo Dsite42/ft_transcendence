@@ -345,6 +345,23 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
 
 #Friendship Functions
 
+@login_required
+def send_friend_request(request, data):
+    if request.method == 'POST':
+        friend_username = request.POST.get('friend_username')
+        data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+        user = CustomUser.objects.get(username=data['intra_name'])
+        try:
+            friend_user = CustomUser.objects.get(username=friend_username)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User does not exist'})
+        success = user.add_friend_request(friend_user)
+        if success:
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Could not add friend'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 #Helper Functions
 

@@ -24,6 +24,7 @@ urlpatterns = [
     path('login_with_otp/', views.login_with_otp, name='login_with_otp'),
     path('change_info_site.html', views.change_info_site, name='change_info_site'),
     path('change_info/', views.change_info, name='change_info'),
+    path('send_friend_request/', views.send_friend_request, name='send_friend_request'),
 ]
 
 if settings.DEBUG:

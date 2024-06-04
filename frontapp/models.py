@@ -46,8 +46,18 @@ class CustomUser(AbstractUser):
         
         return friend_names
     
+    def add_friend_request(self, new_friend):
+        # Check if the friend is not the user itself
+        if new_friend != self:
+            # Check if the friend is not already a friend
+            if new_friend not in self.get_friends():
+                # Create a new friendship
+                friendship = Friendship(from_user=self, to_user=new_friend, accepted=False)
+                friendship.save()
+                return True
+        return False
     # ----------------------------
-    
+
     def __str__(self):
         return self.username
 

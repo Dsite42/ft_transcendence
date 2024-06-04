@@ -37,6 +37,13 @@
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
+        <form id="addFriendForm" method="post" onsubmit="addFriend(event)" action="/send_friend_request/">
+            {% csrf_token %}
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Enter friend's username" name="friend_username" required>
+                <button class="btn btn-primary" type="submit">Add Friend</button>
+            </div>
+        </form>
         <ul class="list-group">
             {% for friend in user.friends %}
                 <li class="list-group-item d-flex align-items-center justify-content-between">
