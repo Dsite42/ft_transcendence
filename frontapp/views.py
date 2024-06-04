@@ -60,25 +60,28 @@ def login_required(callable):
 def home(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'home.html')
+    
     session = request.COOKIES.get('session', None)   
     isAuthenticated = False
     friends = None
+    pending_friend_request_names = None
+    avatar = None
     try:
         data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
         isAuthenticated = True
     except:
         isAuthenticated = False
-        avatar = None
     if (isAuthenticated):
         user = CustomUser.objects.get(username=data['intra_name'])
         avatar = user.avatar
-        friends = user.get_friend_names()
-        print(friends)
+        friends = user.get_friends()
+        pending_friend_request_names = user.get_pending_friend_request_names()
     return render(request, 'base.html', {
         'user': {
             'is_authenticated': isAuthenticated,
             'avatar': avatar,
             'friends': friends,
+            'pending_friend_request_names': pending_friend_request_names,
         }
     })
 

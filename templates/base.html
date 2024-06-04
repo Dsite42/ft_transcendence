@@ -48,18 +48,30 @@
             {% for friend in user.friends %}
                 <li class="list-group-item d-flex align-items-center justify-content-between">
                     <div>
-                        {{ friend }}
+                        {{ friend.username }}
                         <p class="mb-0"><small>Last online: {{ friend.last_online }}</small></p>
                     </div>
                     <div>
-                        <button class="btn btn-primary btn-sm me-2" onclick="startChat('{{ friend }}')">Chat</button>
-                        <button class="btn btn-success btn-sm me-2" onclick="inviteToGame('{{ friend }}')">Invite</button>
-                        <button class="btn btn-danger btn-sm" onclick="removeFriend('{{ friend }}')">Remove</button>
+                        <button class="btn btn-primary btn-sm me-2" onclick="startChat('{{ friend.username }}')">Chat</button>
+                        <button class="btn btn-success btn-sm me-2" onclick="inviteToGame('{{ friend.username }}')">Invite</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeFriend('{{ friend.username }}')">Remove</button>
                     </div>
                 </li>
             {% empty %}
                 <li class="list-group-item">No friends yet</li>    
             {% endfor %}
+            {% for friend in pending_friend_request_names %}
+            <li class="list-group-item d-flex align-items-center justify-content-between">
+                <div>
+                    {{ friend }} (Pending)
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-sm me-2" onclick="addFriend('{{ friend }}')">Add</button>
+                    <button class="btn btn-danger btn-sm" onclick="removeFriend('{{ friend }}')">Remove</button>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
         </ul>
     </div>
 </div>
