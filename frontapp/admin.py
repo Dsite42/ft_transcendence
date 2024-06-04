@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+from .models import CustomUser , Friendship
 from django.contrib.auth.models import User
 from django import forms
 
@@ -30,5 +30,11 @@ class CustomUserAdmin(UserAdmin):
             'fields': tuple(field.name for field in CustomUser._meta.fields if field.name not in [f.name for f in User._meta.fields]),
         }),
     )
+
+class FriendshipAdmin(admin.ModelAdmin):
+    list_display = ('from_user', 'to_user', 'accepted')
+    list_editable = ('accepted',)
+
+admin.site.register(Friendship, FriendshipAdmin)
 
 admin.site.register(CustomUser, CustomUserAdmin)

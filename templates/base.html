@@ -38,10 +38,20 @@
     </div>
     <div class="offcanvas-body">
         <ul class="list-group">
-            {% for friend in friends %}
-                <li class="list-group-item">{{ friend.username }}</li>
+            {% for friend in user.friends %}
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div>
+                        {{ friend }}
+                        <p class="mb-0"><small>Last online: {{ friend.last_online }}</small></p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-sm me-2" onclick="startChat('{{ friend }}')">Chat</button>
+                        <button class="btn btn-success btn-sm me-2" onclick="inviteToGame('{{ friend }}')">Invite</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeFriend('{{ friend }}')">Remove</button>
+                    </div>
+                </li>
             {% empty %}
-                <li class="list-group-item">No friends yet</li>
+                <li class="list-group-item">No friends yet</li>    
             {% endfor %}
         </ul>
     </div>

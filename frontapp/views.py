@@ -62,6 +62,7 @@ def home(request):
         return render(request, 'home.html')
     session = request.COOKIES.get('session', None)   
     isAuthenticated = False
+    friends = None
     try:
         data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
         isAuthenticated = True
@@ -71,10 +72,13 @@ def home(request):
     if (isAuthenticated):
         user = CustomUser.objects.get(username=data['intra_name'])
         avatar = user.avatar
+        friends = user.get_friend_names()
+        print(friends)
     return render(request, 'base.html', {
         'user': {
             'is_authenticated': isAuthenticated,
-            'avatar': avatar
+            'avatar': avatar,
+            'friends': friends,
         }
     })
 
@@ -157,7 +161,7 @@ def auth(request: HttpRequest) -> HttpResponse:
     intra_name = user_info['login']
     if intra_name:
         user, created = CustomUser.objects.get_or_create(username=intra_name)
-        if created or not user.display_name or not user.avatar or not user.stats:
+        if created or not user.display_name or not user.avatar or not user.stats or not user.friends:
             print(user_info)
             initialize_user(user, user_info)
         if user.two_factor_auth_enabled:
@@ -198,6 +202,7 @@ def initialize_user(user: CustomUser, user_info) -> None:
         "games_draw": 0,
         "highest_score": 0
     }
+    user.friends = []
     user.save()
 
 
@@ -337,6 +342,9 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
     else:
         return JsonResponse({'success': False, 'reason': 'Method not allowed'}, status=405)
     
+
+#Friendship Functions
+
 
 #Helper Functions
 
