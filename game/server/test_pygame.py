@@ -6,6 +6,7 @@
 import os; os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from time import time
 from math import floor, ceil
+from argparse import ArgumentParser
 from game import (
     GameState,
     GamePhase,
@@ -183,5 +184,10 @@ class PygameRunner:
             x += x_step
 
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('-W', '--width', type=int, default=1280)
+    parser.add_argument('-H', '--height', type=int, default=720)
+    parser.add_argument('-r', '--rate', type=float, default=60.0)
+    arguments = parser.parse_args()
     pygame.init()
-    PygameRunner(1280, 720, 60.0).game_loop()
+    PygameRunner(arguments.width, arguments.height, arguments.rate).game_loop()
