@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, Flag
 from typing import Optional
 from math import cos, sin, pi
 from dataclasses import dataclass
@@ -18,6 +18,15 @@ class GamePhase(Enum):
     Intermission = 2
     Finished = 3
 
+class GameUpdateFlag(Flag):
+    Empty = 0
+    Phase = 1 << 0
+    BallPosition = 1 << 1
+    PaddleScoreA = 1 << 2
+    PaddleScoreB = 1 << 3
+    PaddlePositionA = 1 << 4
+    PaddlePositionB = 1 << 5
+
 @dataclass
 class GameState:
     WAITING_TIMEOUT = 30.0
@@ -27,6 +36,8 @@ class GameState:
     ball: 'BallState'
     paddle_a: 'PaddleState'
     paddle_b: 'PaddleState'
+    update_flags: 'GameUpdateFlag'
+    next_update_flags: 'GameUpdateFlag'
     timeout: float
 
     def __init__(self) -> None:
@@ -34,12 +45,18 @@ class GameState:
         self.ball = BallState()
         self.paddle_a = PaddleState(-WORLD_X_EDGE + 1.0)
         self.paddle_b = PaddleState( WORLD_X_EDGE - 1.0)
+        self.update_flags = GameUpdateFlag.Empty
+        self.next_update_flags = GameUpdateFlag.Empty
         self.timeout = GameState.WAITING_TIMEOUT
 
     def tick(self, delta_time: float) -> None:
+        self.update_flags = self.next_update_flags
+        self.next_update_flags = GameUpdateFlag.Empty
         # Always keep the paddles moving
-        self.paddle_a.tick(delta_time)
-        self.paddle_b.tick(delta_time)
+        if self.paddle_a.tick(delta_time):
+            self.update_flags |= GameUpdateFlag.PaddlePositionA
+        if self.paddle_b.tick(delta_time):
+            self.update_flags |= GameUpdateFlag.PaddlePositionB
         match self.phase:
             case GamePhase.Waiting:
                 # Wait for the game to start for the configured timeout or finish
@@ -47,9 +64,11 @@ class GameState:
                 self.timeout -= delta_time
                 if self.timeout <= 0.0:
                     self.phase = GamePhase.Finished
+                    self.update_flags |= GameUpdateFlag.Phase
             case GamePhase.Playing:
                 # Simulate the ball and check if a goal was scored
                 self.ball.tick(delta_time, self.paddle_a, self.paddle_b)
+                self.update_flags |= GameUpdateFlag.BallPosition
                 if (side := self.ball.check_goal()) != None:
                     match side:
                         case 0: self.paddle_a.score += 1
@@ -62,11 +81,13 @@ class GameState:
                         # A player has scored a goal, start a score display intermission
                         self.phase = GamePhase.Intermission
                         self.timeout = GameState.INTERMISSION_TIMEOUT
+                    self.update_flags |= GameUpdateFlag.Phase
             case GamePhase.Intermission:
                 # Wait for the intermission timeout to expire, then switch phase
                 self.timeout -= delta_time
                 if self.timeout <= 0.0:
                     self.phase = GamePhase.Playing
+                    self.update_flags |= GameUpdateFlag.Phase
             case GamePhase.Finished:
                 pass
 
@@ -75,6 +96,7 @@ class GameState:
             # Start the game in intermission phase with the regular timeout
             self.phase = GamePhase.Intermission
             self.timeout = GameState.INTERMISSION_TIMEOUT
+            self.next_update_flags |= GameUpdateFlag.Phase
 
 @dataclass
 class BallState:
@@ -187,13 +209,14 @@ class PaddleState:
         self.position = 0
         self.direction = 0
 
-    def tick(self, delta_time: float) -> None:
+    def tick(self, delta_time: float) -> bool:
         # Move according to the direction, clamping at the world edges
         self.position += self.direction * PaddleState.SPEED * delta_time
         if self.position < -WORLD_Y_EDGE + PaddleState.HALF_LENGTH:
             self.position = -WORLD_Y_EDGE + PaddleState.HALF_LENGTH
         if self.position > WORLD_Y_EDGE - PaddleState.HALF_LENGTH:
             self.position = WORLD_Y_EDGE - PaddleState.HALF_LENGTH
+        return self.direction != 0
 
     def collide_with_ball(self, ball: 'BallState') -> bool:
         # The ball must have passed the paddle's edge position in this tick
