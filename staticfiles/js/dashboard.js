@@ -1,15 +1,5 @@
 var chart;
 
-// Function to fetch data from the backend
-async function fetchPlayerRanking() {
-    return fetch('/fetch_players/')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Fetched Data:', data);
-            populateTable(data);
-            return data;
-        });
-}
 // Function to populate the table
 function populateTable(data) {
     // Initialize Bootstrap Table with data
@@ -59,6 +49,3 @@ function createDetailChart(player) {
     chart = new ApexCharts(document.querySelector("#chart-details"), options);
     chart.render();
 }
-// Fetch data and populate table
-fetchPlayerRanking();
-
