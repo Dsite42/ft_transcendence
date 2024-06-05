@@ -71,8 +71,12 @@ class GameState:
                 self.update_flags |= GameUpdateFlag.BallPosition
                 if (side := self.ball.check_goal()) != None:
                     match side:
-                        case 0: self.paddle_a.score += 1
-                        case 1: self.paddle_b.score += 1
+                        case 0:
+                            self.paddle_a.score += 1
+                            self.update_flags |= GameUpdateFlag.PaddleScoreA
+                        case 1:
+                            self.paddle_b.score += 1
+                            self.update_flags |= GameUpdateFlag.PaddleScoreB
                     self.ball.reset(side)
                     if self.paddle_a.score > 10 or self.paddle_b.score > 10:
                         # A player has won, finish the game
