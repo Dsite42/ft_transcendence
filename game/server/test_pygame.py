@@ -123,8 +123,9 @@ class PygameRunner:
         else:
             debug_phase = f'phase={self.game_state.phase}'
         self.draw_text(debug_phase, 0, self.height - 24, (255, 255, 255))
+        self.draw_text(f'update_flags={self.game_state.update_flags}', 0, self.height - 48, (255, 255, 0))
         if self.game_state.phase == GamePhase.Waiting:
-            self.draw_text('>>> Press [X] to start game', 0, self.height - 48, (0, 255, 255))
+            self.draw_text('>>> Press [X] to start game', 0, self.height - 72, (0, 255, 255))
         # Present the frame
         pygame.display.flip()
 
