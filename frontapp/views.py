@@ -164,7 +164,7 @@ def auth(request: HttpRequest) -> HttpResponse:
     intra_name = user_info['login']
     if intra_name:
         user, created = CustomUser.objects.get_or_create(username=intra_name)
-        if created or not user.display_name or not user.avatar or not user.stats or not user.friends:
+        if created or not user.display_name or not user.avatar or not user.stats:
             print(user_info)
             initialize_user(user, user_info)
         if user.two_factor_auth_enabled:
@@ -205,7 +205,6 @@ def initialize_user(user: CustomUser, user_info) -> None:
         "games_draw": 0,
         "highest_score": 0
     }
-    user.friends = []
     user.save()
 
 

@@ -6,8 +6,8 @@ from django.db.models import JSONField
 class CustomUser(AbstractUser):
     display_name = models.CharField(max_length=255, null=True, blank=True)
     avatar = models.URLField(max_length=200, null=True, blank=True)
-    stats = JSONField(default=dict)  # custom struct for user stats
-    match_history = JSONField(default=list)  # array of custom structs for match history
+    stats = JSONField(default=dict, null=True, blank=True )  # custom struct for user stats
+    match_history = JSONField(default=list,  null=True, blank=True)  # array of custom structs for match history
     two_factor_auth_enabled = models.BooleanField(default=False)
     
     groups = models.ManyToManyField(
