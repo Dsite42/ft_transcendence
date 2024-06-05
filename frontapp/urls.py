@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices, change_info_site, change_info
+from .views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices, change_info_site, change_info, accept_friend_request, send_friend_request
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -25,6 +25,8 @@ urlpatterns = [
     path('change_info_site.html', views.change_info_site, name='change_info_site'),
     path('change_info/', views.change_info, name='change_info'),
     path('send_friend_request/', views.send_friend_request, name='send_friend_request'),
+    path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
+    path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
 ]
 
 if settings.DEBUG:

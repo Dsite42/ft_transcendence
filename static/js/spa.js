@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
             if (targetObject) {
                 targetObject.innerHTML = data;
+                const scriptElements = targetObject.getElementsByTagName('script');
+                for (let index = 0; index < scriptElements.length; index++)
+                    eval(scriptElements[index].innerHTML);
             } else {
                 console.error("Target object not found");
             }
@@ -213,5 +216,59 @@ function addFriend(event) {
         // Handle any errors
         console.error('Error:', error);
         alert('An error occurred while sending the friend request.');
+    });
+}
+
+function acceptFriendRequest(userIntraName, friendUsername) {
+    fetch('/accept_friend_request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')  
+        },
+        body: 'user_intra_name=' + userIntraName + '&friend_username=' + friendUsername
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Friend request accepted successfully!');
+            window.location.reload();
+        }
+    });
+}
+
+function declineFriendRequest(userIntraName, friendUsername) {
+    fetch('/decline_friend_request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')  
+        },
+        body: 'user_intra_name=' + userIntraName + '&friend_username=' + friendUsername + '&remove=false'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Friend request declined successfully!');
+            window.location.reload();
+        }
+    });
+}
+
+function removeFriend(userIntraName, friendUsername) {
+    fetch('/decline_friend_request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')  
+        },
+        body: 'user_intra_name=' + userIntraName + '&friend_username=' + friendUsername + '&remove=true'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Friend removed successfully!');
+            window.location.reload();
+        }
     });
 }

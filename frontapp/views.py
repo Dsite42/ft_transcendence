@@ -75,13 +75,14 @@ def home(request):
         user = CustomUser.objects.get(username=data['intra_name'])
         avatar = user.avatar
         friends = user.get_friends()
-        pending_friend_request_names = user.get_pending_friend_request_names()
+        pending_friend_requests = user.get_pending_friend_requests()
     return render(request, 'base.html', {
         'user': {
             'is_authenticated': isAuthenticated,
             'avatar': avatar,
             'friends': friends,
-            'pending_friend_request_names': pending_friend_request_names,
+            'pending_friend_requests': pending_friend_requests,
+            'intra_name': data['intra_name']
         }
     })
 
@@ -364,7 +365,43 @@ def send_friend_request(request, data):
             return JsonResponse({'success': False, 'error': 'Could not add friend'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
+    
+@login_required
+def accept_friend_request(request, data):
+    if request.method == 'POST':
+        user_intra_name = request.POST.get('user_intra_name')
+        friend_username = request.POST.get('friend_username')
+        user = CustomUser.objects.get(username=user_intra_name)
+        friend = CustomUser.objects.get(username=friend_username)
+        success = user.accept_friend_request(friend)
+        if success:
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'error': 'Could not accept friend request'})
+    else:
+        return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
+    
+#Also used for removing friends
+@login_required
+def decline_friend_request(request, data):
+    if request.method == 'POST':
+        remove = request.POST.get('remove')
+        user_intra_name = request.POST.get('user_intra_name')
+        friend_username = request.POST.get('friend_username')
+        try:
+            user = CustomUser.objects.get(username=user_intra_name)
+            friend = CustomUser.objects.get(username=friend_username)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'status': 'error', 'error': 'User does not exist'})
+        success = user.remove_friend(friend)
+        if remove == 'true' and not success:
+            success = friend.remove_friend(user)
+        if success:
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'error': 'Could not decline friend request'})
+    else:
+        return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
 #Helper Functions
 
 def is_image(file_path):

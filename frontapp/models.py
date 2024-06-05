@@ -36,26 +36,15 @@ class CustomUser(AbstractUser):
         
         return friends
 
-    def get_friend_names(self):
+    def get_pending_friend_requests(self):
         
-        accepted_friendships = self.friendships_sent.filter(accepted=True) | self.friendships_received.filter(accepted=True)
-        
-        
-        friend_names = [friendship.to_user.display_name for friendship in accepted_friendships if friendship.to_user != self] + \
-                       [friendship.from_user.display_name for friendship in accepted_friendships if friendship.from_user != self]
-        
-        return friend_names
-    
-
-    def get_pending_friend_request_names(self):
-        # Get all friendships where the friend request has not been accepted
         pending_friendships = self.friendships_received.filter(accepted=False)
         
-        # Get the usernames from the friendships
-        pending_friend_names = [friendship.from_user.username for friendship in pending_friendships]
+
+        pending_friends = [friendship.from_user for friendship in pending_friendships]
         
-        return pending_friend_names
-    
+        return pending_friends
+
     def add_friend_request(self, new_friend):
         # Check if the friend is not the user itself
         if new_friend != self:
@@ -79,6 +68,15 @@ class CustomUser(AbstractUser):
             return True
         return False
 
+    def remove_friend(self, friend):
+        # Get the friendship where the friend is the sender
+        friendship = self.friendships_sent.filter(to_user=friend).first() or self.friendships_received.filter(from_user=friend).first()
+        
+        # Check if the friendship exists
+        if friendship:
+            friendship.delete()
+            return True
+        return False
     
     # ----------------------------
 
