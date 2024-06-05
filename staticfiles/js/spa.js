@@ -1,12 +1,12 @@
+var chart;
 document.addEventListener('DOMContentLoaded', function() {
-    var chart;
 
     document.querySelectorAll('a.nav-link').forEach(function(link) {
         link.addEventListener('click', function(event) {
             event.preventDefault(); // Prevent the default link behavior
             
             const url = link.getAttribute('href'); // Get the URL from the link's href attribute
-            console.log("Fetching data from:", url);
+            //console.log("Fetching data from:", url);
             
             // Fetch the content of the page using the URL
             urlnew = url.replace("#", "");
@@ -18,13 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.text())
             .then(data => {
-                console.log("Received data:", data);
+                //console.log("Received data:", data);
                 
 
                 // Update the desired object with the fetched content
                 const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
                 if (targetObject) {
                     targetObject.innerHTML = data;
+                    const scriptElements = targetObject.getElementsByTagName('script');
+                    for (let index = 0; index < scriptElements.length; index++)
+                        eval(scriptElements[index].innerHTML);
                 } else {
                     console.error("Target object not found");
                 }
@@ -158,69 +161,3 @@ function getCookie(name){
     }
     return cookieValue;
 }
-
-
-    // Function to fetch data from the backend
-    function fetchPlayerRanking() {
-        return fetch('/fetch_players/')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Fetched Dataaaa:', data);
-                populateTable(data);
-                return data;
-            });
-    }
-
-    // Function to populate the table
-    function populateTable(data) {
-        // Initialize Bootstrap Table with data
-        $('#player-table').bootstrapTable('destroy').bootstrapTable({
-            data: data,
-            sortable: true,
-            onClickRow: function(row, $element, field) {
-                createDetailChart(row);
-            }
-        });
-    }
-
-    // Function to create the detail chart
-    function createDetailChart(player) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        const names = ['Wins', 'Losses'];
-        const wins = [player.wins, player.losses];
-
-        var options = {
-            title: {
-                text: 'Wins',
-                align: 'center',
-                style: {
-                    fontSize: '30px',
-                    fontWeight: 'bold',
-                    fontFamily: undefined,
-                    color: '#263238'
-                }
-            },
-            chart: {
-                type: 'pie'
-            },
-            series: wins,
-            labels: names,
-            responsive: [{
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        width: 10
-                    },
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }]
-        };
-
-        chart = new ApexCharts(document.querySelector("#chart-details"), options);
-        chart.render();
-    }
