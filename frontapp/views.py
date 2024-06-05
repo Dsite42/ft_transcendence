@@ -175,10 +175,10 @@ def auth(request: HttpRequest) -> HttpResponse:
             print(user_info)
             initialize_user(user, user_info)
             existing_user = CustomUser.objects.filter(display_name=intra_name).first()
-        if existing_user:
-            # Reset the display name of the existing user
-            existing_user.display_name = existing_user.username
-            existing_user.save()
+            if existing_user:
+                # Reset the display name of the existing user
+                existing_user.display_name = existing_user.username
+                existing_user.save()
             
 
         if user.two_factor_auth_enabled:
