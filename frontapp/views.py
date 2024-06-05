@@ -48,10 +48,14 @@ def login_required(callable):
             return render(request, 'login.html')
         try:
             data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
+            user = CustomUser.objects.get(username=data['intra_name'])
         except:
             return HttpResponseBadRequest('Invalid session')
         if data['2FA_Activated'] and not data['2FA_Passed']:
             return render(request, 'otp_login.html')
+        print(user.last_active)
+        user.last_active = timezone.now()
+        user.save()
         return callable(request, data)
     return wrapper
 
@@ -64,8 +68,9 @@ def home(request):
     session = request.COOKIES.get('session', None)   
     isAuthenticated = False
     friends = None
-    pending_friend_request_names = None
+    pending_friend_requests = None
     avatar = None
+    intra_name = None
     try:
         data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
         isAuthenticated = True
@@ -76,13 +81,14 @@ def home(request):
         avatar = user.avatar
         friends = user.get_friends()
         pending_friend_requests = user.get_pending_friend_requests()
+        intra_name = data['intra_name']
     return render(request, 'base.html', {
         'user': {
             'is_authenticated': isAuthenticated,
             'avatar': avatar,
             'friends': friends,
             'pending_friend_requests': pending_friend_requests,
-            'intra_name': data['intra_name']
+            'intra_name': intra_name,
         }
     })
 

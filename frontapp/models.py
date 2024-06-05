@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     stats = JSONField(default=dict, null=True, blank=True )  # custom struct for user stats
     match_history = JSONField(default=list,  null=True, blank=True)  # array of custom structs for match history
     two_factor_auth_enabled = models.BooleanField(default=False)
+    last_active = models.DateTimeField(null=True, blank=True)
     
     groups = models.ManyToManyField(
         'auth.Group',
