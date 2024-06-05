@@ -174,6 +174,13 @@ def auth(request: HttpRequest) -> HttpResponse:
         if created or not user.display_name or not user.avatar or not user.stats:
             print(user_info)
             initialize_user(user, user_info)
+            existing_user = CustomUser.objects.filter(display_name=intra_name).first()
+        if existing_user:
+            # Reset the display name of the existing user
+            existing_user.display_name = existing_user.username
+            existing_user.save()
+            
+
         if user.two_factor_auth_enabled:
             response = HttpResponseRedirect('/') # redirect to otp login page
             response.headers['Content-Type'] = 'text/html'
@@ -332,6 +339,9 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
         if display_name:
             if CustomUser.objects.filter(display_name=display_name).exists() and user.display_name != display_name:
                 return JsonResponse({'success': False, 'reason': 'Display name is already in use.'})
+            existing_user = CustomUser.objects.filter(username=display_name).exclude(username=user.username).first()
+            if existing_user:
+                return JsonResponse({'success': False, 'reason': 'Display name is someones intra name.'})
             user.display_name = display_name
             
         if avatar_file:
