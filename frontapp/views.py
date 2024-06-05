@@ -12,7 +12,7 @@ from io import BytesIO
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
-from frontapp.models import Player
+from frontapp.models import Player, Game
 
 
 #Login Required Wrapper
@@ -73,8 +73,15 @@ def logout(request):
 
 def rank_list(request):
     players = Player.objects.all().order_by('-points')
+    #ranking = [player.to_dict() for player in players]
     ranking = [{'name': player.name, 'points': player.points, 'wins': player.wins, 'losses': player.losses} for player in players]
+
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
+
+def game_sessions(request):
+    games = Game.objects.all().order_by('-date')
+    game_sessions = [game.to_dict() for game in games]
+    return render(request, 'game_sessions.html', {'game_sessions': json.dumps(game_sessions)})
 
 
 #Authentication/API related Functions
