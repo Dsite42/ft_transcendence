@@ -1,4 +1,3 @@
-var chart;
 
 // Function to populate the table
 function populateTable(data, tag) {
@@ -50,7 +49,7 @@ function createDetailChart(player) {
         }]
     };
     chart = new ApexCharts(document.querySelector("#chart-player-table"), options);
-    //chart.render();
+    chart.render();
 }
 
 

@@ -1,4 +1,3 @@
-var chart;
 
 // Function to populate the table
 function populateTable(data, tag) {

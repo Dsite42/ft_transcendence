@@ -19,8 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.text())
             .then(data => {
                 //console.log("Received data:", data);
-                
-
+                if (chart) {
+                    chart.destroy();
+                }
                 // Update the desired object with the fetched content
                 const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
                 if (targetObject) {
@@ -58,12 +59,18 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.text())
         .then(data => {
-            console.log("Received data:", data);
-            
+            //console.log("Received data:", data);
+            if (chart) {
+                chart.destroy();
+            }
             // Update the desired object with the fetched content
             const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
             if (targetObject) {
+                console.log(urlnew)
                 targetObject.innerHTML = data;
+                const scriptElements = targetObject.getElementsByTagName('script');
+                for (let index = 0; index < scriptElements.length; index++)
+                    eval(scriptElements[index].innerHTML);
             } else {
                 console.error("Target object not found");
             }
