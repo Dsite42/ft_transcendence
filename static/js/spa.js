@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
                 if (targetObject) {
                     targetObject.innerHTML = data;
+                    const scriptElements = targetObject.getElementsByTagName('script');
+                    for (let index = 0; index < scriptElements.length; index++)
+                        eval(scriptElements[index].innerHTML);
                 } else {
                     console.error("Target object not found");
                 }
@@ -285,7 +288,7 @@ function checkPendingFriendRequests() {
     .then(response => response.json())
     .then(data => {
         if (data.length > 0) {
-            alert('You have pending friend requests, refresh the site in order to see it!');
+            alert('You have a pending friend requests, refresh the site in order to see it!');
         }
     });
 }
