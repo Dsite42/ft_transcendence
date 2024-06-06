@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Optionally, update the URL in the address bar
                 history.pushState(null, '', url);
+                
+                // Call the updatePendingFriendRequests function
+                checkPendingFriendRequests();
             })
             .catch(error => {
                 console.error("Error fetching data:", error);
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.text())
         .then(data => {
             console.log("Received data:", data);
-            
+            checkPendingFriendRequests();
             // Update the desired object with the fetched content
             const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
             if (targetObject) {
@@ -267,6 +270,22 @@ function removeFriend(userIntraName, friendUsername) {
         if (data.status === 'success') {
             alert('Friend removed successfully!');
             window.location.reload();
+        }
+    });
+}
+
+function checkPendingFriendRequests() {
+    fetch('/get_pending_friend_requests/', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.length > 0) {
+            alert('You have pending friend requests, refresh the site in order to see it!');
         }
     });
 }

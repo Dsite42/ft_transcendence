@@ -100,6 +100,6 @@ class Friendship(models.Model):
     from_user = models.ForeignKey(CustomUser, related_name='friendships_sent', on_delete=models.CASCADE)
     to_user = models.ForeignKey(CustomUser, related_name='friendships_received', on_delete=models.CASCADE)
     accepted = models.BooleanField(default=False)
-
+    popup_shown = models.BooleanField(default=False)
     class Meta:
         unique_together = ('from_user', 'to_user')

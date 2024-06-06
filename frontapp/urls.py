@@ -27,6 +27,7 @@ urlpatterns = [
     path('send_friend_request/', views.send_friend_request, name='send_friend_request'),
     path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
+    path('get_pending_friend_requests/', views.get_pending_friend_requests, name='get_pending_friend_requests'),
 ]
 
 if settings.DEBUG:

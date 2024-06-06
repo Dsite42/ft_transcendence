@@ -53,9 +53,9 @@ def login_required(callable):
             return HttpResponseBadRequest('Invalid session')
         if data['2FA_Activated'] and not data['2FA_Passed']:
             return render(request, 'otp_login.html')
-        print(user.last_active)
         user.last_active = timezone.now()
         user.save()
+
         return callable(request, data)
     return wrapper
 
@@ -418,6 +418,17 @@ def decline_friend_request(request, data):
             return JsonResponse({'status': 'error', 'error': 'Could not decline friend request'})
     else:
         return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
+    
+
+@login_required
+def get_pending_friend_requests(request, data):
+    print("get_pending_friend_requests called")
+    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    user = CustomUser.objects.get(username=data['intra_name'])
+    pending_requests = user.get_pending_friend_requests()
+    usernames = [user.username for user in pending_requests]
+    return JsonResponse(usernames, safe=False)
+
 #Helper Functions
 
 def is_image(file_path):
