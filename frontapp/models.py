@@ -40,7 +40,6 @@ class CustomUser(AbstractUser):
     def get_pending_friend_requests(self):
         
         pending_friendships = self.friendships_received.filter(accepted=False)
-        
 
         pending_friends = [friendship.from_user for friendship in pending_friendships]
         
