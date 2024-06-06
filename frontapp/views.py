@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from frontapp.models import CustomUser
+from frontapp.models import CustomUser, Friendship
 import jwt, requests, json
 from django.utils import timezone
 from django.conf import settings
@@ -419,14 +419,20 @@ def decline_friend_request(request, data):
     else:
         return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
     
-
 @login_required
 def get_pending_friend_requests(request, data):
     print("get_pending_friend_requests called")
     data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
     user = CustomUser.objects.get(username=data['intra_name'])
-    pending_requests = user.get_pending_friend_requests()
-    usernames = [user.username for user in pending_requests]
+    pending_requests = Friendship.objects.filter(to_user=user, accepted=False)
+
+    usernames = [friendship.from_user.username for friendship in pending_requests if not friendship.popup_shown]
+
+    for friendship in pending_requests:
+        if not friendship.popup_shown:
+            friendship.popup_shown = True
+            friendship.save()
+
     return JsonResponse(usernames, safe=False)
 
 #Helper Functions
