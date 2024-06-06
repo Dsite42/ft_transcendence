@@ -182,7 +182,7 @@ def auth(request: HttpRequest) -> HttpResponse:
             
 
         if user.two_factor_auth_enabled:
-            response = HttpResponseRedirect('/') # redirect to otp login page
+            response = HttpResponseRedirect('/')
             response.headers['Content-Type'] = 'text/html'
             session_token['2FA_Activated'] = True
             response.set_cookie('session', jwt.encode(session_token, settings.JWT_SECRET, algorithm='HS256'))

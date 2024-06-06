@@ -89,6 +89,9 @@
 <!-- Friendslist Button -->
 <button class="btn btn-primary position-fixed" style="bottom: 52px; left: -0.1%; z-index: 1029;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFriends" aria-controls="offcanvasFriends">
     Friends
+    {% if user.pending_friend_requests|length > 0 %}
+    <span class="badge bg-danger">{{ user.pending_friend_requests|length }}</span>
+    {% endif %}
 </button>
 {% endif %}
     <!-- Navigation Bar -->

@@ -189,23 +189,22 @@ function changeInfoSave() {
 }
 
 function addFriend(event) {
-    // Prevent the form from being submitted normally
-    event.preventDefault();
 
-    // Get the form data
+    event.preventDefault();
+   
     var formData = new FormData(event.target);
 
-    // Send the form data to the server
+    
     fetch('/send_friend_request/', {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRFToken': getCookie('csrftoken')  // Django requires the CSRF token to be included in the request header
+            'X-CSRFToken': getCookie('csrftoken')
         }
     })
     .then(response => response.json())
     .then(data => {
-        // Handle the response from the server
+
         if (data.success) {
             alert('Friend request sent successfully!');
         } else {
@@ -213,7 +212,6 @@ function addFriend(event) {
         }
     })
     .catch(error => {
-        // Handle any errors
         console.error('Error:', error);
         alert('An error occurred while sending the friend request.');
     });
