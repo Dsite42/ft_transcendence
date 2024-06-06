@@ -6,13 +6,10 @@ GAME_UPDATE_ALL = GameUpdateFlag.Empty
 for flag in GameUpdateFlag:
     GAME_UPDATE_ALL |= flag
 
-def build_game_update(game: GameState, flags: Optional[GameUpdateFlag] = None) -> Optional[bytes]:
+def build_game_update(game: GameState, flags: Optional[GameUpdateFlag] = None) -> bytes:
     # If no custom flags are provided, use the game state's update flags
     if flags == None:
         flags = game.update_flags
-    # Do not build a packet when there is no update
-    if flags == GameUpdateFlag.Empty:
-        return None
     # Build a packet with the values required by the update flags
     packet = bytearray(pack('<B', flags.value))
     if flags & GameUpdateFlag.Phase:
