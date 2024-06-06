@@ -26,6 +26,7 @@ class GameUpdateFlag(Flag):
     PaddleScoreB = 1 << 3
     PaddlePositionA = 1 << 4
     PaddlePositionB = 1 << 5
+    ForceBallPosition = 1 << 6
 
 @dataclass
 class GameState:
@@ -78,6 +79,7 @@ class GameState:
                             self.paddle_b.score += 1
                             self.update_flags |= GameUpdateFlag.PaddleScoreB
                     self.ball.reset(side)
+                    self.update_flags |= GameUpdateFlag.ForceBallPosition
                     if self.paddle_a.score > 10 or self.paddle_b.score > 10:
                         # A player has won, finish the game
                         self.phase = GamePhase.Finished
