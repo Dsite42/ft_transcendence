@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcendence Testpage</title>
     {% load static %}
     {% load custom_filters %}
+    {% load i18n %}
+    
+    <title>{% trans "Transcendence Testpage"%}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -35,15 +37,15 @@
 {% if user.is_authenticated %}
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFriends" aria-labelledby="offcanvasFriendsLabel">
     <div class="offcanvas-header">
-        <h5 id="offcanvasFriendsLabel">Friends</h5>
+        <h5 id="offcanvasFriendsLabel">{% trans "Friends" %}</h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
         <form id="addFriendForm" method="post" onsubmit="addFriend(event)" action="/send_friend_request/">
             {% csrf_token %}
             <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Enter friend's username" name="friend_username" required>
-                <button class="btn btn-primary" type="submit">Add Friend</button>
+                <input type="text" class="form-control" placeholder="{% trans 'Enter friend\'s intra-name' %}" name="friend_username" required>
+                <button class="btn btn-primary" type="submit">{% trans 'Add Friend' %}</button>
             </div>
         </form>
         <ul class="list-group">
@@ -53,9 +55,9 @@
                         {{ friend.username }}
                         <p class="mb-0"><small> <!-- Online Status -->
                             {% if friend.last_active|minutes_since|is_less_than_five %}
-                                Online
+                            {% trans 'Online' %} 
                             {% else %}
-                                Last online: {{ friend.last_active }}
+                            {% trans 'Last online:' %}  {{ friend.last_active }}
                             {% endif %}
                             </small></p>
                     </div>
@@ -66,15 +68,15 @@
                     </div>
                 </li>
             {% empty %}
-                <li class="list-group-item">No friends yet</li>    
+                <li class="list-group-item">{% trans 'No friends yet:' %}</li>    
             {% endfor %}
             <hr> <!-- Divider -->
             <br>
-            <h5>Pending Friend Requests</h5>
+            <h5>{% trans 'Pending Friend Requests' %}</h5>
             {% for friend in user.pending_friend_requests %}
             <li class="list-group-item d-flex align-items-center justify-content-between">
                 <div>
-                    {{ friend.username }} (Pending)
+                    {{ friend.username }} {% trans '(Pending)' %}
                 </div>
                 <div>
                     <button class="btn btn-primary btn-sm me-2" onclick="acceptFriendRequest('{{ user.intra_name }}', '{{ friend.username }}')">Add</button>
@@ -88,7 +90,7 @@
 </div>
 <!-- Friendslist Button -->
 <button class="btn btn-primary position-fixed" style="bottom: 52px; left: -0.1%; z-index: 1029;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFriends" aria-controls="offcanvasFriends">
-    Friends
+    {% trans 'Friends' %}
     {% if user.pending_friend_requests|length > 0 %}
     <span class="badge bg-danger">{{ user.pending_friend_requests|length }}</span>
     {% endif %}
@@ -108,11 +110,11 @@
                     </li>
                     {% if not user.is_authenticated %}
                     <li class="nav-item">
-                        <a href="#login" class="nav-link">Login</a>
+                        <a href="#login" class="nav-link"> {% trans 'Login' %}</a>
                     </li>
                     {% endif %}
                     <li class="nav-item">
-                        <a href="#tournament" class="nav-link">Tournaments</a>
+                        <a href="#tournament" class="nav-link">{% trans 'Tournaments' %}</a>
                     </li>
                     {% if user.is_authenticated %}
                     <li class="nav-item profile-icon">
@@ -131,14 +133,14 @@
 
     <!-- Welcome Section -->
     <div class="container mt-5 text-center">
-        <h1 class="mb-4">Welcome to the Pong Game!</h1>
+        <h1 class="mb-4">{% trans 'Welcome to the Pong Game!' %}</h1>
         <button id="startGame" class="btn btn-primary btn-lg">Start Game</button>
         <canvas id="gameCanvas" width="800" height="400" class="border mt-4"></canvas>
     </div>
 
     <!-- Footer -->
     <footer class="footer text-center mt-auto" style="z-index: 1030; position: relative;">
-        2024 Transcendence. All Rights Reserved.
+        {% trans '2024 Transcendence. All Rights Reserved.' %}
     </footer>
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
