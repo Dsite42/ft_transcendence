@@ -172,7 +172,6 @@ def auth(request: HttpRequest) -> HttpResponse:
     if intra_name:
         user, created = CustomUser.objects.get_or_create(username=intra_name)
         if created or not user.display_name or not user.avatar or not user.stats:
-            print(user_info)
             initialize_user(user, user_info)
             existing_user = CustomUser.objects.filter(display_name=intra_name).first()
             if existing_user:
@@ -259,8 +258,7 @@ def verify_otp(request, data):
     
     user = CustomUser.objects.get(username=intra_name)
     device = user.totpdevice_set.first()
-    print(otp)
-    print(user)
+
     if device is None:
         return HttpResponse('No TOTPDevice associated with this user')
     if device.verify_token(otp):
@@ -323,8 +321,6 @@ def login_with_otp(request):
 
 @login_required
 def change_info(request: HttpRequest, data) -> JsonResponse:
-    print("change_info called")
-    print(request.POST)
     avatar_file = None
     display_name = None
     avatar_url = None
@@ -421,7 +417,6 @@ def decline_friend_request(request, data):
     
 @login_required
 def get_pending_friend_requests(request, data):
-    print("get_pending_friend_requests called")
     data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
     user = CustomUser.objects.get(username=data['intra_name'])
     pending_requests = Friendship.objects.filter(to_user=user, accepted=False)
