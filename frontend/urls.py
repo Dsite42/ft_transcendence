@@ -23,6 +23,7 @@ from frontapp.views import learn_view, root_view, profile_view, auth, get_user_i
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
+from django.views.i18n import JavaScriptCatalog
 from django.contrib import admin
 
 # urlpatterns = [
@@ -54,6 +55,7 @@ urlpatterns = [
     path('send_friend_request/', views.send_friend_request, name='send_friend_request'),
     path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
+    path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
 ]
 
 urlpatterns += i18n_patterns(

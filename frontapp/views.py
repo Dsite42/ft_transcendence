@@ -17,6 +17,7 @@ import os
 from django.contrib import messages
 from typing import Callable
 from PIL import Image
+from django.utils.translation import gettext as _
 
 class APIError(Exception):
     pass
@@ -25,19 +26,19 @@ class APIError(Exception):
 def json_request(callable: Callable[[HttpRequest, dict], dict]):
     def wrapper(request: HttpRequest) -> JsonResponse:
         if request.method != 'POST':
-            return JsonResponse({'success': False, 'reason': 'Method not allowed'}, status=405)
+            return JsonResponse({'success': False, 'reason': _('Method not allowed')}, status=405)
         if not request.headers.get('Content-Type') == 'application/json':
-            return JsonResponse({'success': False, 'reason': 'Invalid content type'}, status=415)
+            return JsonResponse({'success': False, 'reason': _('Invalid content type')}, status=415)
         try:
             data = json.loads(request.body.decode('utf-8'))
         except:
-            return JsonResponse({'success': False, 'reason': 'Malformed JSON'}, status=400)
+            return JsonResponse({'success': False, 'reason': _('Malformed JSON')}, status=400)
         try:
             data = callable(request, data)
         except APIError as error:
             return JsonResponse({'success': False, 'reason': str(error)}, status=400)
         except:
-            return JsonResponse({'success': False, 'reason': 'Internal server error'}, status=500)
+            return JsonResponse({'success': False, 'reason': _('Internal server error')}, status=500)
         return JsonResponse({'success': True, 'data': data})
     return wrapper
 
@@ -192,7 +193,7 @@ def auth(request: HttpRequest) -> HttpResponse:
             response.set_cookie('session', jwt.encode(session_token, settings.JWT_SECRET, algorithm='HS256'))
             return response
     else:
-        return HttpResponse({'error': 'Username is not provided'}, status=400)
+        return HttpResponse({'error': _('Username is not provided')}, status=400)
 
 @login_required
 def get_user_info(request: HttpRequest, data: dict) -> HttpResponse:
@@ -245,7 +246,7 @@ def enable_otp(request, data):
             image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
             return JsonResponse({'uri': uri, 'qr_code': image_base64})
     else:
-        return JsonResponse({'error': 'Username is not provided'}, status=400)
+        return JsonResponse({'error': _('Username is not provided')}, status=400)
       
 @login_required
 def verify_otp(request, data):
@@ -334,28 +335,28 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
         user = CustomUser.objects.get(username=data['intra_name'])
         if display_name:
             if CustomUser.objects.filter(display_name=display_name).exists() and user.display_name != display_name:
-                return JsonResponse({'success': False, 'reason': 'Display name is already in use.'})
+                return JsonResponse({'success': False, 'reason': _('Display name is already in use.')})
             existing_user = CustomUser.objects.filter(username=display_name).exclude(username=user.username).first()
             if existing_user:
-                return JsonResponse({'success': False, 'reason': 'Display name is someones intra name.'})
+                return JsonResponse({'success': False, 'reason': _('Display name is someones intra name.')})
             user.display_name = display_name
             
         if avatar_file:
             # Save the uploaded file and get its URL
             if not is_image(avatar_file):
-                return JsonResponse({'success': False, 'reason': 'File is not an image.'})
+                return JsonResponse({'success': False, 'reason': _('File is not an image.')})
             file_name = default_storage.save(os.path.join('avatars', user.username, avatar_file.name), avatar_file)
             avatar_url = os.path.join(settings.MEDIA_URL, file_name)
             user.avatar = avatar_url
         elif avatar_url:
             if not is_image_url(avatar_url):
-                return JsonResponse({'success': False, 'reason': 'File is not an image.'})
+                return JsonResponse({'success': False, 'reason': _('File is not an image.')})
             user.avatar = avatar_url
         
         user.save()
         return JsonResponse({'success': True})
     else:
-        return JsonResponse({'success': False, 'reason': 'Method not allowed'}, status=405)
+        return JsonResponse({'success': False, 'reason': _('Method not allowed')}, status=405)
     
 
 #Friendship Functions
@@ -369,14 +370,14 @@ def send_friend_request(request, data):
         try:
             friend_user = CustomUser.objects.get(username=friend_username)
         except CustomUser.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'User does not exist'})
+            return JsonResponse({'success': False, 'error': _('User does not exist')})
         success = user.add_friend_request(friend_user)
         if success:
             return JsonResponse({'success': True})
         else:
-            return JsonResponse({'success': False, 'error': 'Could not add friend'})
+            return JsonResponse({'success': False, 'error': _('Could not add friend')})
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+        return JsonResponse({'success': False, 'error': _('Invalid request method')})
     
 @login_required
 def accept_friend_request(request, data):
@@ -389,9 +390,9 @@ def accept_friend_request(request, data):
         if success:
             return JsonResponse({'status': 'success'})
         else:
-            return JsonResponse({'status': 'error', 'error': 'Could not accept friend request'})
+            return JsonResponse({'status': 'error', 'error': _('Could not accept friend request')})
     else:
-        return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
+        return JsonResponse({'status': 'error', 'error': _('Invalid request method')})
     
 #Also used for removing friends
 @login_required
@@ -404,16 +405,16 @@ def decline_friend_request(request, data):
             user = CustomUser.objects.get(username=user_intra_name)
             friend = CustomUser.objects.get(username=friend_username)
         except CustomUser.DoesNotExist:
-            return JsonResponse({'status': 'error', 'error': 'User does not exist'})
+            return JsonResponse({'status': 'error', 'error': _('User does not exist')})
         success = user.remove_friend(friend)
         if remove == 'true' and not success:
             success = friend.remove_friend(user)
         if success:
             return JsonResponse({'status': 'success'})
         else:
-            return JsonResponse({'status': 'error', 'error': 'Could not decline friend request'})
+            return JsonResponse({'status': 'error', 'error': _('Could not decline friend request')})
     else:
-        return JsonResponse({'status': 'error', 'error': 'Invalid request method'})
+        return JsonResponse({'status': 'error', 'error': _('Invalid request method')})
     
 @login_required
 def get_pending_friend_requests(request, data):

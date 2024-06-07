@@ -187,9 +187,9 @@ function changeInfoSave() {
     .then(response => response.json())
     .then(response => {
         if (response.success) {
-            alert('Info changed successfully, refresh site for avatar changes to take effect!');
+            alert(gettext('Info changed successfully, refresh site for avatar changes to take effect!'));
         } else {
-            alert('Error changing info! : ' +response.reason);
+            alert(gettext('Error changing info! : ') +response.reason);
         }
     });
 }
@@ -212,14 +212,14 @@ function addFriend(event) {
     .then(data => {
 
         if (data.success) {
-            alert('Friend request sent successfully!');
+            alert(gettext('Friend request sent successfully!'));
         } else {
-            alert('Error sending friend request: ' + data.error);
+            alert(gettext('Error sending friend request: ') + data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while sending the friend request.');
+        alert(gettext('An error occurred while sending the friend request.'));
     });
 }
 
@@ -235,7 +235,7 @@ function acceptFriendRequest(userIntraName, friendUsername) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('Friend request accepted successfully!');
+            alert(gettext('Friend request accepted successfully!'));
             window.location.reload();
         }
     });
@@ -253,7 +253,7 @@ function declineFriendRequest(userIntraName, friendUsername) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('Friend request declined successfully!');
+            alert(gettext('Friend request declined successfully!'));
             window.location.reload();
         }
     });
@@ -271,7 +271,7 @@ function removeFriend(userIntraName, friendUsername) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('Friend removed successfully!');
+            alert(gettext('Friend removed successfully!'));
             window.location.reload();
         }
     });
@@ -288,7 +288,7 @@ function checkPendingFriendRequests() {
     .then(response => response.json())
     .then(data => {
         if (data.length > 0) {
-            alert('You have a pending friend requests, refresh the site in order to see it!');
+            alert(gettext('You have a pending friend requests, refresh the site in order to see it!'));
         }
     });
 }
