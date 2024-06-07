@@ -119,9 +119,6 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a href="#learn" class="nav-link">What You'll Learn</a>
-                    </li>
                     {% if not user.is_authenticated %}
                     <li class="nav-item">
                         <a href="#login" class="nav-link"> {% trans 'Login' %}</a>
