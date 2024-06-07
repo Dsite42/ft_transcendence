@@ -155,8 +155,8 @@ class BallState:
         if side != 0 and side != 1:
             side = randint(0, 1)
         match side:
-            case 0: angle = pi
-            case 1: angle = 0
+            case 0: angle = 0
+            case 1: angle = pi
         # Slightly randomize the angle and calculate the velocity
         offset = random() * 1.5 - 0.75
         if offset < 0.0 and offset > -BallState.RANDOM_OFFSET_MIN:
@@ -172,9 +172,9 @@ class BallState:
     def check_goal(self) -> Optional[int]:
         # If a goal line was passed, return the scoring side's index
         if self.position_x < -WORLD_X_EDGE - 8.0:
-            return 0
-        if self.position_x > WORLD_X_EDGE + 8.0:
             return 1
+        if self.position_x > WORLD_X_EDGE + 8.0:
+            return 0
         return None
 
     def handle_spin(self, paddle: 'PaddleState') -> None:

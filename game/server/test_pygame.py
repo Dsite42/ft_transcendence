@@ -115,8 +115,8 @@ class PygameRunner:
         )
         # Draw scores if in intermission or finished phase
         if self.game_state.phase == GamePhase.Intermission or self.game_state.phase == GamePhase.Finished:
-            self.draw_number(self.game_state.paddle_a.score, WORLD_X_EDGE - 8.0, -3.75, 1.5, True)
-            self.draw_number(self.game_state.paddle_b.score, -WORLD_X_EDGE + 8.0, -3.75, 1.5, False)
+            self.draw_number(self.game_state.paddle_a.score, -WORLD_X_EDGE + 8.0, -3.75, 1.5, False)
+            self.draw_number(self.game_state.paddle_b.score, WORLD_X_EDGE - 8.0, -3.75, 1.5, True)
         # Draw debug text
         self.surface.set_clip()
         if self.game_state.phase == GamePhase.Waiting or self.game_state.phase == GamePhase.Intermission:
