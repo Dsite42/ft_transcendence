@@ -18,6 +18,8 @@ from django.contrib import messages
 from typing import Callable
 from PIL import Image
 
+from .rpc_client import get_matchmaker_service
+
 class APIError(Exception):
     pass
 
@@ -445,3 +447,14 @@ def is_image_url(url):
         return response.headers['Content-Type'].startswith('image/')
     except:
         return False
+    
+
+#RPC Functions
+def create_game_view(request):
+    player1_id = request.GET.get('player1_id', 'Player1')
+    player2_id = request.GET.get('player2_id', 'Player2')
+    # RPC-Funktion aufrufen
+    matchmaker_service, connection = get_matchmaker_service()
+    response = matchmaker_service.create_single_game('dnebatz', 'dnebatz')
+    connection.close()
+    return JsonResponse(response)
