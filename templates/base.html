@@ -33,20 +33,6 @@
     </style>
 </head>
 <body>
-<!-- Language Selector -->
-<form action="{% url 'set_language' %}" method="post">
-    {% csrf_token %}
-    <select name="language">
-        {% get_current_language as LANGUAGE_CODE %}
-        {% get_available_languages as LANGUAGES %}
-        {% for lang in LANGUAGES %}
-            <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
-                {{ lang.1 }} ({{ lang.0 }})
-            </option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="{% trans 'Change language' %}">
-</form>
 <!-- Friend List -->
 {% if user.is_authenticated %}
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFriends" aria-labelledby="offcanvasFriendsLabel">
@@ -58,7 +44,7 @@
         <form id="addFriendForm" method="post" onsubmit="addFriend(event)" action="/send_friend_request/">
             {% csrf_token %}
             <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="{% trans 'Enter friend\'s intra-name' %}" name="friend_username" required>
+                <input type="text" class="form-control" placeholder="{% trans 'Enter friends intra-name' %}" name="friend_username" required>
                 <button class="btn btn-primary" type="submit">{% trans 'Add Friend' %}</button>
             </div>
         </form>
@@ -137,7 +123,20 @@
             </div>
         </div>
     </nav>
-
+    <!-- Language Selector -->
+    <form action="{% url 'set_language' %}" method="post">
+    {% csrf_token %}
+    <select name="language">
+        {% get_current_language as LANGUAGE_CODE %}
+        {% get_available_languages as LANGUAGES %}
+        {% for lang in LANGUAGES %}
+            <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                {{ lang.1 }} ({{ lang.0 }})
+            </option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="{% trans 'Change language' %}">
+</form>
     <!-- Main Content -->
     <div id="main-content" class="container mt-5">
     </div>

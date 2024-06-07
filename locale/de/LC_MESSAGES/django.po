@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-07 10:23+0200\n"
+"POT-Creation-Date: 2024-06-07 14:26+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,79 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: frontapp/views.py:29 frontapp/views.py:359
+msgid "Method not allowed"
+msgstr "Methode nicht erlaubt"
+
+#: frontapp/views.py:31
+msgid "Invalid content type"
+msgstr "Ungültiger Inhaltstyp"
+
+#: frontapp/views.py:35
+msgid "Malformed JSON"
+msgstr "Fehlerhaftes JSON"
+
+#: frontapp/views.py:41
+msgid "Internal server error"
+msgstr "Interner Serverfehler"
+
+#: frontapp/views.py:196 frontapp/views.py:249
+msgid "Username is not provided"
+msgstr "Benutzername nicht angegeben"
+
+#: frontapp/views.py:264
+msgid "No TOTP Device associated with this user"
+msgstr "Kein TOTP Device mit diesem Nutzer verbunden"
+
+#: frontapp/views.py:269 frontapp/views.py:313
+msgid "OTP is valid"
+msgstr "OTP ist gültig"
+
+#: frontapp/views.py:272 frontapp/views.py:319
+msgid "OTP is invalid"
+msgstr "OTP ist ungültig"
+
+#: frontapp/views.py:284
+msgid "All OTP devices have been removed."
+msgstr "Alle OTP-Geräte wurden entfernt."
+
+#: frontapp/views.py:286
+msgid "User {} does not exist."
+msgstr "Benutzer {} existiert nicht."
+
+#: frontapp/views.py:338
+msgid "Display name is already in use."
+msgstr "Anzeigename ist bereits vergeben."
+
+#: frontapp/views.py:341
+msgid "Display name is someones intra name."
+msgstr "Anzeigename ist jemandes Intraname."
+
+#: frontapp/views.py:347 frontapp/views.py:353
+msgid "File is not an image."
+msgstr "Datei ist kein Bild."
+
+#: frontapp/views.py:373 frontapp/views.py:408
+msgid "User does not exist"
+msgstr "Benutzer existiert nicht"
+
+#: frontapp/views.py:378
+msgid "Could not add friend"
+msgstr "Konnte Freund nicht hinzufügen"
+
+#: frontapp/views.py:380 frontapp/views.py:395 frontapp/views.py:417
+msgid "Invalid request method"
+msgstr "Ungültige Anfragemethode"
+
+#: frontapp/views.py:393
+msgid "Could not accept friend request"
+msgstr "Konnte Freundschaftsanfrage nicht annehmen"
+
+#: frontapp/views.py:415
+msgid "Could not decline friend request"
+msgstr "Konnte Freundschaftsanfrage nicht ablehnen"
+
 #: templates/base.html:10
 msgid "Transcendence Testpage"
 msgstr "Transcendence Testseite"
@@ -26,8 +99,8 @@ msgid "Friends"
 msgstr "Freunde"
 
 #: templates/base.html:47
-msgid "Enter friend\\"
-msgstr "Freund hinzufügen\\"
+msgid "Enter friends intra-name"
+msgstr "Intraname des Freundes"
 
 #: templates/base.html:48
 msgid "Add Friend"
@@ -53,27 +126,31 @@ msgstr "Ausstehende Freundschaftsanfragen"
 msgid "(Pending)"
 msgstr "(Ausstehend)"
 
-#: templates/base.html:113 templates/login.html:12
+#: templates/base.html:110 templates/login.html:12
 msgid "Login"
 msgstr "Anmelden"
 
-#: templates/base.html:117 templates/tournament.html:4
+#: templates/base.html:114 templates/tournament.html:4
 msgid "Tournaments"
 msgstr "Turniere"
 
-#: templates/base.html:136
+#: templates/base.html:138
+msgid "Change language"
+msgstr "Sprache ändern"
+
+#: templates/base.html:146
 msgid "Welcome to the Pong Game!"
 msgstr "Willkommen beim Pong-Spiel!"
 
-#: templates/base.html:137
+#: templates/base.html:147
 msgid "Start Game"
 msgstr "Spiel starten"
 
-#: templates/base.html:143
+#: templates/base.html:153
 msgid "2024 Transcendence. All Rights Reserved."
 msgstr "2024 Transcendence. Alle Rechte vorbehalten."
 
-#: templates/base.html:150
+#: templates/base.html:160
 msgid "Game will start soon!"
 msgstr "Das Spiel beginnt bald!"
 
@@ -99,7 +176,8 @@ msgstr "Neue Avatar-URL eingeben"
 
 #: templates/change_info_site.html:18
 msgid "You can either upload a new avatar or provide a URL."
-msgstr "Sie können entweder einen neuen Avatar hochladen oder eine URL angeben."
+msgstr ""
+"Sie können entweder einen neuen Avatar hochladen oder eine URL angeben."
 
 #: templates/change_info_site.html:21
 msgid "Save Changes"
@@ -112,11 +190,11 @@ msgid ""
 "a code it will regenerate your current code for you, if you want to remove "
 "it use the remove Remove current OTP-Device link in the profile section."
 msgstr ""
-"Diese Seite generiert einen OTP-QR-Code, den Sie mit Ihrer "
-"Authentifikator-App scannen können. Sie können jeweils nur einen Code "
-"haben, wenn Sie bereits einen Code haben, wird dieser neu generiert. Wenn "
-"Sie ihn entfernen möchten, verwenden Sie den Link 'Aktuelles OTP-Gerät "
-"entfernen' im Profilbereich."
+"Diese Seite generiert einen OTP-QR-Code, den Sie mit Ihrer Authentifikator-"
+"App scannen können. Sie können jeweils nur einen Code haben, wenn Sie "
+"bereits einen Code haben, wird dieser neu generiert. Wenn Sie ihn entfernen "
+"möchten, verwenden Sie den Link 'Aktuelles OTP-Gerät entfernen' im "
+"Profilbereich."
 
 #: templates/enable_otp.html:8
 msgid ""

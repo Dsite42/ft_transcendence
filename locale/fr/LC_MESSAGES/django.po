@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-07 10:25+0200\n"
+"POT-Creation-Date: 2024-06-07 14:26+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,80 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: frontapp/views.py:29 frontapp/views.py:359
+msgid "Method not allowed"
+msgstr "Méthode non autorisée"
+
+#: frontapp/views.py:31
+msgid "Invalid content type"
+msgstr "Type de contenu invalide"
+
+#: frontapp/views.py:35
+msgid "Malformed JSON"
+msgstr "JSON malformé"
+
+#: frontapp/views.py:41
+msgid "Internal server error"
+msgstr "Erreur interne du serveur"
+
+#: frontapp/views.py:196 frontapp/views.py:249
+msgid "Username is not provided"
+msgstr "Nom d'utilisateur non fourni"
+
+#: frontapp/views.py:264
+msgid "No TOTP Device associated with this user"
+msgstr "Aucun TOTP Device associé à cet utilisateur"
+
+
+#: frontapp/views.py:269 frontapp/views.py:313
+msgid "OTP is valid"
+msgstr "L'OTP est valide."
+
+#: frontapp/views.py:272 frontapp/views.py:319
+msgid "OTP is invalid"
+msgstr "L'OTP est invalide."
+
+#: frontapp/views.py:284
+msgid "All OTP devices have been removed."
+msgstr "Tous les appareils OTP ont été supprimés."
+
+#: frontapp/views.py:286
+msgid "User {} does not exist."
+msgstr "L'utilisateur {} n'existe pas."
+
+#: frontapp/views.py:338
+msgid "Display name is already in use."
+msgstr "Le nom d'affichage est déjà utilisé."
+
+#: frontapp/views.py:341
+msgid "Display name is someones intra name."
+msgstr "Le nom d'affichage est le nom intra de quelqu'un."
+
+#: frontapp/views.py:347 frontapp/views.py:353
+msgid "File is not an image."
+msgstr "Le fichier n'est pas une image."
+
+#: frontapp/views.py:373 frontapp/views.py:408
+msgid "User does not exist"
+msgstr "L'utilisateur n'existe pas."
+
+#: frontapp/views.py:378
+msgid "Could not add friend"
+msgstr "Impossible d'ajouter un ami."
+
+#: frontapp/views.py:380 frontapp/views.py:395 frontapp/views.py:417
+msgid "Invalid request method"
+msgstr "Méthode de requête invalide."
+
+#: frontapp/views.py:393
+msgid "Could not accept friend request"
+msgstr "Impossible d'accepter la demande d'ami."
+
+#: frontapp/views.py:415
+msgid "Could not decline friend request"
+msgstr "Impossible de refuser la demande d'ami."
+
 #: templates/base.html:10
 msgid "Transcendence Testpage"
 msgstr "Page de test Transcendence"
@@ -26,8 +100,8 @@ msgid "Friends"
 msgstr "Amis"
 
 #: templates/base.html:47
-msgid "Enter friend\\"
-msgstr "Ajouter un ami\\"
+msgid "Enter friends intra-name"
+msgstr "Entrez le nom intra de l'ami"
 
 #: templates/base.html:48
 msgid "Add Friend"
@@ -53,27 +127,31 @@ msgstr "Demandes d'amis en attente"
 msgid "(Pending)"
 msgstr "(En attente)"
 
-#: templates/base.html:113 templates/login.html:12
+#: templates/base.html:110 templates/login.html:12
 msgid "Login"
 msgstr "Connexion"
 
-#: templates/base.html:117 templates/tournament.html:4
+#: templates/base.html:114 templates/tournament.html:4
 msgid "Tournaments"
 msgstr "Tournois"
 
-#: templates/base.html:136
+#: templates/base.html:138
+msgid "Change language"
+msgstr "Changer de langue"
+
+#: templates/base.html:146
 msgid "Welcome to the Pong Game!"
 msgstr "Bienvenue dans le jeu Pong !"
 
-#: templates/base.html:137
+#: templates/base.html:147
 msgid "Start Game"
 msgstr "Démarrer le jeu"
 
-#: templates/base.html:143
+#: templates/base.html:153
 msgid "2024 Transcendence. All Rights Reserved."
 msgstr "2024 Transcendence. Tous droits réservés."
 
-#: templates/base.html:150
+#: templates/base.html:160
 msgid "Game will start soon!"
 msgstr "Le jeu commencera bientôt !"
 
@@ -149,7 +227,8 @@ msgstr "Vos données sont en sécurité avec nous !"
 
 #: templates/otp_login.html:4
 msgid "Please enter your OTP from your authenticator app:"
-msgstr "Veuillez entrer votre OTP depuis votre application d'authentification :"
+msgstr ""
+"Veuillez entrer votre OTP depuis votre application d'authentification :"
 
 #: templates/profile.html:4
 msgid "Logout"

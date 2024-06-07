@@ -261,15 +261,15 @@ def verify_otp(request, data):
     device = user.totpdevice_set.first()
 
     if device is None:
-        return HttpResponse('No TOTPDevice associated with this user')
+        return HttpResponse(_('No TOTP Device associated with this user'))
     if device.verify_token(otp):
         # OTP is valid
         user.two_factor_auth_enabled = True
         user.save()
-        return HttpResponse('OTP is valid')
+        return HttpResponse(_('OTP is valid'))
     else:
         # OTP is invalid
-        return HttpResponse('OTP is invalid')
+        return HttpResponse(_('OTP is invalid'))
     
 @login_required
 def remove_all_otp_devices(request, data):
@@ -281,9 +281,9 @@ def remove_all_otp_devices(request, data):
             TOTPDevice.objects.filter(user=user).delete()
             user.two_factor_auth_enabled = False
             user.save()
-            return HttpResponse({"All OTP devices have been removed.".format(intra_name)})
+            return HttpResponse({_("All OTP devices have been removed.").format(intra_name)})
         except CustomUser.DoesNotExist:
-            return HttpResponse({'error': "User {} does not exist.".format(intra_name)}, status=400)
+            return HttpResponse({'error': _("User {} does not exist.").format(intra_name)}, status=400)
         
 @csrf_exempt
 def login_with_otp(request):
@@ -310,13 +310,13 @@ def login_with_otp(request):
         return HttpResponse('No TOTPDevice associated with this user')
     if device.verify_token(otp):
         # OTP is valid
-        response = HttpResponse('OTP is valid')
+        response = HttpResponse(_('OTP is valid'))
         session['2FA_Passed'] = True
         response.set_cookie('session', jwt.encode(session, settings.JWT_SECRET, algorithm='HS256'))
         return response
     else: 
         # OTP is invalid
-        return HttpResponse('OTP is invalid')
+        return HttpResponse(_('OTP is invalid'))
     
 #Profile Editing Functions
 

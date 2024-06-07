@@ -26,24 +26,6 @@ from django.conf.urls.i18n import i18n_patterns
 from django.views.i18n import JavaScriptCatalog
 from django.contrib import admin
 
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-#     path('accounts/', include('allauth.urls')),
-#     path('accounts/', include('allauth.socialaccount.urls')),
-#     path('', views.home, name='home'),
-#     path('i18n/', include('django.conf.urls.i18n')),
-#     path('play_pong/', views.play_pong, name='play_pong'),
-#     path('learn.html', learn_view, name='learn'),
-#     path('auth', auth),
-#     path('get_user_info', get_user_info),
-#     path('remove_all_otp_devices.html', views.remove_all_otp_devices, name='remove_otp'),
-#     path('verify_otp/', views.verify_otp, name='verify_otp'),
-#     path('send_friend_request/', views.send_friend_request, name='send_friend_request'),
-#     path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
-#     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
-#     path('get_pending_friend_requests/', views.get_pending_friend_requests, name='get_pending_friend_requests'),
-# ]
-
 urlpatterns = [
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
     path('change_info/', views.change_info, name='change_info'),
