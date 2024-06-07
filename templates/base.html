@@ -134,7 +134,7 @@
     <!-- Welcome Section -->
     <div class="container mt-5 text-center">
         <h1 class="mb-4">{% trans 'Welcome to the Pong Game!' %}</h1>
-        <button id="startGame" class="btn btn-primary btn-lg">Start Game</button>
+        <button id="startGame" class="btn btn-primary btn-lg">{% trans 'Start Game' %}</button>
         <canvas id="gameCanvas" width="800" height="400" class="border mt-4"></canvas>
     </div>
 
@@ -147,7 +147,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         document.getElementById('startGame').addEventListener('click', function() {
-            alert('Game will start soon!');
+            alert("{% trans 'Game will start soon!' %}");
         });
     </script>
     <script src="{% static 'js/spa.js' %}"></script>

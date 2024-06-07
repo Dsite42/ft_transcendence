@@ -1,0 +1,172 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-07 10:25+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: templates/base.html:10
+msgid "Transcendence Testpage"
+msgstr "Page de test Transcendence"
+
+#: templates/base.html:40 templates/base.html:93
+msgid "Friends"
+msgstr "Amis"
+
+#: templates/base.html:47
+msgid "Enter friend\\"
+msgstr "Ajouter un ami\\"
+
+#: templates/base.html:48
+msgid "Add Friend"
+msgstr "Ajouter un ami"
+
+#: templates/base.html:58
+msgid "Online"
+msgstr "En ligne"
+
+#: templates/base.html:60
+msgid "Last online:"
+msgstr "Dernière connexion :"
+
+#: templates/base.html:71
+msgid "No friends yet:"
+msgstr "Pas encore d'amis :"
+
+#: templates/base.html:75
+msgid "Pending Friend Requests"
+msgstr "Demandes d'amis en attente"
+
+#: templates/base.html:79
+msgid "(Pending)"
+msgstr "(En attente)"
+
+#: templates/base.html:113 templates/login.html:12
+msgid "Login"
+msgstr "Connexion"
+
+#: templates/base.html:117 templates/tournament.html:4
+msgid "Tournaments"
+msgstr "Tournois"
+
+#: templates/base.html:136
+msgid "Welcome to the Pong Game!"
+msgstr "Bienvenue dans le jeu Pong !"
+
+#: templates/base.html:137
+msgid "Start Game"
+msgstr "Démarrer le jeu"
+
+#: templates/base.html:143
+msgid "2024 Transcendence. All Rights Reserved."
+msgstr "2024 Transcendence. Tous droits réservés."
+
+#: templates/base.html:150
+msgid "Game will start soon!"
+msgstr "Le jeu commencera bientôt !"
+
+#: templates/change_info_site.html:4
+msgid "Profile Settings"
+msgstr "Paramètres du profil"
+
+#: templates/change_info_site.html:8
+msgid "Display Name"
+msgstr "Nom d'affichage"
+
+#: templates/change_info_site.html:12
+msgid "Avatar"
+msgstr "Avatar"
+
+#: templates/change_info_site.html:14
+msgid "Current Avatar"
+msgstr "Avatar actuel"
+
+#: templates/change_info_site.html:16
+msgid "Enter new avatar URL"
+msgstr "Entrez la nouvelle URL de l'avatar"
+
+#: templates/change_info_site.html:18
+msgid "You can either upload a new avatar or provide a URL."
+msgstr "Vous pouvez soit télécharger un nouvel avatar, soit fournir une URL."
+
+#: templates/change_info_site.html:21
+msgid "Save Changes"
+msgstr "Enregistrer les modifications"
+
+#: templates/enable_otp.html:5
+msgid ""
+"This site will generate an OTP QR-Code for you to scan with your "
+"authenticator app. You can only have one code at a time, if you already have "
+"a code it will regenerate your current code for you, if you want to remove "
+"it use the remove Remove current OTP-Device link in the profile section."
+msgstr ""
+"Ce site générera un QR-Code OTP que vous pourrez scanner avec votre "
+"application d'authentification. Vous ne pouvez avoir qu'un seul code à la "
+"fois, si vous avez déjà un code, il régénérera votre code actuel. Si vous "
+"voulez le supprimer, utilisez le lien 'Supprimer le dispositif OTP actuel' "
+"dans la section profil."
+
+#: templates/enable_otp.html:8
+msgid ""
+"After generation you have to verify the code by entering the OTP from your "
+"authenticator app. Otherwise OTP will not be activated for your account."
+msgstr ""
+"Après la génération, vous devez vérifier le code en entrant l'OTP de votre "
+"application d'authentification. Sinon, l'OTP ne sera pas activé pour votre "
+"compte."
+
+#: templates/enable_otp.html:10
+msgid "Generate OTP"
+msgstr "Générer OTP"
+
+#: templates/enable_otp.html:13 templates/otp_login.html:6
+msgid "Verify OTP"
+msgstr "Vérifier OTP"
+
+#: templates/enable_otp.html:14 templates/otp_login.html:7
+msgid "Enter OTP"
+msgstr "Entrer OTP"
+
+#: templates/login.html:9
+msgid "you wanna login using the 42 api?"
+msgstr "Vous voulez vous connecter en utilisant l'API 42 ?"
+
+#: templates/login.html:10
+msgid "your data is safe with us!"
+msgstr "Vos données sont en sécurité avec nous !"
+
+#: templates/otp_login.html:4
+msgid "Please enter your OTP from your authenticator app:"
+msgstr "Veuillez entrer votre OTP depuis votre application d'authentification :"
+
+#: templates/profile.html:4
+msgid "Logout"
+msgstr "Déconnexion"
+
+#: templates/profile.html:6
+msgid "Enable OTP with QR-Code"
+msgstr "Activer OTP avec QR-Code"
+
+#: templates/profile.html:8
+msgid "Remove current OTP-Device"
+msgstr "Supprimer le dispositif OTP actuel"
+
+#: templates/profile.html:10
+msgid "Change Profile Info"
+msgstr "Modifier les informations du profil"
+
+#: templates/tournament.html:5
+msgid "Join our exciting tournaments!"
+msgstr "Rejoignez nos tournois passionnants !"
