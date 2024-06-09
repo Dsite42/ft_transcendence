@@ -31,7 +31,10 @@ const Game = (() => {
                 if (mContext === null || mContext === undefined)
                     throw errorWithMessage('Unable to get 2D drawing context');
 
-                // Reset interpolation state
+                // Reset input and interpolation state
+                mInputState = 0;
+                mLastInputState = 0;
+                mReadyCallback = null;
                 mLastUpdateTime = null;
                 mNextUpdateTime = null;
                 mAverageUpdateDelta = null;
@@ -60,8 +63,25 @@ const Game = (() => {
                 mSocket.onmessage = onSocketMessage;
                 mSocket.onclose = onSocketClose;
 
-                // TODO: The animation loop is started when interpolation is ready,
-                //       create a timeout to handle the case where the server does not send any updates
+                // Wait for the ready callback
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        mSocket.onmessage = null;
+                        mSocket.onclose = null;
+                        mSocket.close();
+                        reject(errorWithMessage('Server is not responding'));
+                    }, 1000);
+
+                    mReadyCallback = () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    };
+                });
+
+                // Bind events and start animating
+                addEventListener('keyup', onKeyUp);
+                addEventListener('keydown', onKeyDown);
+                requestAnimationFrame(onAnimationFrame);
             } catch (error) {
                 if (error instanceof Error && error.withMessage === true)
                     game.onError && game.onError(error.message);
@@ -91,7 +111,6 @@ const Game = (() => {
     ];
 
     // Resources for drawing and networking
-    let mStatus = kStatus_None;
     let mCanvas;
     let mContext;
     let mSocket;
@@ -100,6 +119,7 @@ const Game = (() => {
     let mStatus = kStatus_None;
     let mInputState;
     let mLastInputState;
+    let mReadyCallback;
 
     // World-to-screen transformation parameters
     let mViewClip;
@@ -318,8 +338,12 @@ const Game = (() => {
                 mAverageUpdateDelta = (mAverageUpdateDelta + updateDelta) / 2.0;
             else {
                 mAverageUpdateDelta = updateDelta;
-                // If the average update delta is ready, start animating
-                requestAnimationFrame(onAnimationFrame);
+                // The game state is synchronized and can now be interpolated,
+                // signal the ready callback
+                if (mReadyCallback !== null) {
+                    mReadyCallback();
+                    mReadyCallback = null;
+                }
             }
         }
 
