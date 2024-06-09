@@ -96,6 +96,11 @@ const Game = (() => {
     let mContext;
     let mSocket;
 
+    // Client state
+    let mStatus = kStatus_None;
+    let mInputState;
+    let mLastInputState;
+
     // World-to-screen transformation parameters
     let mViewClip;
     let mViewWidth;
@@ -251,6 +256,19 @@ const Game = (() => {
             requestAnimationFrame(onAnimationFrame);
     }
 
+    function onKey(event, isDown) {
+        // If the key is mapped to a button, update the input state
+        const mask = kButtonMap[event.key];
+        if (mask === undefined)
+            return;
+        if (isDown)
+            mInputState |= mask;
+        else
+            mInputState &= ~mask;
+    }
+    const onKeyUp = event => onKey(event, false);
+    const onKeyDown = event => onKey(event, true);
+
     function onSocketMessage(event) {
         const view = new DataView(event.data);
         const flags = view.getUint8(0);
@@ -303,6 +321,12 @@ const Game = (() => {
                 // If the average update delta is ready, start animating
                 requestAnimationFrame(onAnimationFrame);
             }
+        }
+
+        // If the input state changed since the last message, send an update
+        if (mInputState !== mLastInputState) {
+            mSocket.send(new Uint8Array([mInputState]));
+            mLastInputState = mInputState;
         }
     }
 
