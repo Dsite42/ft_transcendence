@@ -142,10 +142,16 @@ const Game = (() => {
         mContext.fillStyle = 'black';
         mContext.fillRect(-kWorldWidth / 2.0, -kWorldHeight / 2.0, kWorldWidth, kWorldHeight);
 
-        // TODO: Draw the dividing line
+        // Draw the dividing line
+        mContext.fillStyle = 'white';
+        for (let y = 0; y < Math.floor(kWorldHeight / 2.0); y++) {
+            if ((y % 6) === 0) {
+                mContext.fillRect(-0.1, -3.0 - y - 1.0, 0.2, 1.0);
+                mContext.fillRect(-0.1,  3.0 + y,       0.2, 1.0);
+            }
+        }
 
         // Draw the ball and the paddles
-        mContext.fillStyle = 'white';
         mContext.fillRect(mBallX - 0.5, mBallY - 0.5, 1.0, 1.0);
         mContext.fillRect(-kWorldWidth / 2.0, mPaddleA - kPaddleHeight / 2.0, 1.0, kPaddleHeight);
         mContext.fillRect(kWorldWidth / 2.0 - 1.0, mPaddleB - kPaddleHeight / 2.0, 1.0, kPaddleHeight);
