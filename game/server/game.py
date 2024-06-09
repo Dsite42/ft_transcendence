@@ -78,21 +78,19 @@ class GameState:
                         case 1:
                             self.paddle_b.score += 1
                             self.update_flags |= GameUpdateFlag.PaddleScoreB
+                    # Reset the ball position and switch into intermission phase
                     self.ball.reset(side)
-                    self.update_flags |= GameUpdateFlag.ForceBallPosition
-                    if self.paddle_a.score > 10 or self.paddle_b.score > 10:
-                        # A player has won, finish the game
-                        self.phase = GamePhase.Finished
-                    else:
-                        # A player has scored a goal, start a score display intermission
-                        self.phase = GamePhase.Intermission
-                        self.timeout = GameState.INTERMISSION_TIMEOUT
-                    self.update_flags |= GameUpdateFlag.Phase
+                    self.phase = GamePhase.Intermission
+                    self.timeout = GameState.INTERMISSION_TIMEOUT
+                    self.update_flags |= GameUpdateFlag.ForceBallPosition | GameUpdateFlag.Phase
             case GamePhase.Intermission:
                 # Wait for the intermission timeout to expire, then switch phase
                 self.timeout -= delta_time
                 if self.timeout <= 0.0:
-                    self.phase = GamePhase.Playing
+                    if self.paddle_a.score > 10 or self.paddle_b.score > 10:
+                        self.phase = GamePhase.Finished
+                    else:
+                        self.phase = GamePhase.Playing
                     self.update_flags |= GameUpdateFlag.Phase
             case GamePhase.Finished:
                 pass
