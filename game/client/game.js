@@ -83,6 +83,13 @@ const Game = (() => {
         'o': kButton_SecondaryUp, 'l': kButton_SecondaryDown
     };
 
+    // 5x5 bitmap font for score digits (0-9)
+    const kScoreFont = [
+        0x0e9d72e, 0x0842988, 0x1f1322e, 0x0f83a0f,
+        0x0847d4c, 0x0f83c3f, 0x0e8bc2e, 0x011111f,
+        0x0e8ba2e, 0x0e87a2e
+    ];
+
     // Resources for drawing and networking
     let mStatus = kStatus_None;
     let mCanvas;
@@ -134,8 +141,6 @@ const Game = (() => {
     }
 
     function draw() {
-        // TODO: Draw the score if mPhase == kPhase_Intermission
-
         // Clear the whole frame's background
         mContext.fillStyle = '#2e2e2e';
         mContext.fillRect(0, 0, mViewWidth, mViewHeight);
@@ -163,8 +168,51 @@ const Game = (() => {
         mContext.fillRect(-kWorldWidth / 2.0, mPaddleA - kPaddleHeight / 2.0, 1.0, kPaddleHeight);
         mContext.fillRect(kWorldWidth / 2.0 - 1.0, mPaddleB - kPaddleHeight / 2.0, 1.0, kPaddleHeight);
 
+        // Draw scores if in intermission or finished phase
+        if (mPhase === kPhase_Intermission || mPhase === kPhase_Finished) {
+            drawNumber(mScoreA, -kWorldWidth / 2.0 + 8.0, -3.75, 1.5, false);
+            drawNumber(mScoreB, kWorldWidth / 2.0 - 8.0, -3.75, 1.5, true);
+        }
+
         // Restore the drawing context's transform and clipping
         mContext.restore();
+    }
+
+    function drawNumber(number, x, y, scale, anchorRight) {
+        // Make sure the input number is an unsigned integer which
+        // is converted into an array of bitmaps to draw
+        if (!Number.isInteger(number) || number < 0)
+            return;
+        let bitmaps = [];
+        do {
+            bitmaps.push(kScoreFont[number % 10]);
+            number = ~~(number / 10);
+        } while (number != 0);
+        bitmaps.reverse();
+
+        // Precalculate starting position, horizontal step and rectangle size
+        if (anchorRight)
+            x -= (bitmaps.length * 6.0 - 1.0) * scale;
+        const stepX = 6.0 * scale;
+        const rectSize = scale * 1.05;
+
+        // Draw each 5x5 bitmap as a set of filled rectangles
+        for (let bitmap of bitmaps) {
+            // Packing order: [MSB] [4 4] [3 4] ... [1 1] [0 1] ... [1 0] [0 0] [LSB]
+            for (let offsetY = 0; offsetY < 5; offsetY++) {
+                for (let offsetX = 0; offsetX < 5; offsetX++) {
+                    if ((bitmap & 1) !== 0) {
+                        mContext.fillRect(
+                            x + offsetX * scale,
+                            y + offsetY * scale,
+                            rectSize, rectSize
+                        );
+                    }
+                    bitmap >>= 1;
+                }
+            }
+            x += stepX;
+        }
     }
 
     function onAnimationFrame() {
