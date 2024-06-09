@@ -76,6 +76,13 @@ const Game = (() => {
     const kStatus_None = 0, kStatus_Loading = 1, kStatus_Running = 2, kStatus_Finished = 3, kStatus_Error = 4;
     const kWorldAspect = 4.0 / 3.0, kWorldHeight = 40.0, kWorldWidth = kWorldHeight * kWorldAspect, kPaddleHeight = 8.0;
 
+    // Input mapping
+    const kButton_PrimaryUp = 1 << 0, kButton_PrimaryDown = 1 << 1, kButton_SecondaryUp = 1 << 2, kButton_SecondaryDown = 1 << 3;
+    const kButtonMap = {
+        'w': kButton_PrimaryUp, 's': kButton_PrimaryDown, 'ArrowUp': kButton_PrimaryUp, 'ArrowDown': kButton_PrimaryDown,
+        'o': kButton_SecondaryUp, 'l': kButton_SecondaryDown
+    };
+
     // Resources for drawing and networking
     let mStatus = kStatus_None;
     let mCanvas;
