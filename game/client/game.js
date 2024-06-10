@@ -356,7 +356,13 @@ const Game = (() => {
     }
 
     function onSocketClose() {
-        // TODO: Handle loss of connection
+        if (mStatus !== kStatus_Loading && mStatus !== kStatus_Running)
+            return;
+        mStatus = kStatus_Error;
+        game.onError && game.onError('Connection to server was lost');
+
+        removeEventListener('keyup', onKeyUp);
+        removeEventListener('keydown', onKeyDown);
     }
 
     return game;
