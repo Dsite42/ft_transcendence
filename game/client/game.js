@@ -61,7 +61,7 @@ const Game = (() => {
                     };
                 });
                 mSocket.onmessage = onSocketMessage;
-                mSocket.onclose = onSocketClose;
+                mSocket.onclose = null;
 
                 // Wait for the ready callback
                 await new Promise((resolve, reject) => {
@@ -72,6 +72,9 @@ const Game = (() => {
                         reject(errorWithMessage('Server is not responding'));
                     }, 1000);
 
+                    mSocket.onclose = () => {
+                        reject(errorWithMessage('Connection to server was lost'));
+                    };
                     mReadyCallback = () => {
                         clearTimeout(timeout);
                         resolve();
@@ -79,6 +82,7 @@ const Game = (() => {
                 });
 
                 // Bind events and start animating
+                mSocket.onclose = onSocketClose;
                 addEventListener('keyup', onKeyUp);
                 addEventListener('keydown', onKeyDown);
                 requestAnimationFrame(onAnimationFrame);
