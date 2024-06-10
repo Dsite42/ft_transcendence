@@ -458,3 +458,7 @@ def create_game_view(request):
     response = matchmaker_service.create_single_game('dnebatz', 'dnebatz')
     connection.close()
     return JsonResponse(response)
+
+
+def websocket_test(request):
+    return render(request, 'websocket_test.html')

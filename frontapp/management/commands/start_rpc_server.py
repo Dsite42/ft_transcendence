@@ -12,6 +12,7 @@ class DjangoService:
     def notify_game_created(self, game_id, player1_id, player2_id):
         print(f'Game created: Game ID: {game_id}, Player1: {player1_id}, Player2: {player2_id}')
         # Hier können Sie die Logik zum Verarbeiten der Spielbenachrichtigung hinzufügen
+        print("Jooo django received the function call")
         return {"status": "notified"}
     
 

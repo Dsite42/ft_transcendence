@@ -30,6 +30,8 @@ urlpatterns = [
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
     path('get_pending_friend_requests/', views.get_pending_friend_requests, name='get_pending_friend_requests'),
     path('create_game/', create_game_view, name='create_game'),
+
+    path('websocket_test/', views.websocket_test, name='websocket_test'),
 ]
 
 if settings.DEBUG:

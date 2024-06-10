@@ -6,12 +6,28 @@ from tinyrpc.transports.rabbitmq import RabbitMQServerTransport
 from tinyrpc import RPCClient
 from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 
+import asyncio
+import websockets
+import json
+from concurrent.futures import ThreadPoolExecutor
+
 dispatcher = RPCDispatcher()
 
 import django
 from django.conf import settings
 from django.db import models, connections
-import json
+
+
+async def handler(websocket, path):
+    async for message in websocket:
+        print(f"Received message from client: {message}")
+        # Senden Sie eine Nachricht zurück an den Client
+        response = {
+            'status': 'success',
+            'message': 'Spiel wurde erfolgreich gestartet!!!',
+        }
+        await websocket.send(json.dumps(response))
+
 
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
@@ -69,7 +85,6 @@ class Database:
                         schema_editor.add_field(model, field)
 
     def game_result_to_user_stats(self, game_id, winner, winner_diff_points):
-
         # Get the current stats for the user
         sql_query = "SELECT stats FROM auth_user WHERE username = %s;"
         with connections['default'].cursor() as cursor:
@@ -91,17 +106,6 @@ class Database:
             cursor.execute(sql_query, [stats, winner])
 
 
-
-
-
-
-
-
-
-
-
-
-
 class MatchmakerService:
     def __init__(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -117,9 +121,6 @@ class MatchmakerService:
 
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
 
-
-
-
     @public
     def update_game_result(self, game_id, winner, winner_diff_points):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, Winner Diff Points: {winner_diff_points}')
@@ -132,18 +133,38 @@ class MatchmakerService:
         game_id = 1  # Beispiel-Spiel-ID
         result = self.game_service.start_game(player1_id, player2_id)
         self.update_game_result(result['game_id'], result['winner'], result['winner_diff_points'])
+        self.django_service.notify_game_created(result['game_id'], player1_id, player2_id)
         return {"game_id": game_id, "status": "created"}
 
 dispatcher.register_instance(MatchmakerService())
 
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-transport = RabbitMQServerTransport(connection, 'matchmaker_service_queue')
 
-rpc_server = RPCServer(
-    transport,
-    JSONRPCProtocol(),
-    dispatcher
-)
+def start_rpc_server():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    transport = RabbitMQServerTransport(connection, 'matchmaker_service_queue')
 
-print("Matchmaker Service RPC Server started...")
-rpc_server.serve_forever()
+    rpc_server = RPCServer(
+        transport,
+        JSONRPCProtocol(),
+        dispatcher
+    )
+
+    print("Matchmaker Service RPC Server started...")
+    rpc_server.serve_forever()
+
+
+async def start_websocket_server():
+    async with websockets.serve(handler, "localhost", 8765):
+        print("WebSocket server started on ws://localhost:8765")
+        await asyncio.Future()  # run forever
+
+
+async def main():
+    loop = asyncio.get_event_loop()
+    executor = ThreadPoolExecutor()
+    loop.run_in_executor(executor, start_rpc_server)
+
+    await start_websocket_server()
+
+if __name__ == "__main__":
+    asyncio.run(main())
