@@ -83,6 +83,7 @@ const Game = (() => {
                 addEventListener('keydown', onKeyDown);
                 requestAnimationFrame(onAnimationFrame);
             } catch (error) {
+                mStatus = kStatus_Error;
                 if (error instanceof Error && error.withMessage === true)
                     game.onError && game.onError(error.message);
                 else
