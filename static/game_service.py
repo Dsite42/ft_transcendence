@@ -21,7 +21,6 @@ class GameService:
         print(f'Starting game between Player {player1_id} and Player {player2_id}')
         # Spiel-Logik simulieren
         result = {"game_id": 1, "winner": player1_id, "winner_diff_points": 6}
-        #self.matchmaker_service.update_game_result(result['game_id'], result['winner'], result['winner_diff_points'])
         print(f'Game result: {result}')
         return result
 

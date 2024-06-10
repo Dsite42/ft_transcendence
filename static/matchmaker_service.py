@@ -130,7 +130,8 @@ class MatchmakerService:
     def create_single_game(self, player1_id, player2_id):
         print(f'Creating single game between Player {player1_id} and Player {player2_id}')
         game_id = 1  # Beispiel-Spiel-ID
-        self.game_service.start_game(player1_id, player2_id)
+        result = self.game_service.start_game(player1_id, player2_id)
+        self.update_game_result(result['game_id'], result['winner'], result['winner_diff_points'])
         return {"game_id": game_id, "status": "created"}
 
 dispatcher.register_instance(MatchmakerService())
