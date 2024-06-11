@@ -1,10 +1,11 @@
+from .client import Client
+from .game import GameState
+from .protocol import build_game_update, GAME_UPDATE_ALL
+
 from typing import Set
 from asyncio import sleep
-from client import Client
-from game import GameState
 from functools import partial
 from websockets import broadcast, serve
-from protocol import build_game_update, GAME_UPDATE_ALL
 
 class Server:
     def __init__(self, host: str, port: int, jwt_secret: str, tick_rate: float, player_ids: Set[int]) -> None:

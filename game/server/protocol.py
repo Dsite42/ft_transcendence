@@ -1,6 +1,7 @@
+from .game import GameState, GameUpdateFlag
+
 from struct import pack
 from typing import Optional
-from game import GameState, GameUpdateFlag
 
 GAME_UPDATE_ALL = GameUpdateFlag.Empty
 for flag in GameUpdateFlag:

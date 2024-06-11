@@ -4,7 +4,7 @@ from websockets import WebSocketServerProtocol, HeadersLike, Headers
 
 # This prevents a circular import while still allowing autocompletion
 if TYPE_CHECKING:
-    from server import Server
+    from .server import Server
 
 class Client(WebSocketServerProtocol):
     TEXT_RESPONSE_HEADERS = {'Content-Type': 'text/plain'}

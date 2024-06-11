@@ -1,5 +1,6 @@
+from .server import Server
+
 from asyncio import run
-from server import Server
 from argparse import ArgumentParser, Namespace
 
 def process_arguments() -> Namespace:
