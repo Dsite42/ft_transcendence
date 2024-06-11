@@ -1,3 +1,4 @@
+var chart;
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('a.nav-link').forEach(function(link) {
         link.addEventListener('click', function(event) {
@@ -17,7 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.text())
             .then(data => {
                 console.log("Received data:", data);
-                
+                if (chart) {
+                    chart.destroy();
+                }
                 // Update the desired object with the fetched content
                 const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
                 if (targetObject) {
@@ -61,6 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.text())
         .then(data => {
             console.log("Received data:", data);
+            if (chart) {
+                chart.destroy();
+            }
              // Call the updatePendingFriendRequests function if a session token is set
              if (document.cookie.split(';').some((item) => item.trim().startsWith('session='))) {
                 checkPendingFriendRequests();
@@ -281,6 +287,24 @@ function removeFriend(userIntraName, friendUsername) {
         }
     });
 }
+
+function checkPendingFriendRequests() {
+    fetch('/get_pending_friend_requests/', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.length > 0) {
+            alert(gettext('You have a pending friend requests, refresh the site in order to see it!'));
+        }
+    });
+}
+
+// Game Functions   
 
 function drawLoadingScreen() {
 

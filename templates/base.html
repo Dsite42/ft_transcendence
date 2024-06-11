@@ -120,17 +120,17 @@
                         <a href="#tournament" class="nav-link">{% trans 'Tournaments' %}</a>
                     </li>
                     {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a href="#game_sessions" class="nav-link">Game Sessions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#rank_list" class="nav-link">Rank List</a>
+                    </li>
                     <li class="nav-item profile-icon">
                         <a href="#profile" class="nav-link">
                             <img src="{{ user.avatar }}" alt="User Avatar" class="profile-avatar" style="width: 30px; height: 30px;">                        </a>
                     </li>
                     {% endif %}
-                    <li class="nav-item">
-                        <a href="#rank_list" class="nav-link">Rank List</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#game_sessions" class="nav-link">Game Sessions</a>
-                    </li>
                 </ul>
             </div>
         </div>
