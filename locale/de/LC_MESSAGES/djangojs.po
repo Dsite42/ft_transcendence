@@ -1,0 +1,56 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-07 13:44+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: static/js/spa.js:190
+msgid ""
+"Info changed successfully, refresh site for avatar changes to take effect!"
+msgstr "Informationen erfolgreich geändert, aktualisieren Sie die Seite, damit die Änderungen am Avatar wirksam werden!"
+
+#: static/js/spa.js:192
+msgid "Error changing info! : "
+msgstr "Fehler beim Ändern der Informationen! : "
+
+#: static/js/spa.js:215
+msgid "Friend request sent successfully!"
+msgstr "Freundschaftsanfrage erfolgreich gesendet!"
+
+#: static/js/spa.js:217
+msgid "Error sending friend request: "
+msgstr "Fehler beim Senden der Freundschaftsanfrage: "
+
+#: static/js/spa.js:222
+msgid "An error occurred while sending the friend request."
+msgstr "Beim Senden der Freundschaftsanfrage ist ein Fehler aufgetreten."
+
+#: static/js/spa.js:238
+msgid "Friend request accepted successfully!"
+msgstr "Freundschaftsanfrage erfolgreich angenommen!"
+
+#: static/js/spa.js:256
+msgid "Friend request declined successfully!"
+msgstr "Freundschaftsanfrage erfolgreich abgelehnt!"
+
+#: static/js/spa.js:274
+msgid "Friend removed successfully!"
+msgstr "Freund erfolgreich entfernt!"
+
+#: static/js/spa.js:291
+msgid ""
+"You have a pending friend requests, refresh the site in order to see it!"
+msgstr "Sie haben ausstehende Freundschaftsanfragen, aktualisieren Sie die Seite, um sie zu sehen!"

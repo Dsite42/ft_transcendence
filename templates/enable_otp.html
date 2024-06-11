@@ -1,18 +1,17 @@
 {% load static %}
+{% load i18n %}
 
 <br>
-This site will generate an OTP QR-Code for you to scan with your authenticator app.
-You can only have one code at a time, if you allready have a code it will regenerate your current code for you, if you want to remove it use the remove Remove current OTP-Device link in the profile section.
+{% trans "This site will generate an OTP QR-Code for you to scan with your authenticator app. You can only have one code at a time, if you already have a code it will regenerate your current code for you, if you want to remove it use the remove Remove current OTP-Device link in the profile section." %}
 <br>
 <br>
-After generation you have to verify the code by entering the OTP from your authenticator app. Otherwise OTP will not be activated for your account.
+{% trans "After generation you have to verify the code by entering the OTP from your authenticator app. Otherwise OTP will not be activated for your account." %}
 <br>
-<button id="enable-otp" onclick="generate_otp_QR()">Generate OTP</button>
+<button id="enable-otp" onclick="generate_otp_QR()">{% trans "Generate OTP" %}</button>
 <img id="qr-code" style="display: none;">
 
-<button id="verify-otp" onclick="send_otp_code()">Verify OTP</button>
-<input id="otp-input" type="text" placeholder="Enter OTP">
+<button id="verify-otp" onclick="send_otp_code()">{% trans "Verify OTP" %}</button>
+<input id="otp-input" type="text" placeholder="{% trans 'Enter OTP' %}">
 
 
 <script src="{% static 'js/spa.js' %}"></script>
-
