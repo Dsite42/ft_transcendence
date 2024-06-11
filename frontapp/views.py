@@ -56,7 +56,7 @@ def login_required(callable):
             return render(request, 'otp_login.html')
         user.last_active = timezone.now()
         user.save()
-
+        
         return callable(request, data)
     return wrapper
 
