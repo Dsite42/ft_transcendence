@@ -282,25 +282,9 @@ function removeFriend(userIntraName, friendUsername) {
     });
 }
 
-function checkPendingFriendRequests() {
-    fetch('/get_pending_friend_requests/', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')  
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.length > 0) {
-            alert(gettext('You have a pending friend requests, refresh the site in order to see it!'));
-        }
-    });
-}
+function drawLoadingScreen() {
 
-// Game logic
-
-function drawLoadingScreen(canvas) {
+    canvas = document.getElementById('gameCanvas');
     const context = canvas.getContext('2d');
 
     // Clear the canvas
@@ -314,16 +298,41 @@ function drawLoadingScreen(canvas) {
     context.font = '30px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillStyle = 'white'; // Set the text color to white so it's visible on the black background
-
+    context.fillStyle = 'white';
     // Draw the loading text
     context.fillText('Loading...', canvas.width / 2, canvas.height / 2);
 }
 
+function drawErrorScreen(error) {
+
+    canvas = document.getElementById('gameCanvas');
+    const context = canvas.getContext('2d');
+
+    // Clear the canvas
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Fill the canvas with black
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Set the font and alignment
+    context.font = '30px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = 'white'; 
+
+    // Draw the loading text
+    context.fillText('Error:' + error, canvas.width / 2, canvas.height / 2);
+}
+
+
+// Game logic
+
+
 'use strict'
 const Game = (() => {
     const game = {
-        onLoading: (canvas) => drawLoadingScreen(canvas),
+        onLoading: null,
         onRunning: null,
         onFinish: null,
         onError: null,
@@ -333,7 +342,7 @@ const Game = (() => {
             if (mStatus !== kStatus_None && mStatus !== kStatus_Finished && mStatus !== kStatus_Error)
                 throw errorWithMessage('Attempt to start game multiple times');
             mStatus = kStatus_Loading;
-            game.onLoading && game.onLoading(canvas);
+            game.onLoading && game.onLoading();
 
             try {
                 // Determine the game socket's address
@@ -693,3 +702,8 @@ const Game = (() => {
 
     return game;
 })();
+
+// Set the functions called on game Events
+
+Game.onLoading = drawLoadingScreen;
+Game.onError = drawErrorScreen;

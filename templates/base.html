@@ -151,6 +151,7 @@
         {% endif %}
     </div>
     <script>
+    window.onload = function() {
         document.getElementById('startGame').addEventListener('click', function() {
             const canvas = document.getElementById('gameCanvas');
             const host = 'your-host'; // Replace with host from matchmaker
@@ -159,6 +160,7 @@
             Game.start(canvas, host, tokens)
                 .catch(error => console.error('Error starting game:', error));
         });
+    };
     </script>
     <!-- Footer -->
     <footer class="footer text-center mt-auto" style="z-index: 1030; position: relative;">
