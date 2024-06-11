@@ -74,6 +74,7 @@ def home(request):
     pending_friend_requests = None
     avatar = None
     intra_name = None
+    user_id = None
     try:
         data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
         isAuthenticated = True
@@ -85,6 +86,7 @@ def home(request):
         friends = user.get_friends()
         pending_friend_requests = user.get_pending_friend_requests()
         intra_name = data['intra_name']
+        user_id = user.id
     return render(request, 'base.html', {
         'user': {
             'is_authenticated': isAuthenticated,
@@ -92,7 +94,7 @@ def home(request):
             'friends': friends,
             'pending_friend_requests': pending_friend_requests,
             'intra_name': intra_name,
-            # datenbank user id weitergeben
+            'user_id': user_id,
         }
     })
 
