@@ -19,7 +19,7 @@ const Game = (() => {
                     throw errorWithMessage('Unsupported protocol');
                 let address = location.protocol.replace('http', 'ws')
                     .concat(
-                        '//', host,
+                        '//', host, '/game',
                         ...tokens.map((token, index) =>
                             `${index === 0 ? "?" : "&"}with_token=${token}`
                         )
