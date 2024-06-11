@@ -2,26 +2,81 @@ from datetime import datetime
 """
 #Matchmaker
 
+Databases/ Tables
+- Users (intra_id, player_name, player_stats{score, wins, loses, winrate}, game_history(relation to Game Databases/ Tables), tournament_history(relation to Game Databases/ Tables))
+- Games (game_id, player1, player2, game_start_time, game_end_time, game_winner, p1_wins, p2_wins)
+- Tournaments (tournament_id, creator, tournament_name, tournament_size, tournament_start_time, tournament_end_time, tournament_winner, games{game1, game2,..}, players{player1, player2, ...})
+
+
 Cases:
 1. Player is waiting for a other player for a single game
 2. Player is startig a single game with second player on the same keyboard
-2. Player has created a turnement and is waiting for other players
-3. Player has joined a turnement(joint from the list or got invitation) and is waiting for other players or turnement to start
+2. Player has created a tournament and is waiting for other players
+3. Player has joined a tournament(joint from the list) and is waiting for other players or tournament to start
 
-Workflows:
+Workflow single game:
 1. Player creates a single game
-1.2 Player sees the waiting screen
-1.3 Player gets matched with another player
-1.4 Player starts the game
-1.5 Players finish the game see the result screen and game module sends the result to the matchmaker
-1.6 Matchmaker updates the player stats and match history
+    1.1 Client opens a websocket connection to the matchmaker 
+    1.2 Player sees the waiting screen (client side matchmaker status(singelton siehe jonas repo))
+2. Matchmaker
+    2.0 Matchmaker checks process_request(override) if it is a valid websocket connection
+    2.1 Matchmaker checks if there is a waiting game
+        2.1.1 Matchmaker creates a single game object
+        2.1.2 Matchmaker requests via rpc a game address from the game service
+    2.2 Matchmaker sends via websocket the game address to the two players
+3. Players connect to the game and start playing
+4. Game service sends the result via rpc to the matchmaker
+5. Matchmaker updates the player stats and match database
+
+- disconnect handling? -> if game aborted game service calls matchmaker abrot function
+
+Workflow tournament:
+1. Player creates a tournament
+    1.1 Client opens a websocket connection to the matchmaker
+    1.2 Player sees the waiting screen
+2. Matchmaker
+    2.1 Matchmaker creates a tournament object
+    2.2 Matchmaker is waiting for other players to join
+    2.3 Matchmaker checks if the tournament is complete and create match combinations
+    2.4 Matchmaker requests via rpc a game address from the game service if the tournament is complete
+    2.5 Matchmaker sends via websocket the game address to the first two players
+3. Players connect to the game and start playing
+4. Game service sends the result to the matchmaker
+5. Matchmaker
+    5.1 Matchmaker saves the game match result
+    5.2 Matchmaker goes to the next tournament match
+    5.3 Matchmaker requests via rpc a game address from the game service
+    5.4 Matchmaker sends via websocket the game address to the next two players
+6. Repeat 3-5 until the tournament is finished
+7. Matchmaker
+    7.1 Matchmaker checks if there is a winner
+    7.2 If not Matchmaker creates new matches and goes to 5.2
+    7.3 If yes Matchmaker updates the player stats, game database and the tournament database
+    7.4 Matchmaker sends to the clients a redirect to the tournament result page
+
+
+- disconnect handling?
+- neues game darf erst angefagt werden, wenn zwei spieler vorhanden sind
+
+
+
+
+game_service interface:
+matchmaker => game_service
+- create_keyboard_game(player1, guest) - creates a single game with two players on the same keyboard
+- create_game(game_id, player1, player2) 
+
+
+game_service => matchmaker
+- keyboard game stats werden nicht erfasst
+- transmit_game_result(game_id, winner, p1_wins, p2_wins) # game aborded if winner -1 and 0, 0
 
 
 
 
 """
 
-class turnement:
+class tournament:
     def __init__(self, creator, turnement_name, turnement_size):
         self.creator = creator
         self.turnement_name = turnement_name
@@ -90,7 +145,7 @@ class matchMaker:
         self.private_games = []
 
     def create_turnement(self, creator, turnement_name, turnement_size):
-        new_turnement = turnement(creator, turnement_name, turnement_size)
+        new_turnement = tournament(creator, turnement_name, turnement_size)
         self.turnements.append(new_turnement)
         return new_turnement
     
@@ -113,30 +168,16 @@ def main():
                     return
             new_single_game = singleGame(player1, None)
             matchmaker.single_games.append(new_single_game)
-        if event == 'create private game':
-            new_private_game = singleGame(player1, None)
-            matchmaker.private_games.append(new_private_game)
-            #send the game id to the player
-            return new_private_game 
-        if event == 'join_private_game':
-            game = matchmaker.private_games[game_id]
-            game.join_game(player2)
-            game.start_game()
-        if event == 'turnement':
-            for turnement in matchmaker.turnements:
-                if turnement.turnement_status == 'waiting':
-                    turnement.join_turnement(player)
-                    if len(turnement.players) == turnement.turnement_size:
-                        turnement.start_turnement()
+        if event == 'tournament':
+            for tournament in matchmaker.turnements:
+                if tournament.turnement_status == 'waiting':
+                    tournament.join_turnement(player)
+                    if len(tournament.players) == tournament.turnement_size:
+                        tournament.start_turnement()
                         return
-            new_turnement = turnement(player, turnement_name, turnement_size)
+            new_turnement = tournament(player, turnement_name, turnement_size)
             matchmaker.turnements.append(new_turnement)
             return new_turnement
-        if event == 'join_private_turnement':
-            turnement = matchmaker.turnements[turnement_id]
-            turnement.join_turnement(player)
-            if len(turnement.players) == turnement.turnement_size:
-                turnement.start_turnement()
     """
 
     

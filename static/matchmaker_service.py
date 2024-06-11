@@ -9,7 +9,7 @@ from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 import asyncio
 import websockets
 import json
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor #from asyncio import Queue
 
 dispatcher = RPCDispatcher()
 
