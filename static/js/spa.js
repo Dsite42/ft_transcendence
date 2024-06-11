@@ -322,7 +322,7 @@ function drawErrorScreen(error) {
     context.fillStyle = 'white'; 
 
     // Draw the loading text
-    context.fillText('Error:' + error, canvas.width / 2, canvas.height / 2);
+    context.fillText('Error: ' + error, canvas.width / 2, canvas.height / 2);
 }
 
 

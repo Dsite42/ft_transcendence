@@ -154,7 +154,7 @@
     window.onload = function() {
         document.getElementById('startGame').addEventListener('click', function() {
             const canvas = document.getElementById('gameCanvas');
-            const host = 'your-host'; // Replace with host from matchmaker
+            const host = 'localhost:9000'; // Replace with host from matchmaker
             const tokens = [getCookie('session'), 'guest'];
 
             Game.start(canvas, host, tokens)
