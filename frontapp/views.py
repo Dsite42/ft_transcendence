@@ -18,6 +18,7 @@ from django.contrib import messages
 from typing import Callable
 from PIL import Image
 from django.utils.translation import gettext as _
+import logging
 
 class APIError(Exception):
     pass
@@ -50,7 +51,8 @@ def login_required(callable):
         try:
             data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
             user = CustomUser.objects.get(username=data['intra_name'])
-        except:
+        except Exception as e:
+            logging.error("Error in login_required: %s", e)
             return HttpResponseBadRequest('Invalid session')
         if data['2FA_Activated'] and not data['2FA_Passed']:
             return render(request, 'otp_login.html')
@@ -90,6 +92,7 @@ def home(request):
             'friends': friends,
             'pending_friend_requests': pending_friend_requests,
             'intra_name': intra_name,
+            # datenbank user id weitergeben
         }
     })
 

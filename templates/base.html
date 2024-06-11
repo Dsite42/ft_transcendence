@@ -139,13 +139,27 @@
     <div id="main-content" class="container mt-5">
     </div>
 
-    <!-- Welcome Section -->
+    <!-- Game Section -->
     <div class="container mt-5 text-center">
         <h1 class="mb-4">{% trans 'Welcome to the Pong Game!' %}</h1>
-        <button id="startGame" class="btn btn-primary btn-lg">{% trans 'Start Game' %}</button>
         <canvas id="gameCanvas" width="800" height="400" class="border mt-4"></canvas>
+        <br>
+        {% if user.is_authenticated %}
+        <button id="startGame" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Game' %}</button>
+        {% else %}
+        <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
+        {% endif %}
     </div>
+    <script>
+        document.getElementById('startGame').addEventListener('click', function() {
+            const canvas = document.getElementById('gameCanvas');
+            const host = 'your-host'; // Replace with your host
+            const tokens = ['token1', 'guest']; // Replace with your tokens
 
+            Game.start(canvas, host, tokens)
+                .catch(error => console.error('Error starting game:', error));
+        });
+    </script>
     <!-- Footer -->
     <footer class="footer text-center mt-auto" style="z-index: 1030; position: relative;">
         {% trans '2024 Transcendence. All Rights Reserved.' %}
