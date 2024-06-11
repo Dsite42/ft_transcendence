@@ -38,6 +38,8 @@ urlpatterns = [
     path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
+    path('rank_list.html', views.rank_list, name='rank_list'),
+    path('game_sessions.html', views.game_sessions, name='game_sessions'),
 ]
 
 urlpatterns += i18n_patterns(
@@ -69,6 +71,8 @@ urlpatterns += i18n_patterns(
     path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
     path('get_pending_friend_requests/', views.get_pending_friend_requests, name='get_pending_friend_requests'),
+    path('rank_list.html', views.rank_list, name='rank_list'),
+    path('game_sessions.html', views.game_sessions, name='game_sessions'),
 )
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

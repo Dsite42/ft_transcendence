@@ -19,7 +19,7 @@ from typing import Callable
 from PIL import Image
 from django.utils.translation import gettext as _
 import logging
-from frontapp.models import Player, Game
+from frontapp.models import Game
 class APIError(Exception):
     pass
 
@@ -441,9 +441,8 @@ def get_pending_friend_requests(request, data):
 
 @login_required
 def rank_list(request):
-    players = Player.objects.all().order_by('-points')
-    #ranking = [player.to_dict() for player in players]
-    ranking = [{'name': player.name, 'points': player.points, 'wins': player.wins, 'losses': player.losses} for player in players]
+    players = CustomUser.objects.all()#.order_by('-points') 
+    ranking = [{'name': player.username, 'points': player.stats.get('highest_score'), 'wins': player.stats.get('games_won'), 'losses': player.stats.get('games_lost')} for player in players]
 
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
 
