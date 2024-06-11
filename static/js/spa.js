@@ -1,12 +1,10 @@
-var chart;
 document.addEventListener('DOMContentLoaded', function() {
-
     document.querySelectorAll('a.nav-link').forEach(function(link) {
         link.addEventListener('click', function(event) {
             event.preventDefault(); // Prevent the default link behavior
             
             const url = link.getAttribute('href'); // Get the URL from the link's href attribute
-            //console.log("Fetching data from:", url);
+            console.log("Fetching data from:", url);
             
             // Fetch the content of the page using the URL
             urlnew = url.replace("#", "");
@@ -18,10 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.text())
             .then(data => {
-                //console.log("Received data:", data);
-                if (chart) {
-                    chart.destroy();
-                }
+                console.log("Received data:", data);
+                
                 // Update the desired object with the fetched content
                 const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
                 if (targetObject) {
@@ -64,9 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.text())
         .then(data => {
-            //console.log("Received data:", data);
-            if (chart) {
-                chart.destroy();
             console.log("Received data:", data);
              // Call the updatePendingFriendRequests function if a session token is set
              if (document.cookie.split(';').some((item) => item.trim().startsWith('session='))) {
@@ -75,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update the desired object with the fetched content
             const targetObject = document.getElementById('main-content'); // Replace 'learn-content' with the ID of the object
             if (targetObject) {
-                console.log(urlnew)
                 targetObject.innerHTML = data;
                 const scriptElements = targetObject.getElementsByTagName('script');
                 for (let index = 0; index < scriptElements.length; index++)

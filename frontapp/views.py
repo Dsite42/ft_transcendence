@@ -440,14 +440,14 @@ def get_pending_friend_requests(request, data):
 #Dashboard Functions
 
 @login_required
-def rank_list(request):
+def rank_list(request, data):
     players = CustomUser.objects.all()#.order_by('-points') 
     ranking = [{'name': player.username, 'points': player.stats.get('highest_score'), 'wins': player.stats.get('games_won'), 'losses': player.stats.get('games_lost')} for player in players]
 
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
 
 @login_required
-def game_sessions(request):
+def game_sessions(request, data):
     games = Game.objects.all().order_by('-date')
     game_sessions = [game.to_dict() for game in games]
     return render(request, 'game_sessions.html', {'game_sessions': json.dumps(game_sessions)})
