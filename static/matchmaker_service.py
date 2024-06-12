@@ -10,6 +10,7 @@ import asyncio
 import websockets
 import json
 from concurrent.futures import ThreadPoolExecutor
+import time
 
 dispatcher = RPCDispatcher()
 
@@ -55,12 +56,21 @@ async def consume_messages(websocket, consumer_id):
 
 async def produce_messages(websocket, consumer_id):
     while True:
-        message = await message_queue.get()
-        if message is None:
-            break
-        if message.get('consumer_id') == consumer_id:
-            await websocket.send(json.dumps(message))
+        try:
+            start_time = time.time()
+            message = await asyncio.wait_for(message_queue.get(), timeout=1)
+            if message is None:
+                break
+            if message.get('consumer_id') == consumer_id:
+                await websocket.send(json.dumps(message))
+            end_time = time.time()
+            print(f"produce_messages loop took {end_time - start_time:.2f} seconds")
+        except asyncio.TimeoutError:
+            continue
+        except Exception as e:
+            print(f"Error in produce_messages: {e}")
 
+            
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
         self.Model = None
@@ -119,13 +129,13 @@ class Database:
 
 class MatchmakerService:
     def __init__(self):
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         protocol = JSONRPCProtocol()
 
-        transport_django = RabbitMQClientTransport(connection, 'django_service_queue')
+        transport_django = RabbitMQClientTransport(self.connection, 'django_service_queue')
         self.django_service = RPCClient(protocol, transport_django).get_proxy()
 
-        transport_game = RabbitMQClientTransport(connection, 'game_service_queue')
+        transport_game = RabbitMQClientTransport(self.connection, 'game_service_queue')
         self.game_service = RPCClient(protocol, transport_game).get_proxy()
 
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
@@ -138,6 +148,7 @@ class MatchmakerService:
 
     @public
     def create_single_game(self, player1_id, player2_id):
+        start_time = time.time()
         print(f'Creating single game between Player {player1_id} and Player {player2_id}. consumer_id: {g_consumer_id}')
         game_id = 1
         result = self.game_service.start_game(player1_id, player2_id)
@@ -151,6 +162,8 @@ class MatchmakerService:
         asyncio.set_event_loop(loop)
         loop.run_until_complete(message_queue.put(message))
         loop.close()
+        end_time = time.time()
+        print(f"create_single_game took {end_time - start_time:.2f} seconds")
         return {"game_id": game_id, "status": "created"}
 
 dispatcher.register_instance(MatchmakerService())
