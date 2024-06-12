@@ -58,18 +58,15 @@ async def produce_messages(websocket, consumer_id):
     while True:
         try:
             start_time = time.time()
-            message = await asyncio.wait_for(message_queue.get(), timeout=1)
+            message = await message_queue.get()
             if message is None:
                 break
             if message.get('consumer_id') == consumer_id:
                 await websocket.send(json.dumps(message))
             end_time = time.time()
             print(f"produce_messages loop took {end_time - start_time:.2f} seconds")
-        except asyncio.TimeoutError:
-            continue
         except Exception as e:
             print(f"Error in produce_messages: {e}")
-
             
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
@@ -158,15 +155,15 @@ class MatchmakerService:
             'message': f'Game successfully created. Join via abc.com:1234',
             'consumer_id': g_consumer_id  # Hier wird die consumer_id hinzugefügt
         }
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(message_queue.put(message))
-        loop.close()
+        message_queue.put_nowait(message)
+        message_queue._loop._write_to_self()
+        
         end_time = time.time()
         print(f"create_single_game took {end_time - start_time:.2f} seconds")
         return {"game_id": game_id, "status": "created"}
 
 dispatcher.register_instance(MatchmakerService())
+
 
 def start_rpc_server():
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
