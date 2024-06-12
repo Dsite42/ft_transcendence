@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
-# test_pygame.py: Runs the game using PyGame for game logic testing
-#                 This is not part of actual project code, it will not be used at runtime
+# test_game.py: Runs the server's game logic locally using PyGame
+# This script is meant for game logic testing and won't be used during normal runtime
 
-import os; os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import os, sys
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+sys.path.append(os.path.split(os.path.dirname(__file__))[0])
+
 from time import time
 from math import floor, ceil
 from argparse import ArgumentParser
-from game import (
+from server.game import (
     GameState,
     GamePhase,
     PaddleState,
