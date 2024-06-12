@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test client</title>
+        <style>
+            #canvas {
+                width: 1280px;
+                height: 720px;
+                background: black;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Test client</h1>
+        <hr>
+        <canvas id="canvas"></canvas>
+        <hr>
+        <!-- Game interaction form -->
+        <p>Status: <span id="status">None</span></p>
+        <input type="text" id="hostInput" placeholder="Server host">
+        <input type="text" id="token1Input" placeholder="JWT token #1">
+        <input type="text" id="token2Input" placeholder="JWT token #2 (optional)">
+        <button id="connectButton">Connect</button>
+        <!-- Game script and test client logic -->
+        <script src="game.js"></script>
+        <script>
+            const canvasElement = document.getElementById('canvas');
+            const statusElement = document.getElementById('status');
+            const hostElement = document.getElementById('hostInput');
+            const token1Element = document.getElementById('token1Input');
+            const token2Element = document.getElementById('token2Input');
+            const connectElement = document.getElementById('connectButton');
+
+            function setFormEnabled(active) {
+                hostElement.readOnly = !active;
+                token1Element.readOnly = !active;
+                token2Element.readOnly = !active;
+                connectElement.disabled = !active;
+            }
+
+            Game.onLoading = () => statusElement.innerText = 'Loading';
+            Game.onRunning = () => statusElement.innerText = 'Running';
+            Game.onError = error => {
+                statusElement.innerText = `Error (${error})`;
+                setFormEnabled(true);
+            };
+            Game.onFinish = () => {
+                statusElement.innerText = 'Finished';
+                setFormEnabled(true);
+            };
+            connectElement.onclick = async () => {
+                setFormEnabled(false);
+                const tokens = [];
+                if (token1Element.value !== '') tokens.push(token1Element.value);
+                if (token2Element.value !== '') tokens.push(token2Element.value);
+                await Game.start(canvasElement, hostElement.value, tokens);
+            };
+        </script>
+    </body>
+</html>
