@@ -9,7 +9,7 @@ from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 import asyncio
 import websockets
 import json
-from concurrent.futures import ThreadPoolExecutor #from asyncio import Queue
+from concurrent.futures import ThreadPoolExecutor
 
 dispatcher = RPCDispatcher()
 
@@ -17,23 +17,54 @@ import django
 from django.conf import settings
 from django.db import models, connections
 
+# Thread-sichere asyncio Warteschlange zur Kommunikation zwischen Threads
+message_queue = asyncio.Queue()
+global g_consumer_id
+
+def set_consumer_id(consumer_id):
+    global g_consumer_id
+    g_consumer_id = consumer_id
+
 
 async def handler(websocket, path):
-    async for message in websocket:
-        print(f"Received message from client: {message}")
-        # Senden Sie eine Nachricht zurück an den Client
-        response = {
-            'status': 'success',
-            'message': 'Spiel wurde erfolgreich gestartet!!!',
-        }
-        await websocket.send(json.dumps(response))
+    consumer_id = id(websocket)
+    consumer_task = asyncio.create_task(consume_messages(websocket, consumer_id))
+    producer_task = asyncio.create_task(produce_messages(websocket, consumer_id))
 
+    done, pending = await asyncio.wait(
+        [consumer_task, producer_task],
+        return_when=asyncio.FIRST_COMPLETED,
+    )
+
+    for task in pending:
+        task.cancel()
+
+async def consume_messages(websocket, consumer_id):
+    async for message in websocket:
+        data = json.loads(message)
+        print(f"Received message from client: {data}")
+        if data.get('action') == 'start_game':
+            set_consumer_id(consumer_id)
+            player1_id = data.get('player1_id')
+            player2_id = data.get('player2_id')
+            await message_queue.put({
+                'status': 'success',
+                'message': f'Game is being created for {player1_id} and {player2_id}. consumer_id: {consumer_id}',
+                'consumer_id': consumer_id
+            })
+
+async def produce_messages(websocket, consumer_id):
+    while True:
+        message = await message_queue.get()
+        if message is None:
+            break
+        if message.get('consumer_id') == consumer_id:
+            await websocket.send(json.dumps(message))
 
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
         self.Model = None
 
-        # Define the DATABASES dictionary
         databases = {
             'default': {
                 'ENGINE': engine,
@@ -46,13 +77,9 @@ class Database:
             }
         }
 
-        # Update the settings with the custom DATABASES dictionary
         settings.configure(DATABASES=databases)
-
-        # Initialize Django
         django.setup()
 
-        # Create the custom base model
         class CustomBaseModel(models.Model):
             class Meta:
                 app_label = 'frontapp'
@@ -60,62 +87,44 @@ class Database:
 
         self.Model = CustomBaseModel
 
-    # Create a table if it doesnt exist
     def create_table(self, model):
         with connections['default'].schema_editor() as schema_editor:
             if model._meta.db_table not in connections['default'].introspection.table_names():
                 schema_editor.create_model(model)
 
-    # Update table if you added fields (doesn't drop fields as far as i know, which i was too afraid to implement)
     def update_table(self, model):
         with connections['default'].schema_editor() as schema_editor:
-            # Check if the table exists
             if model._meta.db_table in connections['default'].introspection.table_names():
-                # Get the current columns in the table
                 current_columns = [field.column for field in model._meta.fields]
-
-                # Get the database columns
                 database_columns = connections['default'].introspection.get_table_description(connections['default'].cursor(), model._meta.db_table)
                 database_column_names = [column.name for column in database_columns]
 
-                # Check if each field in the model exists in the database table
                 for field in model._meta.fields:
                     if field.column not in database_column_names:
-                        # Add the new column to the table
                         schema_editor.add_field(model, field)
 
     def game_result_to_user_stats(self, game_id, winner, winner_diff_points):
-        # Get the current stats for the user
         sql_query = "SELECT stats FROM auth_user WHERE username = %s;"
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [winner])
             stats = cursor.fetchone()[0]
 
-        # Deserialize the stats
         stats = json.loads(stats)
-
-        # Update the 'games_won' field
         stats['games_won'] = stats.get('games_won', 0) + winner_diff_points
-
-        # Serialize the stats
         stats = json.dumps(stats)
 
-        # Update the stats in the database
         sql_query = "UPDATE auth_user SET stats = %s WHERE username = %s;"
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [stats, winner])
-
 
 class MatchmakerService:
     def __init__(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         protocol = JSONRPCProtocol()
 
-        # Transport for django_service_queue
         transport_django = RabbitMQClientTransport(connection, 'django_service_queue')
         self.django_service = RPCClient(protocol, transport_django).get_proxy()
 
-        # Transport for game_service_queue
         transport_game = RabbitMQClientTransport(connection, 'game_service_queue')
         self.game_service = RPCClient(protocol, transport_game).get_proxy()
 
@@ -129,15 +138,22 @@ class MatchmakerService:
 
     @public
     def create_single_game(self, player1_id, player2_id):
-        print(f'Creating single game between Player {player1_id} and Player {player2_id}')
-        game_id = 1  # Beispiel-Spiel-ID
+        print(f'Creating single game between Player {player1_id} and Player {player2_id}. consumer_id: {g_consumer_id}')
+        game_id = 1
         result = self.game_service.start_game(player1_id, player2_id)
         self.update_game_result(result['game_id'], result['winner'], result['winner_diff_points'])
-        self.django_service.notify_game_created(result['game_id'], player1_id, player2_id)
+        message = {
+            'status': 'success',
+            'message': f'Game successfully created. Join via abc.com:1234',
+            'consumer_id': g_consumer_id  # Hier wird die consumer_id hinzugefügt
+        }
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(message_queue.put(message))
+        loop.close()
         return {"game_id": game_id, "status": "created"}
 
 dispatcher.register_instance(MatchmakerService())
-
 
 def start_rpc_server():
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -152,12 +168,10 @@ def start_rpc_server():
     print("Matchmaker Service RPC Server started...")
     rpc_server.serve_forever()
 
-
 async def start_websocket_server():
     async with websockets.serve(handler, "localhost", 8765):
         print("WebSocket server started on ws://localhost:8765")
-        await asyncio.Future()  # run forever
-
+        await asyncio.Future()
 
 async def main():
     loop = asyncio.get_event_loop()
