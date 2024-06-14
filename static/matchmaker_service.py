@@ -1,62 +1,59 @@
-import pika
-from tinyrpc.server import RPCServer
-from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
-from tinyrpc.dispatch import public, RPCDispatcher
-from tinyrpc.transports.rabbitmq import RabbitMQServerTransport
-from tinyrpc import RPCClient
-from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
-
 import asyncio
-import websockets
+import signal
 import json
-from concurrent.futures import ThreadPoolExecutor
 import time
-
-dispatcher = RPCDispatcher()
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 import django
 from django.conf import settings
 from django.db import models, connections
 
-# Thread-sichere asyncio Warteschlange zur Kommunikation zwischen Threads
-message_queue = asyncio.Queue()
+import pika
+from tinyrpc.server import RPCServer
+from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
+from tinyrpc.dispatch import public, RPCDispatcher
+from tinyrpc.transports.rabbitmq import RabbitMQServerTransport, RabbitMQClientTransport
+from tinyrpc import RPCClient
+
+import websockets
+
+dispatcher = RPCDispatcher()
 global g_consumer_id
+
+# Thread-safe asyncio queue for communication between threads
+message_queue = asyncio.Queue()
 
 def set_consumer_id(consumer_id):
     global g_consumer_id
     g_consumer_id = consumer_id
 
-
 async def handler(websocket, path):
     consumer_id = id(websocket)
-    consumer_task = asyncio.create_task(consume_messages(websocket, consumer_id))
-    producer_task = asyncio.create_task(produce_messages(websocket, consumer_id))
-
-    done, pending = await asyncio.wait(
-        [consumer_task, producer_task],
-        return_when=asyncio.FIRST_COMPLETED,
-    )
-
-    for task in pending:
-        task.cancel()
+    async with asyncio.TaskGroup() as tg:
+        consumer_task = tg.create_task(consume_messages(websocket, consumer_id))
+        producer_task = tg.create_task(produce_messages(websocket, consumer_id))
 
 async def consume_messages(websocket, consumer_id):
     async for message in websocket:
-        data = json.loads(message)
-        print(f"Received message from client: {data}")
-        if data.get('action') == 'start_game':
-            set_consumer_id(consumer_id)
-            player1_id = data.get('player1_id')
-            player2_id = data.get('player2_id')
-            await message_queue.put({
-                'status': 'success',
-                'message': f'Game is being created for {player1_id} and {player2_id}. consumer_id: {consumer_id}',
-                'consumer_id': consumer_id
-            })
+        try:
+            data = json.loads(message)
+            print(f"Received message from client: {data}")
+            if data.get('action') == 'start_game':
+                set_consumer_id(consumer_id)
+                player1_id = data.get('player1_id')
+                player2_id = data.get('player2_id')
+                await message_queue.put({
+                    'status': 'success',
+                    'message': f'Game is being created for {player1_id} and {player2_id}. consumer_id: {consumer_id}',
+                    'consumer_id': consumer_id
+                })
+        except Exception as e:
+            print(f"Error in consume_messages: {e}")
 
 async def produce_messages(websocket, consumer_id):
-    while True:
-        try:
+    try:
+        while True:
             start_time = time.time()
             message = await message_queue.get()
             if message is None:
@@ -65,9 +62,9 @@ async def produce_messages(websocket, consumer_id):
                 await websocket.send(json.dumps(message))
             end_time = time.time()
             print(f"produce_messages loop took {end_time - start_time:.2f} seconds")
-        except Exception as e:
-            print(f"Error in produce_messages: {e}")
-            
+    except Exception as e:
+        print(f"Error in produce_messages: {e}")
+
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
         self.Model = None
@@ -135,7 +132,7 @@ class MatchmakerService:
         transport_game = RabbitMQClientTransport(self.connection, 'game_service_queue')
         self.game_service = RPCClient(protocol, transport_game).get_proxy()
 
-        self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
+        self.db = Database(engine='django.db.backends.sqlite3', name='/home/chris/Core/ft_transcendence/frontend_draft/db.sqlite3')
 
     @public
     def update_game_result(self, game_id, winner, winner_diff_points):
@@ -153,7 +150,7 @@ class MatchmakerService:
         message = {
             'status': 'success',
             'message': f'Game successfully created. Join via abc.com:1234',
-            'consumer_id': g_consumer_id  # Hier wird die consumer_id hinzugefügt
+            'consumer_id': g_consumer_id
         }
         message_queue.put_nowait(message)
         message_queue._loop._write_to_self()
@@ -163,7 +160,6 @@ class MatchmakerService:
         return {"game_id": game_id, "status": "created"}
 
 dispatcher.register_instance(MatchmakerService())
-
 
 def start_rpc_server():
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -183,12 +179,36 @@ async def start_websocket_server():
         print("WebSocket server started on ws://localhost:8765")
         await asyncio.Future()
 
-async def main():
-    loop = asyncio.get_event_loop()
+async def run_servers():
+    loop = asyncio.get_running_loop()
     executor = ThreadPoolExecutor()
-    loop.run_in_executor(executor, start_rpc_server)
-
+    rpc_server_thread = threading.Thread(target=start_rpc_server, daemon=True)
+    rpc_server_thread.start()
     await start_websocket_server()
 
+async def handle_shutdown(loop, executor):
+    print("Shutting down...")
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    await asyncio.gather(*tasks, return_exceptions=True)
+    await loop.shutdown_asyncgens()
+    executor.shutdown(wait=False)
+    print("Shutdown complete.")
+
+async def main():
+    loop = asyncio.get_running_loop()
+    executor = ThreadPoolExecutor()
+
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(handle_shutdown(loop, executor)))
+
+    try:
+        await run_servers()
+    except asyncio.CancelledError:
+        print("Main task cancelled.")
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print("Application interrupted. Exiting...")
