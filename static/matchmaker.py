@@ -140,9 +140,8 @@ class matchMaker:
 
     def __init__(self):
         self.turnements = []
-        self.private_turnements = []
         self.single_games = []
-        self.private_games = []
+        self.keyboard_games = []
 
     def create_turnement(self, creator, turnement_name, turnement_size):
         new_turnement = tournament(creator, turnement_name, turnement_size)

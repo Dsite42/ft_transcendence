@@ -17,10 +17,10 @@ class GameService:
         self.matchmaker_service = RPCClient(protocol, transport).get_proxy()
 
     @public
-    def start_game(self, player1_id, player2_id):
-        print(f'Starting game between Player {player1_id} and Player {player2_id}')
+    def start_game(self, player1_id):
+        print(f'Starting game between Player {player1_id}')
         # Spiel-Logik simulieren
-        result = {"game_id": 1, "winner": player1_id, "winner_diff_points": 6}
+        result = {"game_id": 1, "winner": player1_id, "p1_wins": 10, "p2_wins": 4}
         print(f'Game result: {result}')
         return result
 
