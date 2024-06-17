@@ -4,7 +4,7 @@ from .protocol import build_game_update, GAME_UPDATE_ALL
 
 from asyncio import sleep
 from functools import partial
-from typing import Set, List, Tuple
+from typing import Set, List, Union
 from websockets import WebSocketException, broadcast, serve
 
 class Server:
@@ -44,12 +44,23 @@ class Server:
             # Send a full game update to synchronize the client and start processing its messages
             await client.send(build_game_update(self.game_state, GAME_UPDATE_ALL))
             async for message in client:
-                pass
+                self.handle_client_message(message, paddles)
         except WebSocketException:
             # Ignore WebSocket-related exceptions and drop the client
             pass
         finally:
             self.clients.discard(client)
+
+    def handle_client_message(self, message: Union[bytes, str], paddles: list['PaddleState']) -> None:
+        if not isinstance(message, bytes) or len(message) != 1:
+            raise ValueError('Invalid message')
+        input_state = message[0]
+        # Extract the bit-packed directions for all client-owned paddles
+        for index, paddle in enumerate(paddles):
+            paddle.direction = 0
+            direction_bits = (input_state >> (index << 1)) & 3
+            if direction_bits & 1: paddle.direction -= 1
+            if direction_bits & 2: paddle.direction += 1
 
     def get_client_paddles(self, client: 'Client') -> List['PaddleState']:
         paddles = []
