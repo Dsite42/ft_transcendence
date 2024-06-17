@@ -20,7 +20,7 @@ class GameService:
     def create_game(self, game_id, player1_id, player2_id):
         print(f'Starting game between Player {player1_id}')
         # Spiel-Logik simulieren
-        result = {"game_id": game_id, "game_address": "single_game_websocket_address"}
+        result = {"game_id": game_id, "game_address": "single_game_websocket_address_from_game_service"}
         print(f'Game result: {result}')
         return result
 
