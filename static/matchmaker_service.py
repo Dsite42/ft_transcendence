@@ -18,8 +18,17 @@ from tinyrpc import RPCClient
 
 import websockets
 from asgiref.sync import sync_to_async
+from datetime import datetime
 
 #define classes
+
+class Client:
+    def __init__(self, player_id, websocket):
+        self.player_id = player_id
+        self.websocket = websocket
+        
+
+
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
         self.Model = None
@@ -110,14 +119,20 @@ class tournament:
         self.turnement_winner = winner
 
 
-class singleGame:
-    def __init__(self, player1, player2):
+class SingleGame:
+    def __init__(self, game_id, player1, client1, player2, client2, game_address):
+        self.game_id = game_id
+        self.game_address = game_address
         self.player1 = player1
+        self.client1 = client1
         self.player2 = player2
+        self.client2 = client2
         self.game_start_time = datetime.now()
         self.game_end_time = None
         self.game_status = 'waiting'
         self.game_winner = None
+        self.p1_wins = None
+        self.p2_wins = None
 
     def join_game(self, player):
         if self.player2 is None:
@@ -139,7 +154,7 @@ class singleGame:
         self.game_status = 'aborted'
         
     
-class matchMaker:
+class MatchMaker:
     def __init__(self):
         self.turnements = []
         self.single_games = []
@@ -151,39 +166,50 @@ class matchMaker:
         self.turnements.append(new_turnement)
         return new_turnement
     
-    def request_single_game(self, player1):
+    async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
-        self.check_single_game_queue()
-        
-    def check_single_game_queue(self):
+        await self.check_single_game_queue()
+                
+    async def check_single_game_queue(self):
         print(f'Checking single game queue. Length: {len(self.single_games_queue)}')
         if len(self.single_games_queue) >= 2:
             player1 = self.single_games_queue.pop(0)
             player2 = self.single_games_queue.pop(0)
-            new_game = self.create_single_game(player1, player2)
-            self.single_games.append(new_game)
-            # 
+            await self.create_single_game(player1, player2)
+            
+    async def search_single_game_clients(self, player1_id, player2_id):
+        client1 = connected_clients.get(player1_id)
+        client2 = connected_clients.get(player2_id)
+        if client1 and client2:
+            return client1, client2
+        return None, None
+        
     
-    def create_single_game(self, player1_id, player2_id):
+    async def create_single_game(self, player1_id, player2_id):
         start_time = time.time()
-        print(f'Creating single game between Player {player1_id} and Player {player2_id}. consumer_id: {g_consumer_id}')
+        print(f'Creating single game between Player {player1_id} and Player {player2_id}.')
         game_id = 1
-        result = matchmaker_service.game_service.create_game(game_id, player1_id, player2_id)
-        #matchmaker_service.update_game_result(result['game_id'], result['winner'], result['p1_wins'], result['p2_wins'])
+        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, player2_id)
+        game_address = result['game_address']
         message = {
             'action': 'game_address',
-            'message': f'Game successfully created. Join via:',
-            'game_address': result['game_address'],
-            'consumer_id': g_consumer_id
+            'message': f'Game successfully created. Join via: ',
+            'game_address': game_address,
         }
-        message_queue.put_nowait(message)
-        message_queue._loop._write_to_self()
+        client1, client2 = await self.search_single_game_clients(player1_id, player2_id)
+        if not client1 or not client2:
+            print("Error: Could not find both clients.")
+            return
+        new_game = SingleGame(game_id, player1_id, client1, player2_id, client2, game_address)
+        print("New game created.", new_game.player1, new_game.player2, new_game.game_address)
+        self.single_games.append(new_game)
+        
+        # Send message to both players
+        await send_message_to_client(player1_id, message)
+        await send_message_to_client(player2_id, message)
         
         end_time = time.time()
         print(f"create_single_game took {end_time - start_time:.2f} seconds")
-        return {"game_id": game_id, "status": "created"}
-
-
 
 class MatchmakerService:
     def __init__(self):
@@ -205,104 +231,55 @@ class MatchmakerService:
         self.db.game_result_to_user_stats(game_id, winner, p1_wins, p2_wins)
         return {"status": "success update_game_result"}
 
-    #@public
-    #def create_single_game(self, player1_id):
-    #    start_time = time.time()
-    #    print(f'Creating single game between Player {player1_id}. consumer_id: {g_consumer_id}')
-    #    game_id = 1
-    #    result = self.game_service.start_game(player1_id)
-    #    self.update_game_result(result['game_id'], result['winner'], result['p1_wins'], result['p2_wins'])
-    #    message = {
-    #        'status': 'success',
-    #        'message': f'Game successfully created. Join via abc.com:1234',
-    #        'consumer_id': g_consumer_id
-    #    }
-    #    message_queue.put_nowait(message)
-    #    message_queue._loop._write_to_self()
-    #    
-    #    end_time = time.time()
-    #    print(f"create_single_game took {end_time - start_time:.2f} seconds")
-    #    return {"game_id": game_id, "status": "created"}
-
-
-
-
-
-
 dispatcher = RPCDispatcher()
-matchmaker = matchMaker()
+matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
-global g_consumer_id
-# Thread-safe asyncio queue for communication between threads
-message_queue = asyncio.Queue()
-
-
-
-
-
-
-def set_consumer_id(consumer_id):
-    global g_consumer_id
-    g_consumer_id = consumer_id
-
-
-
-
-
+connected_clients = {}
 
 async def handler(websocket, path):
-    consumer_id = id(websocket)
-    async with asyncio.TaskGroup() as tg:
-        consumer_task = tg.create_task(consume_messages(websocket, consumer_id))
-        producer_task = tg.create_task(produce_messages(websocket, consumer_id))
+    try:
+        first_message = await websocket.recv()  # Erste Nachricht vom Client
+        data = json.loads(first_message)
+        action = data.get('action')
+        client_id = data.get('player_id')
+        
+        if action == 'handshake' and client_id:
+            client = Client(client_id, websocket)
+            connected_clients[client_id] = client
+            try:
+                await consume_messages(websocket, client_id)
+            finally:
+                del connected_clients[client_id]
+        else:
+            print("Error: First message did not contain a valid player_id")
+            await websocket.close()
+    except Exception as e:
+        print(f"Error in handler: {e}")
 
-async def consume_messages(websocket, consumer_id):
+async def consume_messages(websocket, client_id):
     async for message in websocket:
         try:
             data = json.loads(message)
-            print(f"Received message from client: {data}")
+            print(f"Received message from client {client_id}: {data}")
             if data.get('action') == 'request_single_game':
-                set_consumer_id(consumer_id)
                 player_id = data.get('player_id')
                 print(f"Requesting single game for player {player_id}.")
-                #create_single_game(player_id)
-                # Use sync_to_async to call the synchronous function
-                await sync_to_async(matchmaker.request_single_game)(player_id)                
-                #await message_queue.put({
-                #    'status': 'success',
-                #    'message': f'Game is being created for {player1_id}. consumer_id: {consumer_id}',
-                #    'consumer_id': consumer_id
-                #})
+                await matchmaker.request_single_game(player_id)                
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except Exception as e:
             print(f"Error in consume_messages: {e}")
 
-async def produce_messages(websocket, consumer_id):
-    try:
-        while True:
-            start_time = time.time()
-            message = await message_queue.get()
-            if message is None:
-                break
-            if message.get('consumer_id') == consumer_id:
-                await websocket.send(json.dumps(message))
-            end_time = time.time()
-            print(f"produce_messages loop took {end_time - start_time:.2f} seconds. Data: {message}")
-    except Exception as e:
-        print(f"Error in produce_messages: {e}")
-
-
-
-
-
-
-
-
-
-
-
+async def send_message_to_client(client_id, message):
+    client = connected_clients.get(client_id)
+    if client and client.websocket.open:
+        try:
+            await client.websocket.send(json.dumps(message))
+        except Exception as e:
+            print(f"Error sending message to client {client_id}: {e}")
+    else:
+        print(f"Client {client_id} is not connected")
 
 def start_rpc_server():
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

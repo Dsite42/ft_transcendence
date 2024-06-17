@@ -11,13 +11,16 @@
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
                 // Nachricht an den Server senden
+                socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ player_id }}" }));
                 socket.send(JSON.stringify({ action: 'request_single_game', player_id: "{{ player_id }}" }));
             };
 
             socket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('WebSocket message received:', data);
-                alert('Nachricht vom Server: ' + data.message);
+                if (data.action === 'game_address')
+                    window.location.href = "http://www.google.com"
+                alert('Nachricht vom Server: ' + data.message + data.game_address);
             };
 
             socket.onclose = function(event) {
