@@ -143,6 +143,7 @@ class matchMaker:
     def __init__(self):
         self.turnements = []
         self.single_games = []
+        self.single_games_queue = []
         self.keyboard_games = []
 
     def create_turnement(self, creator, turnement_name, turnement_size):
@@ -150,15 +151,29 @@ class matchMaker:
         self.turnements.append(new_turnement)
         return new_turnement
     
-    def create_single_game(self, player_id):
+    def request_single_game(self, player1):
+        self.single_games_queue.append(player1)
+        self.check_single_game_queue()
+        
+    def check_single_game_queue(self):
+        print(f'Checking single game queue. Length: {len(self.single_games_queue)}')
+        if len(self.single_games_queue) >= 2:
+            player1 = self.single_games_queue.pop(0)
+            player2 = self.single_games_queue.pop(0)
+            new_game = self.create_single_game(player1, player2)
+            self.single_games.append(new_game)
+            # 
+    
+    def create_single_game(self, player1_id, player2_id):
         start_time = time.time()
-        print(f'Creating single game between Player {player_id}. consumer_id: {g_consumer_id}')
+        print(f'Creating single game between Player {player1_id} and Player {player2_id}. consumer_id: {g_consumer_id}')
         game_id = 1
-        result = matchmaker_service.game_service.start_game(player_id)
-        matchmaker_service.update_game_result(result['game_id'], result['winner'], result['p1_wins'], result['p2_wins'])
+        result = matchmaker_service.game_service.create_game(game_id, player1_id, player2_id)
+        #matchmaker_service.update_game_result(result['game_id'], result['winner'], result['p1_wins'], result['p2_wins'])
         message = {
-            'status': 'success',
-            'message': f'Game successfully created. Join via abc.com:1234',
+            'action': 'game_address',
+            'message': f'Game successfully created. Join via:',
+            'game_address': result['game_address'],
             'consumer_id': g_consumer_id
         }
         message_queue.put_nowait(message)
@@ -231,6 +246,11 @@ def set_consumer_id(consumer_id):
     global g_consumer_id
     g_consumer_id = consumer_id
 
+
+
+
+
+
 async def handler(websocket, path):
     consumer_id = id(websocket)
     async with asyncio.TaskGroup() as tg:
@@ -242,18 +262,20 @@ async def consume_messages(websocket, consumer_id):
         try:
             data = json.loads(message)
             print(f"Received message from client: {data}")
-            if data.get('action') == 'start_single_game':
+            if data.get('action') == 'request_single_game':
                 set_consumer_id(consumer_id)
                 player_id = data.get('player_id')
-                
+                print(f"Requesting single game for player {player_id}.")
                 #create_single_game(player_id)
                 # Use sync_to_async to call the synchronous function
-                await sync_to_async(matchmaker.create_single_game)(player_id)                
+                await sync_to_async(matchmaker.request_single_game)(player_id)                
                 #await message_queue.put({
                 #    'status': 'success',
                 #    'message': f'Game is being created for {player1_id}. consumer_id: {consumer_id}',
                 #    'consumer_id': consumer_id
                 #})
+            elif data.get('action') == 'game_address':
+                print(f"Game address received: {data}")
         except Exception as e:
             print(f"Error in consume_messages: {e}")
 
@@ -267,7 +289,7 @@ async def produce_messages(websocket, consumer_id):
             if message.get('consumer_id') == consumer_id:
                 await websocket.send(json.dumps(message))
             end_time = time.time()
-            print(f"produce_messages loop took {end_time - start_time:.2f} seconds")
+            print(f"produce_messages loop took {end_time - start_time:.2f} seconds. Data: {message}")
     except Exception as e:
         print(f"Error in produce_messages: {e}")
 

@@ -450,13 +450,13 @@ def is_image_url(url):
     
 
 #RPC Functions
-def create_game_view(request):
+def request_single_game_view(request):
     player_id = request.GET.get('player_id')
     # RPC-Funktion aufrufen
     #matchmaker_service, connection = get_matchmaker_service()
     #response = matchmaker_service.create_single_game('dnebatz')
     #connection.close()
-    return render(request, 'create_single_game.html', {'player_id': player_id})
+    return render(request, 'request_single_game.html', {'player_id': player_id})
 
 def websocket_test(request):
     return render(request, 'websocket_test.html')

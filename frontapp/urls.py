@@ -3,7 +3,7 @@ from . import views
 from .views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices, change_info_site, change_info, accept_friend_request, send_friend_request
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import create_game_view
+from .views import request_single_game_view
 
 
 urlpatterns = [
@@ -29,7 +29,7 @@ urlpatterns = [
     path('accept_friend_request/', views.accept_friend_request, name='accept_friend_request'),
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
     path('get_pending_friend_requests/', views.get_pending_friend_requests, name='get_pending_friend_requests'),
-    path('create_game/', create_game_view, name='create_game'),
+    path('request_single_game/', request_single_game_view, name='request_single_game'),
 
     path('websocket_test/', views.websocket_test, name='websocket_test'),
 ]
