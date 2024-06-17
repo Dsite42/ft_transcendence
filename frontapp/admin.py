@@ -1,10 +1,10 @@
 from django.contrib import admin
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser , Friendship
 from django.contrib.auth.models import User
 from django import forms
+from .models import Game
 
 class CustomUserForm(forms.ModelForm):
     class Meta:
@@ -38,3 +38,5 @@ class FriendshipAdmin(admin.ModelAdmin):
 admin.site.register(Friendship, FriendshipAdmin)
 
 admin.site.register(CustomUser, CustomUserAdmin)
+
+admin.site.register(Game)

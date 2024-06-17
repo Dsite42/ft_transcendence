@@ -1,0 +1,251 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-07 14:26+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: frontapp/views.py:29 frontapp/views.py:359
+msgid "Method not allowed"
+msgstr "Méthode non autorisée"
+
+#: frontapp/views.py:31
+msgid "Invalid content type"
+msgstr "Type de contenu invalide"
+
+#: frontapp/views.py:35
+msgid "Malformed JSON"
+msgstr "JSON malformé"
+
+#: frontapp/views.py:41
+msgid "Internal server error"
+msgstr "Erreur interne du serveur"
+
+#: frontapp/views.py:196 frontapp/views.py:249
+msgid "Username is not provided"
+msgstr "Nom d'utilisateur non fourni"
+
+#: frontapp/views.py:264
+msgid "No TOTP Device associated with this user"
+msgstr "Aucun TOTP Device associé à cet utilisateur"
+
+
+#: frontapp/views.py:269 frontapp/views.py:313
+msgid "OTP is valid"
+msgstr "L'OTP est valide."
+
+#: frontapp/views.py:272 frontapp/views.py:319
+msgid "OTP is invalid"
+msgstr "L'OTP est invalide."
+
+#: frontapp/views.py:284
+msgid "All OTP devices have been removed."
+msgstr "Tous les appareils OTP ont été supprimés."
+
+#: frontapp/views.py:286
+msgid "User {} does not exist."
+msgstr "L'utilisateur {} n'existe pas."
+
+#: frontapp/views.py:338
+msgid "Display name is already in use."
+msgstr "Le nom d'affichage est déjà utilisé."
+
+#: frontapp/views.py:341
+msgid "Display name is someones intra name."
+msgstr "Le nom d'affichage est le nom intra de quelqu'un."
+
+#: frontapp/views.py:347 frontapp/views.py:353
+msgid "File is not an image."
+msgstr "Le fichier n'est pas une image."
+
+#: frontapp/views.py:373 frontapp/views.py:408
+msgid "User does not exist"
+msgstr "L'utilisateur n'existe pas."
+
+#: frontapp/views.py:378
+msgid "Could not add friend"
+msgstr "Impossible d'ajouter un ami."
+
+#: frontapp/views.py:380 frontapp/views.py:395 frontapp/views.py:417
+msgid "Invalid request method"
+msgstr "Méthode de requête invalide."
+
+#: frontapp/views.py:393
+msgid "Could not accept friend request"
+msgstr "Impossible d'accepter la demande d'ami."
+
+#: frontapp/views.py:415
+msgid "Could not decline friend request"
+msgstr "Impossible de refuser la demande d'ami."
+
+#: templates/base.html:10
+msgid "Transcendence Testpage"
+msgstr "Page de test Transcendence"
+
+#: templates/base.html:40 templates/base.html:93
+msgid "Friends"
+msgstr "Amis"
+
+#: templates/base.html:47
+msgid "Enter friends intra-name"
+msgstr "Entrez le nom intra de l'ami"
+
+#: templates/base.html:48
+msgid "Add Friend"
+msgstr "Ajouter un ami"
+
+#: templates/base.html:58
+msgid "Online"
+msgstr "En ligne"
+
+#: templates/base.html:60
+msgid "Last online:"
+msgstr "Dernière connexion :"
+
+#: templates/base.html:71
+msgid "No friends yet:"
+msgstr "Pas encore d'amis :"
+
+#: templates/base.html:75
+msgid "Pending Friend Requests"
+msgstr "Demandes d'amis en attente"
+
+#: templates/base.html:79
+msgid "(Pending)"
+msgstr "(En attente)"
+
+#: templates/base.html:110 templates/login.html:12
+msgid "Login"
+msgstr "Connexion"
+
+#: templates/base.html:114 templates/tournament.html:4
+msgid "Tournaments"
+msgstr "Tournois"
+
+#: templates/base.html:138
+msgid "Change language"
+msgstr "Changer de langue"
+
+#: templates/base.html:146
+msgid "Welcome to the Pong Game!"
+msgstr "Bienvenue dans le jeu Pong !"
+
+#: templates/base.html:147
+msgid "Start Game"
+msgstr "Démarrer le jeu"
+
+#: templates/base.html:153
+msgid "2024 Transcendence. All Rights Reserved."
+msgstr "2024 Transcendence. Tous droits réservés."
+
+#: templates/base.html:160
+msgid "Game will start soon!"
+msgstr "Le jeu commencera bientôt !"
+
+#: templates/change_info_site.html:4
+msgid "Profile Settings"
+msgstr "Paramètres du profil"
+
+#: templates/change_info_site.html:8
+msgid "Display Name"
+msgstr "Nom d'affichage"
+
+#: templates/change_info_site.html:12
+msgid "Avatar"
+msgstr "Avatar"
+
+#: templates/change_info_site.html:14
+msgid "Current Avatar"
+msgstr "Avatar actuel"
+
+#: templates/change_info_site.html:16
+msgid "Enter new avatar URL"
+msgstr "Entrez la nouvelle URL de l'avatar"
+
+#: templates/change_info_site.html:18
+msgid "You can either upload a new avatar or provide a URL."
+msgstr "Vous pouvez soit télécharger un nouvel avatar, soit fournir une URL."
+
+#: templates/change_info_site.html:21
+msgid "Save Changes"
+msgstr "Enregistrer les modifications"
+
+#: templates/enable_otp.html:5
+msgid ""
+"This site will generate an OTP QR-Code for you to scan with your "
+"authenticator app. You can only have one code at a time, if you already have "
+"a code it will regenerate your current code for you, if you want to remove "
+"it use the remove Remove current OTP-Device link in the profile section."
+msgstr ""
+"Ce site générera un QR-Code OTP que vous pourrez scanner avec votre "
+"application d'authentification. Vous ne pouvez avoir qu'un seul code à la "
+"fois, si vous avez déjà un code, il régénérera votre code actuel. Si vous "
+"voulez le supprimer, utilisez le lien 'Supprimer le dispositif OTP actuel' "
+"dans la section profil."
+
+#: templates/enable_otp.html:8
+msgid ""
+"After generation you have to verify the code by entering the OTP from your "
+"authenticator app. Otherwise OTP will not be activated for your account."
+msgstr ""
+"Après la génération, vous devez vérifier le code en entrant l'OTP de votre "
+"application d'authentification. Sinon, l'OTP ne sera pas activé pour votre "
+"compte."
+
+#: templates/enable_otp.html:10
+msgid "Generate OTP"
+msgstr "Générer OTP"
+
+#: templates/enable_otp.html:13 templates/otp_login.html:6
+msgid "Verify OTP"
+msgstr "Vérifier OTP"
+
+#: templates/enable_otp.html:14 templates/otp_login.html:7
+msgid "Enter OTP"
+msgstr "Entrer OTP"
+
+#: templates/login.html:9
+msgid "you wanna login using the 42 api?"
+msgstr "Vous voulez vous connecter en utilisant l'API 42 ?"
+
+#: templates/login.html:10
+msgid "your data is safe with us!"
+msgstr "Vos données sont en sécurité avec nous !"
+
+#: templates/otp_login.html:4
+msgid "Please enter your OTP from your authenticator app:"
+msgstr ""
+"Veuillez entrer votre OTP depuis votre application d'authentification :"
+
+#: templates/profile.html:4
+msgid "Logout"
+msgstr "Déconnexion"
+
+#: templates/profile.html:6
+msgid "Enable OTP with QR-Code"
+msgstr "Activer OTP avec QR-Code"
+
+#: templates/profile.html:8
+msgid "Remove current OTP-Device"
+msgstr "Supprimer le dispositif OTP actuel"
+
+#: templates/profile.html:10
+msgid "Change Profile Info"
+msgstr "Modifier les informations du profil"
+
+#: templates/tournament.html:5
+msgid "Join our exciting tournaments!"
+msgstr "Rejoignez nos tournois passionnants !"

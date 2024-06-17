@@ -1,20 +1,22 @@
+{% load i18n %}
+
 <div class="container">
-    <h2>Profile Settings</h2>
+    <h2>{% trans "Profile Settings" %}</h2>
     <form method="POST" action="/change_info/" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group">
-            <label for="displayName">Display Name</label>
+            <label for="displayName">{% trans "Display Name" %}</label>
             <input type="text" class="form-control" id="displayName" name="display_name" value="{{ user.display_name }}">
         </div>
         <div class="form-group">
-            <label for="avatar">Avatar</label>
+            <label for="avatar">{% trans "Avatar" %}</label>
             <div>
-                <img src="{{ user.avatar }}" alt="Current Avatar" style="width: 100px; height: 100px;">
+                <img src="{{ user.avatar }}" alt="{% trans 'Current Avatar' %}" style="width: 100px; height: 100px;">
             </div>
-            <input type="url" class="form-control" id="avatarUrl" name="avatar_url" placeholder="Enter new avatar URL">
+            <input type="url" class="form-control" id="avatarUrl" name="avatar_url" placeholder="{% trans 'Enter new avatar URL' %}">
             <input type="file" class="form-control" id="avatarFile" name="avatar_file">
-            <small class="form-text text-muted">You can either upload a new avatar or provide a URL.</small>
+            <small class="form-text text-muted">{% trans "You can either upload a new avatar or provide a URL." %}</small>
         </div>
     </form>
-    <button class="btn btn-primary" onclick="changeInfoSave()">Save Changes</button>
+    <button class="btn btn-primary" onclick="changeInfoSave()">{% trans "Save Changes" %}</button>
 </div>

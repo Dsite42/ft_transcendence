@@ -1,12 +1,13 @@
+{% load i18n %}
 {% block content %} <!-- Add this line -->
 
-<a href="{% url 'logout' %}">Logout</a>
+<a href="{% url 'logout' %}">{% trans "Logout" %}</a>
 <br>
-<a href="#enable_otp_page" >Enable OTP with QR-Code </a>
+<a href="#enable_otp_page" >{% trans "Enable OTP with QR-Code" %}</a>
 <br>
-<a href="#remove_all_otp_devices">Remove current OTP-Device</a>
+<a href="#remove_all_otp_devices">{% trans "Remove current OTP-Device" %}</a>
 <br>
-<a href="#change_info_site">Change Profile Info</a>
+<a href="#change_info_site">{% trans "Change Profile Info" %}</a>
 <br>
 
-    {% endblock %}
+{% endblock %}
