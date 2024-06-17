@@ -44,8 +44,8 @@
                 statusElement.innerText = `Error (${error})`;
                 setFormEnabled(true);
             };
-            Game.onFinish = () => {
-                statusElement.innerText = 'Finished';
+            Game.onFinish = (scoreA, scoreB) => {
+                statusElement.innerText = `Finished (Score: ${scoreA} - ${scoreB})`;
                 setFormEnabled(true);
             };
             connectElement.onclick = async () => {
