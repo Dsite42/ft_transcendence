@@ -35,8 +35,7 @@ def process_arguments() -> Namespace:
     if arguments.port < 0 or arguments.port > 65535:
         parser.error('invalid port, must be within unsigned 16-bit integer range')
     # Check if the given player IDs are valid
-    arguments.player_ids = set(arguments.player_ids)
-    if len(arguments.player_ids) != 2:
+    if len(set(arguments.player_ids)) != 2:
         parser.error('player IDs must be unique')
     for player_id in arguments.player_ids:
         if player_id < 0 and player_id != -1:
