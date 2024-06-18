@@ -58,7 +58,7 @@ def login_required(callable):
             return render(request, 'otp_login.html')
         user.last_active = timezone.now()
         user.save()
-        
+
         return callable(request, data)
     return wrapper
 
@@ -67,8 +67,8 @@ def login_required(callable):
 def home(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'home.html')
-    
-    session = request.COOKIES.get('session', None)   
+
+    session = request.COOKIES.get('session', None)
     isAuthenticated = False
     friends = None
     pending_friend_requests = None
@@ -136,7 +136,7 @@ def enable_otp_page(request, data):
 
 def logout(request):
     response = redirect('home')
-    response.delete_cookie('session') 
+    response.delete_cookie('session')
     return response
 
 @login_required
@@ -163,7 +163,10 @@ def auth(request: HttpRequest) -> HttpResponse:
         'client_secret': settings.OAUTH2_SECRET,
         'redirect_uri': 'http://127.0.0.1:8000/auth'
     }).json()
-
+    if (oauth_response.get('error')):
+        alert = oauth_response.get('error_description')
+        messages.error(request, f'Error: {alert}')
+        return render(request, 'base.html')
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
         'Authorization': 'Bearer ' + oauth_response['access_token']
     }).json()
@@ -184,7 +187,7 @@ def auth(request: HttpRequest) -> HttpResponse:
                 # Reset the display name of the existing user
                 existing_user.display_name = existing_user.username
                 existing_user.save()
-            
+
 
         if user.two_factor_auth_enabled:
             response = HttpResponseRedirect('/')
@@ -252,7 +255,7 @@ def enable_otp(request, data):
             return JsonResponse({'uri': uri, 'qr_code': image_base64})
     else:
         return JsonResponse({'error': _('Username is not provided')}, status=400)
-      
+
 @login_required
 def verify_otp(request, data):
     user_info = get_user_info_dict(request)
@@ -261,7 +264,7 @@ def verify_otp(request, data):
     body_unicode = request.body.decode('utf-8')
     body_data = json.loads(body_unicode)
     otp = body_data.get('otp')
-    
+
     user = CustomUser.objects.get(username=intra_name)
     device = user.totpdevice_set.first()
 
@@ -275,7 +278,7 @@ def verify_otp(request, data):
     else:
         # OTP is invalid
         return HttpResponse(_('OTP is invalid'))
-    
+
 @login_required
 def remove_all_otp_devices(request, data):
     user_info = get_user_info_dict(request)
@@ -289,10 +292,10 @@ def remove_all_otp_devices(request, data):
             return HttpResponse({_("All OTP devices have been removed.").format(intra_name)})
         except CustomUser.DoesNotExist:
             return HttpResponse({'error': _("User {} does not exist.").format(intra_name)}, status=400)
-        
+
 @csrf_exempt
 def login_with_otp(request):
-    
+
     encoded_session = request.COOKIES['session']
     session = jwt.decode(encoded_session, settings.JWT_SECRET, algorithms=['HS256'])
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
@@ -302,12 +305,12 @@ def login_with_otp(request):
     if not user_info:
         return HttpResponse('No user info found')
     intra_name = user_info['login']
-  
+
 
     body_unicode = request.body.decode('utf-8')
     body_data = json.loads(body_unicode)
     otp = body_data.get('otp')
-    
+
     user = CustomUser.objects.get(username=intra_name)
     device = user.totpdevice_set.first()
 
@@ -319,10 +322,10 @@ def login_with_otp(request):
         session['2FA_Passed'] = True
         response.set_cookie('session', jwt.encode(session, settings.JWT_SECRET, algorithm='HS256'))
         return response
-    else: 
+    else:
         # OTP is invalid
         return HttpResponse(_('OTP is invalid'))
-    
+
 #Profile Editing Functions
 
 @login_required
@@ -330,7 +333,7 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
     avatar_file = None
     display_name = None
     avatar_url = None
-    
+
     if request.method == 'POST':
         avatar_file = request.FILES.get('avatarFile', None)
         display_name = request.POST.get('displayName', '')
@@ -345,7 +348,7 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
             if existing_user:
                 return JsonResponse({'success': False, 'reason': _('Display name is someones intra name.')})
             user.display_name = display_name
-            
+
         if avatar_file:
             # Save the uploaded file and get its URL
             if not is_image(avatar_file):
@@ -357,12 +360,12 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
             if not is_image_url(avatar_url):
                 return JsonResponse({'success': False, 'reason': _('File is not an image.')})
             user.avatar = avatar_url
-        
+
         user.save()
         return JsonResponse({'success': True})
     else:
         return JsonResponse({'success': False, 'reason': _('Method not allowed')}, status=405)
-    
+
 
 #Friendship Functions
 
@@ -383,7 +386,7 @@ def send_friend_request(request, data):
             return JsonResponse({'success': False, 'error': _('Could not add friend')})
     else:
         return JsonResponse({'success': False, 'error': _('Invalid request method')})
-    
+
 @login_required
 def accept_friend_request(request, data):
     if request.method == 'POST':
@@ -398,7 +401,7 @@ def accept_friend_request(request, data):
             return JsonResponse({'status': 'error', 'error': _('Could not accept friend request')})
     else:
         return JsonResponse({'status': 'error', 'error': _('Invalid request method')})
-    
+
 #Also used for removing friends
 @login_required
 def decline_friend_request(request, data):
@@ -420,7 +423,7 @@ def decline_friend_request(request, data):
             return JsonResponse({'status': 'error', 'error': _('Could not decline friend request')})
     else:
         return JsonResponse({'status': 'error', 'error': _('Invalid request method')})
-    
+
 @login_required
 def get_pending_friend_requests(request, data):
     data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
@@ -435,13 +438,13 @@ def get_pending_friend_requests(request, data):
             friendship.save()
 
     return JsonResponse(usernames, safe=False)
-    
+
 
 #Dashboard Functions
 
 @login_required
 def rank_list(request, data):
-    players = CustomUser.objects.all()#.order_by('-points') 
+    players = CustomUser.objects.all()#.order_by('-points')
     ranking = [{'name': player.username, 'points': player.stats.get('highest_score'), 'wins': player.stats.get('games_won'), 'losses': player.stats.get('games_lost')} for player in players]
 
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
@@ -460,7 +463,7 @@ def is_image(file_path):
         return True
     except IOError:
         return False
-    
+
 def is_image_url(url):
     try:
         response = requests.head(url)
