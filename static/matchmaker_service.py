@@ -56,20 +56,25 @@ class Database:
         self.Model = CustomBaseModel
 
 
-    def game_result_to_user_stats(self, game_id, winner, p1_wins, p2_wins):
+    def game_result_to_user_stats(self, player_id, is_winner, p2_wins, score):
         sql_query = "SELECT stats FROM auth_user WHERE username = %s;"
         with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [winner])
+            cursor.execute(sql_query, [player_id])
             stats = cursor.fetchone()[0]
 
         stats = json.loads(stats)
-        general_points_for_winning = 5
-        stats['games_won'] = stats.get('games_won', 0) + general_points_for_winning + (p1_wins - p2_wins)
+        stats['games_played'] = stats.get('games_played') + 1
+        if is_winner == 1:
+            stats['games_won'] = stats.get('games_won', 0) + 1
+        else:
+            stats['games_lost'] = stats.get('games_lost', 0) + 1
+        if score:
+            stats['score'] = stats.get('score', 0) + score
         stats = json.dumps(stats)
 
         sql_query = "UPDATE auth_user SET stats = %s WHERE username = %s;"
         with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [stats, winner])
+            cursor.execute(sql_query, [stats, player_id])
             
 ''' from the django-db standalone github
     def create_table(self, model):
@@ -143,9 +148,11 @@ class SingleGame:
     def start_game(self):
         self.game_status = 'started'
     
-    def end_game(self, winner):
+    def end_game(self, winner, p1_wins, p2_wins):
         self.game_end_time = datetime.now()
         self.game_winner = winner
+        self.p1_wins = p1_wins
+        self.p2_wins = p2_wins
         self.game_status = 'ended'
 
     
@@ -156,10 +163,12 @@ class SingleGame:
     
 class MatchMaker:
     def __init__(self):
+        self.db = Database(engine='django.db.backends.sqlite3', name='/home/chris/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.turnements = []
         self.single_games = []
         self.single_games_queue = []
         self.keyboard_games = []
+
 
     def create_turnement(self, creator, turnement_name, turnement_size):
         new_turnement = tournament(creator, turnement_name, turnement_size)
@@ -210,6 +219,25 @@ class MatchMaker:
         
         end_time = time.time()
         print(f"create_single_game took {end_time - start_time:.2f} seconds")
+        
+        
+    async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
+        #game = self.single_games.get(game_id)
+        #general_points_for_winning = 5
+        #if game is not None:
+        #    game.end_game(winner, p1_wins, p2_wins)
+            # Player1
+        #   is_winner = 1 if game.player1 == winner else 0
+        #   score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        #   self.db.game_result_to_user_stats(game.player1, is_winner, p1_wins, score)
+        # Player2
+        #   is_winner = 1 if game.player2 == winner else 0
+        #   score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        #   self.db.game_result_to_user_stats(game.player2, is_winner, p2_wins, score)
+        #else:
+        #    print(f"Game ID {game_id} not found.")
+        return
+        
 
 class MatchmakerService:
     def __init__(self):
@@ -222,14 +250,14 @@ class MatchmakerService:
         transport_game = RabbitMQClientTransport(self.connection, 'game_service_queue')
         self.game_service = RPCClient(protocol, transport_game).get_proxy()
 
-        self.db = Database(engine='django.db.backends.sqlite3', name='/home/chris/Core/ft_transcendence/frontend_draft/db.sqlite3')
+
 
     @public
-    def update_game_result(self, game_id, winner, p1_wins, p2_wins):
+    def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
-        
-        self.db.game_result_to_user_stats(game_id, winner, p1_wins, p2_wins)
-        return {"status": "success update_game_result"}
+        #matchmaker.db.game_result_to_user_stats(game_id, winner, p1_wins, p2_wins)
+        matchmaker.db.game_result_to_user_stats('dnebatz', 1, p1_wins, 20)
+
 
 dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()

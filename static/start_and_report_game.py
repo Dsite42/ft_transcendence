@@ -16,9 +16,10 @@ game_id = 1
 player1_id = 'dnebatz'
 player2_id = 'Klaus'
 winner = player1_id
-winner_diff_points = -4
+p1_wins = 11
+p2_wins = 7
 
 
 # Ergebnis übermitteln
-response = matchmaker_service.update_game_result(game_id, winner, winner_diff_points)
+response = matchmaker_service.transmit_game_result(game_id, winner, p1_wins, p2_wins)
 print(f"Result sent: {response}")
