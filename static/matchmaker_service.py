@@ -63,7 +63,7 @@ class Database:
             stats = cursor.fetchone()[0]
 
         stats = json.loads(stats)
-        stats['games_played'] = stats.get('games_played') + 1
+        stats['games_played'] = stats.get('games_played', 0) + 1
         if is_winner == 1:
             stats['games_won'] = stats.get('games_won', 0) + 1
         else:
