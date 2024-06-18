@@ -1,5 +1,6 @@
 from .server import Server
 
+from sys import stderr
 from asyncio import run
 from argparse import ArgumentParser, Namespace
 
@@ -53,5 +54,7 @@ if __name__ == '__main__':
             arguments.player_ids
         )
         run(server.main_loop())
+    except Exception as exception:
+        print(f'fatal: {exception}', file=stderr)
     except KeyboardInterrupt:
         pass
