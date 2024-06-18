@@ -131,25 +131,23 @@ class Friendship(models.Model):
 #       return self.name
     
 class Game(models.Model):
-    id = models.AutoField(primary_key=True)
+    game_id = models.AutoField(primary_key=True)
     player1 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='player1')
     player2 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='player2')
-    player1_score = models.IntegerField(default=0)
-    player2_score = models.IntegerField(default=0)
+    p1_wins = models.IntegerField(default=0)
+    p2_wins = models.IntegerField(default=0)
     winner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='winner')
-    loser = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='loser')
 
     date = models.DateTimeField(auto_now_add=True)
     
     def to_dict(self):
         return {
-            'id': self.id,
+            'game_id': self.id,
             'player1': self.player1.username,
             'player2': self.player2.username,
-            'player1_score': self.player1_score,
+            'p1_wins': self.p1_wins,
             'player2_score': self.player2_score,
             'winner': self.winner.username,
-            'loser': self.loser.username,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S'),
         }
 
