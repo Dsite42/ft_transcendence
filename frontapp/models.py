@@ -142,11 +142,11 @@ class Game(models.Model):
     
     def to_dict(self):
         return {
-            'game_id': self.id,
+            'game_id': self.game_id,
             'player1': self.player1.username,
             'player2': self.player2.username,
             'p1_wins': self.p1_wins,
-            'player2_score': self.player2_score,
+            'p2_wins': self.p2_wins,
             'winner': self.winner.username,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S'),
         }
