@@ -1,4 +1,5 @@
 from .client import Client
+from .notifier import AbstractNotifier
 from .game import GameState, GamePhase, PaddleState
 from .protocol import build_game_update, GAME_UPDATE_ALL
 
@@ -8,7 +9,7 @@ from typing import Set, List, Union
 from websockets import WebSocketException, broadcast, serve
 
 class Server:
-    def __init__(self, host: str, port: int, jwt_secret: str, tick_rate: float, player_ids: List[int]) -> None:
+    def __init__(self, host: str, port: int, jwt_secret: str, tick_rate: float, player_ids: List[int], notifier: AbstractNotifier) -> None:
         self.host = host
         self.port = port
         self.jwt_secret = jwt_secret
@@ -16,16 +17,24 @@ class Server:
         self.player_ids = set(player_ids)
         self.waiting_ids = set(player_ids)
         self.player_order = player_ids
+        self.notifier = notifier
         self.game_state = GameState()
         self.clients: Set[Client] = set()
 
     async def main_loop(self) -> None:
         async with serve(self.handle_client, self.host, self.port, create_protocol=partial(Client, self)):
+            self.notifier.notify_ready()
             # Simulate a game tick, broadcast a partial update and wait for the next tick
             while self.game_state.phase != GamePhase.Finished:
                 self.game_state.tick(self.tick_interval)
                 broadcast(self.clients, build_game_update(self.game_state))
                 await sleep(self.tick_interval)
+            # Report the game's final state
+            self.notifier.notify_finished(
+                self.game_state.winning_side,
+                self.game_state.paddle_a.score,
+                self.game_state.paddle_b.score
+            )
 
     async def handle_client(self, client: 'Client') -> None:
         # Prevents a race-condition where multiple clients with the same user ID pass
