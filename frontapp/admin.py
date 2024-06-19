@@ -15,20 +15,17 @@ class CustomUserForm(forms.ModelForm):
         for field in self.fields.values():
             field.required = False
 
-class GameInline(admin.TabularInline):
+
+class GameInlinePlayer1(admin.TabularInline):
     model = Game
+    fk_name = 'player1'
     extra = 0
-    verbose_name = "Game"
-    verbose_name_plural = "Games"
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if self.parent_model == CustomUser:
-            user_id = request.resolver_match.kwargs.get('object_id')
-            return qs.filter(Q(player1_id=user_id) | Q(player2_id=user_id) | Q(winner_id=user_id))
-        return qs
 
-    fk_name = 'player1'  # Diese Beziehung angeben, um den Fehler zu umgehen
+class GameInlinePlayer2(admin.TabularInline):
+    model = Game
+    fk_name = 'player2'
+    extra = 0
 
 class CustomUserAdmin(UserAdmin):
     form = CustomUserForm
@@ -44,7 +41,7 @@ class CustomUserAdmin(UserAdmin):
             'fields': tuple(field.name for field in CustomUser._meta.fields if field.name not in [f.name for f in User._meta.fields]),
         }),
     )
-    inlines = [GameInline]  # Hier fügen wir den Inline-Admin hinzu
+    inlines = [GameInlinePlayer1, GameInlinePlayer2]
 
 class FriendshipAdmin(admin.ModelAdmin):
     list_display = ('from_user', 'to_user', 'accepted')

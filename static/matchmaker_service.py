@@ -163,7 +163,7 @@ class SingleGame:
     
 class MatchMaker:
     def __init__(self):
-        self.db = Database(engine='django.db.backends.sqlite3', name='/home/chris/Core/ft_transcendence/frontend_draft/db.sqlite3')
+        self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.turnements = []
         self.single_games = []
         self.single_games_queue = []

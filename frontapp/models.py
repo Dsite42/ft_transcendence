@@ -132,11 +132,11 @@ class Friendship(models.Model):
     
 class Game(models.Model):
     game_id = models.AutoField(primary_key=True)
-    player1 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='player1')
-    player2 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='player2')
+    player1 = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='player1')
+    player2 = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='player2')
     p1_wins = models.IntegerField(default=0)
     p2_wins = models.IntegerField(default=0)
-    winner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='winner')
+    winner = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='winner')
 
     date = models.DateTimeField(auto_now_add=True)
     
