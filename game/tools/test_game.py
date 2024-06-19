@@ -130,6 +130,12 @@ class PygameRunner:
         self.draw_text(f'update_flags={self.game_state.update_flags}', 0, self.height - 48, (255, 255, 0))
         if self.game_state.phase == GamePhase.Waiting:
             self.draw_text('>>> Press [X] to start game', 0, self.height - 72, (0, 255, 255))
+        if self.game_state.phase == GamePhase.Finished:
+            match self.game_state.winning_side:
+                case 0: winning_text = 'Left side'
+                case 1: winning_text = 'Right side'
+                case _: winning_text = 'Draw'
+            self.draw_text(f'winning_side={self.game_state.winning_side} ({winning_text})', 0, self.height - 72, (255, 0, 255))
         # Present the frame
         pygame.display.flip()
 
