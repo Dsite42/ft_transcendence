@@ -19,7 +19,7 @@ function createDetailChart(player) {
         chart.destroy();
     }
     const names = ['Wins', 'Losses'];
-    const wins = [player.wins, player.losses];
+    const wins = [player.games_won, player.games_lost];
     var options = {
         title: {
             text: 'Wins',

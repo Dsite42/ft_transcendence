@@ -447,7 +447,7 @@ def get_pending_friend_requests(request, data):
 @login_required
 def rank_list(request, data):
     players = CustomUser.objects.all()#.order_by('-points') 
-    ranking = [{'name': player.username, 'points': player.stats.get('highest_score'), 'wins': player.stats.get('games_won'), 'losses': player.stats.get('games_lost')} for player in players]
+    ranking = [{'name': player.username, 'score': player.stats.get('score'), 'games_won': player.stats.get('games_won'), 'games_lost': player.stats.get('games_lost'), 'games_played': player.stats.get('games_played')} for player in players]
 
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
 
