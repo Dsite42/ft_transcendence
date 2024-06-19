@@ -22,7 +22,7 @@ class Server:
     async def main_loop(self) -> None:
         async with serve(self.handle_client, self.host, self.port, create_protocol=partial(Client, self)):
             # Simulate a game tick, broadcast a partial update and wait for the next tick
-            while True:
+            while self.game_state.phase != GamePhase.Finished:
                 self.game_state.tick(self.tick_interval)
                 broadcast(self.clients, build_game_update(self.game_state))
                 await sleep(self.tick_interval)
