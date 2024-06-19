@@ -2,8 +2,6 @@ import asyncio
 import signal
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor
-import threading
 
 import django
 from django.conf import settings
@@ -19,6 +17,9 @@ from tinyrpc import RPCClient
 import websockets
 from asgiref.sync import sync_to_async
 from datetime import datetime
+
+from aiorpc import AioRPC
+from asyncio import Future, sleep, run
 
 #define classes
 
@@ -322,17 +323,17 @@ def start_rpc_server():
     print("Matchmaker Service RPC Server started...")
     rpc_server.serve_forever()
 
+
 async def start_websocket_server():
     async with websockets.serve(handler, "10.12.7.1", 8765):
         print("WebSocket server started on ws://10.12.7.1:8765")
         await asyncio.Future()
 
 async def run_servers():
-    loop = asyncio.get_running_loop()
-    executor = ThreadPoolExecutor()
-    rpc_server_thread = threading.Thread(target=start_rpc_server, daemon=True)
-    rpc_server_thread.start()
     await start_websocket_server()
+    async with AioRPC('localhost', 'matchmaker_service_queue', MatchmakerService()):
+        # Do anything else here
+        await Future()
 
 async def handle_shutdown(loop, executor):
     print("Shutting down...")
@@ -345,10 +346,9 @@ async def handle_shutdown(loop, executor):
 
 async def main():
     loop = asyncio.get_running_loop()
-    executor = ThreadPoolExecutor()
 
     for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, lambda: asyncio.create_task(handle_shutdown(loop, executor)))
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(handle_shutdown(loop)))
 
     try:
         await run_servers()
