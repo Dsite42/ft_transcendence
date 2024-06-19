@@ -1,2 +1,4 @@
+pika==1.3.2
 PyJWT==2.8.0
+tinyrpc==1.1.7
 websockets==12.0
