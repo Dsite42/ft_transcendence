@@ -351,8 +351,6 @@ function drawErrorScreen(error) {
 
 
 // Game logic
-
-
 'use strict'
 const Game = (() => {
     const game = {
@@ -366,7 +364,9 @@ const Game = (() => {
             if (mStatus !== kStatus_None && mStatus !== kStatus_Finished && mStatus !== kStatus_Error)
                 throw errorWithMessage('Attempt to start game multiple times');
             mStatus = kStatus_Loading;
-            game.onLoading && game.onLoading();
+            try {
+                game.onLoading && game.onLoading();
+            } catch {}
 
             try {
                 // Determine the game socket's address
@@ -374,7 +374,7 @@ const Game = (() => {
                     throw errorWithMessage('Unsupported protocol');
                 let address = location.protocol.replace('http', 'ws')
                     .concat(
-                        '//', host,
+                        '//', host, '/game',
                         ...tokens.map((token, index) =>
                             `${index === 0 ? "?" : "&"}with_token=${token}`
                         )
@@ -423,7 +423,9 @@ const Game = (() => {
                     const timeout = setTimeout(() => {
                         mSocket.onmessage = null;
                         mSocket.onclose = null;
-                        mSocket.close();
+                        try {
+                            mSocket.close();
+                        } catch {}
                         reject(errorWithMessage('Server is not responding'));
                     }, 1000);
 
@@ -436,17 +438,30 @@ const Game = (() => {
                     };
                 });
 
-                // Bind events and start animating
-                mSocket.onclose = onSocketClose;
-                addEventListener('keyup', onKeyUp);
-                addEventListener('keydown', onKeyDown);
-                requestAnimationFrame(onAnimationFrame);
+                if (mPhase == kPhase_Finished) {
+                    // The game is already finished, close the socket and transition into finished state
+                    mStatus = kStatus_Finished;
+                    try {
+                        game.onFinish && game.onFinish(mScoreA, mScoreB);
+                    } catch {}
+                    try {
+                        mSocket.close();
+                    } catch {}
+                } else {
+                    // Bind events and start animating
+                    mSocket.onclose = onSocketClose;
+                    addEventListener('keyup', onKeyUp);
+                    addEventListener('keydown', onKeyDown);
+                    requestAnimationFrame(onAnimationFrame);
+                }
             } catch (error) {
                 mStatus = kStatus_Error;
-                if (error instanceof Error && error.withMessage === true)
-                    game.onError && game.onError(error.message);
-                else
-                    game.onError && game.onError('Unable to start game');
+                try {
+                    if (error instanceof Error && error.withMessage === true)
+                        game.onError && game.onError(error.message);
+                    else
+                        game.onError && game.onError('Unable to start game');
+                } catch {}
             }
         }
     };
@@ -629,7 +644,9 @@ const Game = (() => {
         if (mStatus === kStatus_Loading) {
             // Transition into running state when the first frame is visible
             mStatus = kStatus_Running;
-            game.onRunning && game.onRunning();
+            try {
+                game.onRunning && game.onRunning();
+            } catch {}
         }
         // Only continue to animate when the game is still running
         if (mStatus === kStatus_Running)
@@ -712,20 +729,36 @@ const Game = (() => {
             mSocket.send(new Uint8Array([mInputState]));
             mLastInputState = mInputState;
         }
+
+        // If the game was finished, clean up and transition into finished state
+        if (mStatus === kStatus_Running && mPhase === kPhase_Finished) {
+            try {
+                mSocket.close();
+            } catch {}
+            removeEventListener('keyup', onKeyUp);
+            removeEventListener('keydown', onKeyDown);
+
+            mStatus = kStatus_Finished;
+            try {
+                game.onFinish && game.onFinish(mScoreA, mScoreB);
+            } catch {}
+        }
     }
 
     function onSocketClose() {
         if (mStatus !== kStatus_Loading && mStatus !== kStatus_Running)
             return;
-        mStatus = kStatus_Error;
-        game.onError && game.onError('Connection to server was lost');
-
         removeEventListener('keyup', onKeyUp);
         removeEventListener('keydown', onKeyDown);
+        mStatus = kStatus_Error;
+        try {
+            game.onError && game.onError('Connection to server was lost');
+        } catch {}
     }
 
     return game;
 })();
+
 
 // Set the functions called on game Events
 

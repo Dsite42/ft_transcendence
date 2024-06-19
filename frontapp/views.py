@@ -167,7 +167,7 @@ def auth(request: HttpRequest) -> HttpResponse:
         'client_secret': settings.OAUTH2_SECRET,
         'redirect_uri': 'http://127.0.0.1:8000/auth'
     }).json()
-
+    print("oauth_response: ", oauth_response)
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
         'Authorization': 'Bearer ' + oauth_response['access_token']
     }).json()
@@ -177,6 +177,7 @@ def auth(request: HttpRequest) -> HttpResponse:
         '2FA_Activated': False,
         '2FA_Passed': False,
         'intra_name': user_info['login'],
+        'user_id': CustomUser.objects.get(username=user_info['login']).id
     }
     intra_name = user_info['login']
     if intra_name:
