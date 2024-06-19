@@ -40,6 +40,7 @@ class GameState:
     update_flags: 'GameUpdateFlag'
     next_update_flags: 'GameUpdateFlag'
     timeout: float
+    winning_side: int
 
     def __init__(self) -> None:
         self.phase = GamePhase.Waiting
@@ -49,6 +50,7 @@ class GameState:
         self.update_flags = GameUpdateFlag.Empty
         self.next_update_flags = GameUpdateFlag.Empty
         self.timeout = GameState.WAITING_TIMEOUT
+        self.winning_side = -1
 
     def tick(self, delta_time: float) -> None:
         self.update_flags = self.next_update_flags
@@ -89,6 +91,7 @@ class GameState:
                 if self.timeout <= 0.0:
                     if self.paddle_a.score > 10 or self.paddle_b.score > 10:
                         self.phase = GamePhase.Finished
+                        self.winning_side = 0 if self.paddle_a.score > self.paddle_b.score else 1
                     else:
                         self.phase = GamePhase.Playing
                     self.update_flags |= GameUpdateFlag.Phase
