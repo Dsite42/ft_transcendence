@@ -6,7 +6,7 @@ from asyncio import run
 from argparse import ArgumentParser, Namespace
 
 def parse_arguments() -> Namespace:
-    parser = ArgumentParser(description='')
+    parser = ArgumentParser(description='Manages game servers and provides an RPC interface')
     parser.add_argument(
         '-r', '--rpc-host',
         type=str, required=True,
