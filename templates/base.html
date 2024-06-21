@@ -184,12 +184,14 @@
         <br>
         {% if user.is_authenticated %}
         <button id="startGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Game via MM' %}</button>
+        <button id="startKeyboardGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Keyboard Game via MM' %}</button>
         {% else %}
         <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
         {% endif %}
     </div>
     <script>
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
+        // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
             const socket = new WebSocket('ws://10.12.7.1:8765');
 
@@ -218,6 +220,38 @@
                 console.error('WebSocket error:', error);
             };
         });
+
+        // keyboard_game
+        document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
+            const socket = new WebSocket('ws://10.12.7.1:8765');
+
+            socket.onopen = function(event) {
+                console.log('WebSocket is open now.');
+                // Nachricht an den Server senden
+                socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+                socket.send(JSON.stringify({ action: 'request_keyboard_game', player_id: "{{ user.user_id }}" }));
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('WebSocket message received:', data);
+                alert('Nachricht vom Server: ' + data.message + data.game_address);
+                if (data.action === 'game_address') {
+                    //window.location.href = "http://www.google.com"
+                    Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
+                }
+            };
+
+            socket.onclose = function(event) {
+                console.log('WebSocket is closed now.');
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        });
+
+
     </script>
 
 

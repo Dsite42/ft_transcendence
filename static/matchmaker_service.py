@@ -181,7 +181,6 @@ class MatchMaker:
         self.turnements = []
         self.single_games = []
         self.single_games_queue = []
-        self.keyboard_games = []
 
 
     def create_turnement(self, creator, turnement_name, turnement_size):
@@ -192,6 +191,9 @@ class MatchMaker:
     async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
         await self.check_single_game_queue()
+
+    async def request_keyboard_game(self, player1):
+        await self.create_keyboard_game(player1)
                 
     async def check_single_game_queue(self):
         print(f'Checking single game queue. Length: {len(self.single_games_queue)}')
@@ -234,7 +236,20 @@ class MatchMaker:
         
         end_time = time.time()
         print(f"create_single_game took {end_time - start_time:.2f} seconds")
-        
+    
+    async def create_keyboard_game(self, player1_id):
+        print(f'Creating keyboard game for Player {player1_id}.')
+        game_id = self.game_id_counter
+        self.game_id_counter += 1
+        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, 'guest')
+        game_address = result['game_address']
+        message = {
+            'action': 'game_address',
+            'message': f'Keyboard Game successfully created. Join via: ',
+            'game_address': game_address,
+        }
+        await send_message_to_client(player1_id, message)
+
         
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
         self.single_games.append(SingleGame(game_id, 4, None, 2, None, 'localhost:8000'))
@@ -330,7 +345,11 @@ async def consume_messages(websocket, client_id):
             if data.get('action') == 'request_single_game':
                 player_id = data.get('player_id')
                 print(f"Requesting single game for player {player_id}.")
-                await matchmaker.request_single_game(player_id)                
+                await matchmaker.request_single_game(player_id) 
+            elif data.get('action') == 'request_keyboard_game':
+                player_id = data.get('player_id')
+                print(f"Requesting keyboard game for player {player_id}.")
+                await matchmaker.request_keyboard_game(player_id)               
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except Exception as e:
