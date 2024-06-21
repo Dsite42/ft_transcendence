@@ -306,6 +306,10 @@ async def handler(websocket, path):
         client_id = data.get('player_id')
         
         if action == 'handshake' and client_id:
+            if connected_clients.get(client_id):
+                print(f"Client {client_id} already connected.")
+                await websocket.close()
+                return
             client = Client(client_id, websocket)
             connected_clients[client_id] = client
             try:
