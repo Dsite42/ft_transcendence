@@ -5,6 +5,7 @@ services:
   rabbitmq:
     image: 'rabbitmq:latest'
   game:
+    init: true
     build: .
     ports:
       - ${PORT_RANGE}:${PORT_RANGE}
