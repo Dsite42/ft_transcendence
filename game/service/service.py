@@ -21,9 +21,9 @@ class GameService:
         port = self.ports.pop()
         try:
             settings = GameServerSettings(port, self.jwt_secret, player_a_id, player_b_id)
-            server = GameServer(game_id, settings, self.on_server_state_update)
+            server = GameServer(game_id, settings, self.on_server_finished, self.on_server_quit)
+            await server.ready_future
             self.servers.add(server)
-            # TODO: Wait for server to be ready and handle its events
             return {
                 'game_id': game_id,
                 'game_address': f'{self.game_host}:{port}'
@@ -33,9 +33,11 @@ class GameService:
             self.ports.add(port)
             return None
 
-    def on_server_state_update(self, server: GameServer) -> None:
-        # TODO: Handle the server's new state
-        pass
+    def on_server_finished(self, server: GameServer, winning_side: int, score_a: int, score_b: int) -> None:
+        print(f'on_server_finished({server=}, {winning_side=}, {score_a=}, {score_b=})')
+
+    def on_server_quit(self, server: GameServer) -> None:
+        print(f'on_server_quit({server=})')
 
     async def main_loop(self) -> None:
         async with AioRPC(self.rpc_host, 'game_service', self):

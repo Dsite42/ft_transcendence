@@ -2,8 +2,14 @@ from struct import unpack
 from typing import Callable
 from subprocess import Popen
 from dataclasses import dataclass
-from asyncio import get_event_loop
+from asyncio import Future, get_event_loop
 from os import close, pipe2, read, O_NONBLOCK
+
+# Invoked when a game server's result has become available
+FinishHandler = Callable[['GameServer', int, int, int], None]
+
+# Invoked when a game server's process has quit and its port has become usable again
+QuitHandler = Callable[['GameServer'], None]
 
 @dataclass
 class GameServerSettings:
@@ -59,23 +65,39 @@ class GameServerProcess:
                 close(fileno)
 
 class GameServer:
-    def __init__(self, game_id: int, settings: GameServerSettings, on_state_update: Callable[['GameServer'], None]) -> None:
+    def __init__(self, game_id: int, settings: GameServerSettings, on_finished: FinishHandler, on_quit: QuitHandler) -> None:
         self.game_id = game_id
         self.settings = settings
+        self.on_finished = on_finished
+        self.on_quit = on_quit
         self.process = GameServerProcess(settings, self.on_process_readable)
+        self.ready_future = Future()
         self.message_length = None
         self.message_buffer = bytearray()
-        self.on_state_update = on_state_update
+        self.finish_reported = False
 
     def on_game_ready(self) -> None:
-        # TODO: Handle message
-        print(f'on_game_ready({self=})')
-        pass
+        if not self.ready_future.done():
+            # The server has become ready, finish the future for the waiting task
+            self.ready_future.set_result(None)
 
     def on_game_finished(self, winning_side: int, score_a: int, score_b: int) -> None:
-        # TODO: Handle message
-        print(f'on_game_finished({self=}, {winning_side=}, {score_a=}, {score_b=})')
-        pass
+        if not self.finish_reported:
+            # Prevent a finished game from being reported multiple times
+            self.finish_reported = True
+            self.on_finished(self, winning_side, score_a, score_b)
+
+    def on_process_quit(self) -> None:
+        if not self.ready_future.done():
+            # The server has quit before becoming ready, raise an exception for the waiting task
+            self.ready_future.set_exception(Exception('Server has quit unexpectedly'))
+        else:
+            if not self.finish_reported:
+                # Prevent a finished game from being reported multiple times
+                self.finish_reported = True
+                # The server has quit before reporting its score, so report a draw
+                self.on_finished(self, -1, 0, 0)
+            self.on_quit(self)
 
     def on_process_message(self, message: str) -> None:
         # Split the message into command and arguments
@@ -109,8 +131,9 @@ class GameServer:
         except BlockingIOError:
             pass
         except Exception:
-            # Release the server on any exception
+            # Release the server on any exception and raise a quit event
             self.process = None
+            self.on_process_quit()
 
     def on_process_data(self, data: bytes) -> None:
         offset = 0
