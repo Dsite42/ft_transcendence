@@ -1,5 +1,5 @@
 from .aiorpc import AioRPC
-from .game_server import GameServer
+from .game_server import GameServerSettings, GameServer
 
 from asyncio import Future
 from typing import Optional
@@ -20,7 +20,8 @@ class GameService:
             return None
         port = self.ports.pop()
         try:
-            server = GameServer(port, self.jwt_secret, game_id, player_a_id, player_b_id)
+            settings = GameServerSettings(port, self.jwt_secret, player_a_id, player_b_id)
+            server = GameServer(game_id, settings, self.on_server_state_update)
             self.servers.add(server)
             # TODO: Wait for server to be ready and handle its events
             return {
@@ -31,6 +32,10 @@ class GameService:
             # Prevent leaking the port on exception
             self.ports.add(port)
             return None
+
+    def on_server_state_update(self, server: GameServer) -> None:
+        # TODO: Handle the server's new state
+        pass
 
     async def main_loop(self) -> None:
         async with AioRPC(self.rpc_host, 'game_service', self):
