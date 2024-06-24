@@ -37,7 +37,9 @@ class GameService:
         print(f'on_server_finished({server=}, {winning_side=}, {score_a=}, {score_b=})')
 
     def on_server_quit(self, server: GameServer) -> None:
-        print(f'on_server_quit({server=})')
+        # The server's process has quit, add its port back to the set of available ports
+        self.servers.discard(server)
+        self.ports.add(server.settings.port)
 
     async def main_loop(self) -> None:
         async with AioRPC(self.rpc_host, 'game_service', self):
