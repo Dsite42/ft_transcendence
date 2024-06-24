@@ -13,6 +13,16 @@ function populateTable(data, tag) {
         }
     });
 }
+
+// Function to filter the table by user
+function filterTableByUser(username) {
+    console.log('Username:', username);
+    const table = $('#game_sessions-table');
+    const data = table.bootstrapTable('getData');
+    const filteredData = data.filter(session => session.player1 === username || session.player2 === username);
+    populateTable(filteredData, '#game_sessions-table');
+}
+
 // Function to create the detail chart
 function createDetailChart(player) {
     if (chart) {

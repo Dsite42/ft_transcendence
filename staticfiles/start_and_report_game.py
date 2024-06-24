@@ -11,8 +11,8 @@ protocol = JSONRPCProtocol()
 # RPC-Client einrichten
 matchmaker_service = RPCClient(protocol, matchmaker_transport).get_proxy()
 
-example_transport = RabbitMQClientTransport(connection, 'example_service')
-example_service = RPCClient(protocol, example_transport).get_proxy()
+#example_transport = RabbitMQClientTransport(connection, 'example_service')
+#example_service = RPCClient(protocol, example_transport).get_proxy()
 
 
 
@@ -25,8 +25,8 @@ p1_wins = 11
 p2_wins = 7
 
 
-response = example_service.ping()
-print(response)
+#response = example_service.ping()
+#print(response)
 # Ergebnis übermitteln
-#response = matchmaker_service.transmit_game_result(game_id, winner, p1_wins, p2_wins)
-#print(f"Result sent: {response}")
+response = matchmaker_service.transmit_game_result(game_id, winner, p1_wins, p2_wins)
+print(f"Result sent: {response}")

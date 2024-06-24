@@ -453,9 +453,11 @@ def rank_list(request, data):
 
 @login_required
 def game_sessions(request, data):
+    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    user = CustomUser.objects.get(username=data['intra_name'])
     games = Game.objects.all().order_by('-date')
     game_sessions = [game.to_dict() for game in games]
-    return render(request, 'game_sessions.html', {'game_sessions': json.dumps(game_sessions)})
+    return render(request, 'game_sessions.html', {'game_sessions': json.dumps(game_sessions), 'current_user': user.username})
 
 #Helper Functions
 
