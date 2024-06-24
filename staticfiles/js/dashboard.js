@@ -1,3 +1,4 @@
+var chart;
 
 // Function to populate the table
 function populateTable(data, tag) {
@@ -18,6 +19,7 @@ function filterTableByUser(username) {
     const data = table.bootstrapTable('getData');
     const filteredData = data.filter(session => session.player1 === username || session.player2 === username);
     populateTable(filteredData, '#game_sessions-table');
+    return filteredData;
 }
 
 // Function to create the detail chart
@@ -60,6 +62,29 @@ function createDetailChart(player) {
 }
 
 
+function prepareDataForGameSessionChart(data) {
+    // Prepare data for stepline chart
+    // Aggregate games by date
+    var gamesByDate = data.reduce((acc, session) => {
+        // Extract just the date part from the 'date' string
+        let date = session.date.split(' ')[0];
+        if (acc[date]) {
+            acc[date] += 1;
+        } else {
+            acc[date] = 1;
+        }
+        return acc;
+    }, {})
+    // Transform data for ApexCharts
+    var chartData = Object.entries(gamesByDate).map(([date, count]) => ({
+        x: new Date(date).getTime(), // Convert date string to timestamp
+        y: count
+    }))
+    // Sort data by date as ApexCharts expects data to be sorted for time series
+    chartData.sort((a, b) => a.x - b.x);
+    return chartData;
+}
+
 function createGameSessionChart(data) {
     if (chart) {
         chart.destroy();
@@ -95,6 +120,6 @@ function createGameSessionChart(data) {
         }
     };
 
-      var chart = new ApexCharts(document.querySelector("#chart-game_sessions"), options);
+      chart = new ApexCharts(document.querySelector("#chart-game_sessions"), options);
       chart.render();
 }
