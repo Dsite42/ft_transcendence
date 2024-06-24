@@ -34,7 +34,7 @@ def parse_arguments() -> Namespace:
             raise ValueError()
         arguments.port_range = range(
             int(match_.group(1)),
-            int(match_.group(2))
+            int(match_.group(2)) + 1
         )
         if len(arguments.port_range) == 0:
             raise ValueError()
