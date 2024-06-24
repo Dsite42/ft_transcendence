@@ -5,7 +5,7 @@
             id="game_sessions-table"
             data-toggle="table"
             data-sortable="true"
-            data-click-to-select="true">
+            data-click-to-select="false">
         <thead>
             <tr>
                 <th data-field="game_id" data-sortable="true">ID</th>
@@ -32,6 +32,29 @@
     console.log('html_currentUser:', currentUser);
 
     populateTable(gameSessionData, '#game_sessions-table');
+
+    // Prepare data for stepline chart
+    // Aggregate games by date
+    var gamesByDate = gameSessionData.reduce((acc, session) => {
+        // Extract just the date part from the 'date' string
+        let date = session.date.split(' ')[0];
+        if (acc[date]) {
+            acc[date] += 1;
+        } else {
+            acc[date] = 1;
+        }
+        return acc;
+    }, {});
+
+    // Transform data for ApexCharts
+    var chartData = Object.entries(gamesByDate).map(([date, count]) => ({
+        x: new Date(date).getTime(), // Convert date string to timestamp
+        y: count
+    }));
+
+    // Sort data by date as ApexCharts expects data to be sorted for time series
+    chartData.sort((a, b) => a.x - b.x);
+    createGameSessionChart(chartData);
 
     document.getElementById('filter-btn').addEventListener('click', function() {
             filterTableByUser(currentUser);

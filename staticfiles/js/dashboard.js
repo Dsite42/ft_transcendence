@@ -8,15 +8,12 @@ function populateTable(data, tag) {
         onClickRow: function(row, $element, field) {
             if (tag == '#player-table')
                 createDetailChart(row);
-            else if (tag == '#game_sessions-table')
-                createDetailSessionChart(row);
         }
     });
 }
 
 // Function to filter the table by user
 function filterTableByUser(username) {
-    console.log('Username:', username);
     const table = $('#game_sessions-table');
     const data = table.bootstrapTable('getData');
     const filteredData = data.filter(session => session.player1 === username || session.player2 === username);
@@ -63,41 +60,41 @@ function createDetailChart(player) {
 }
 
 
-// Function to create the detail chart
-function createDetailSessionChart(session) {
+function createGameSessionChart(data) {
     if (chart) {
         chart.destroy();
     }
-    const names = [session.player1, session.player2];
-    const wins = [session.player1_score, session.player2_score];
     var options = {
-        title: {
-            text: 'Player Scores',
-            align: 'center',
-            style: {
-                fontSize: '30px',
-                fontWeight: 'bold',
-                fontFamily: undefined,
-                color: '#263238'
-            }
-        },
+        series: [{
+            data: data
+        }],
         chart: {
-            type: 'pie'
+            type: 'line',
+            height: 350
         },
-        series: wins,
-        labels: names,
-        responsive: [{
-            breakpoint: 480,
-            options: {
-                chart: {
-                    width: 10
-                },
-                legend: {
-                    position: 'bottom'
-                }
+        stroke: {
+            curve: 'stepline',
+        },
+        dataLabels: {
+            enabled: false
+        },
+        title: {
+            text: 'Amount of matches over time',
+            align: 'left'
+        },
+        markers: {
+            hover: {
+                sizeOffset: 4
             }
-        }]
+        },
+        xaxis: {
+            type: 'datetime',
+            labels: {
+                format: 'dd MMM'
+            }
+        }
     };
-    chart = new ApexCharts(document.querySelector("#chart-game_sessions"), options);
-    chart.render();
+
+      var chart = new ApexCharts(document.querySelector("#chart-game_sessions"), options);
+      chart.render();
 }
