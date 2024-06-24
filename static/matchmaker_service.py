@@ -274,6 +274,19 @@ class MatchMaker:
         else:
             print(f"Game ID {game_id} not found.")
         return
+    
+    async def abort_game(self, game_id):
+        game = None
+        for game in self.single_games:
+            if game.game_id == game_id:
+                game = game
+                break
+        if game is not None:
+            game.abort_game()
+            self.single_games.remove(game)
+        else:
+            print(f"Game ID {game_id} not found.")
+        return
         
 
 class MatchmakerService:
@@ -292,7 +305,9 @@ class MatchmakerService:
     @public
     def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
-        #matchmaker.db.game_result_to_user_stats(game_id, winner, p1_wins, p2_wins)
+        if winner == -1:
+            matchmaker.abort_game(game_id)
+            return
         matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
 
