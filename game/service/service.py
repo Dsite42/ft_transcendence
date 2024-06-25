@@ -1,4 +1,5 @@
 from .aiorpc import AioRPC
+from .result_transmitter import ResultTransmitter
 from .game_server import GameServerSettings, GameServer
 
 from asyncio import Future
@@ -12,6 +13,7 @@ class GameService:
         self.ports = set(ports)
         self.jwt_secret = jwt_secret
         self.servers = set()
+        self.transmitter = ResultTransmitter(rpc_host)
 
     @public
     async def create_game(self, game_id: int, player_a_id: int, player_b_id: int) -> Optional[dict]:
@@ -34,7 +36,8 @@ class GameService:
             return None
 
     def on_server_finished(self, server: GameServer, winning_side: int, score_a: int, score_b: int) -> None:
-        print(f'on_server_finished({server=}, {winning_side=}, {score_a=}, {score_b=})')
+        # Transmit the game's result to the matchmaker
+        self.transmitter.transmit(server.game_id, winning_side, score_a, score_b)
 
     def on_server_quit(self, server: GameServer) -> None:
         # The server's process has quit, add its port back to the set of available ports
@@ -42,5 +45,6 @@ class GameService:
         self.ports.add(server.settings.port)
 
     async def main_loop(self) -> None:
-        async with AioRPC(self.rpc_host, 'game_service', self):
-            await Future()
+        with self.transmitter:
+            async with AioRPC(self.rpc_host, 'game_service', self):
+                await Future()
