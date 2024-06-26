@@ -177,7 +177,7 @@ def auth(request: HttpRequest) -> HttpResponse:
         '2FA_Activated': False,
         '2FA_Passed': False,
         'intra_name': user_info['login'],
-        'user_id': CustomUser.objects.get(username=user_info['login']).id
+        'user_id': False
     }
     intra_name = user_info['login']
     if intra_name:
@@ -189,6 +189,7 @@ def auth(request: HttpRequest) -> HttpResponse:
                 # Reset the display name of the existing user
                 existing_user.display_name = existing_user.username
                 existing_user.save()
+            session_token['user_id'] = user.id
             
 
         if user.two_factor_auth_enabled:
