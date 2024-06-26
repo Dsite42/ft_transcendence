@@ -158,18 +158,6 @@
         <h1 class="mb-4">{% trans 'Welcome to the Pong Game!' %}</h1>
         <canvas id="gameCanvas" width="1600" height="800" class="border mt-4"></canvas>
     </div>
-    <script>
-    window.onload = function() {
-        document.getElementById('startGame').addEventListener('click', function() {
-            const canvas = document.getElementById('gameCanvas');
-            const host = 'localhost:9000'; // Replace with host from matchmaker
-            const tokens = [getCookie('session'), 'guest'];
-
-            Game.start(canvas, host, tokens)
-                .catch(error => console.error('Error starting game:', error));
-        });
-    };
-    </script>
 
     <!-- Matchmaker Test Section -->
          <!-- Game Section -->

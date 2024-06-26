@@ -59,6 +59,7 @@ class Database:
 
 
     def game_result_to_user_stats(self, player_id, is_winner, p2_wins, score):
+        print(f"game_result_to_user_stats: Player ID: {player_id}, is_winner: {is_winner}, p2_wins: {p2_wins}, score: {score}")
         sql_query = "SELECT stats FROM auth_user WHERE id = %s;"
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [player_id])
@@ -252,7 +253,6 @@ class MatchMaker:
 
         
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
-        self.single_games.append(SingleGame(game_id, 4, None, 2, None, 'localhost:8000'))
         game = None
         for game in self.single_games:
             if game.game_id == game_id:
@@ -263,10 +263,12 @@ class MatchMaker:
             game.end_game(winner, p1_wins, p2_wins)
             # Player1
             is_winner = 1 if game.player1 == winner else 0
+            print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
             score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
             await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
             #Player2
             is_winner = 1 if game.player2 == winner else 0
+            print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
             score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
             await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
 
@@ -308,6 +310,7 @@ class MatchmakerService:
         if winner == -1:
             await matchmaker.abort_game(game_id)
             return
+        print("Type:" , type(winner))
         await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
 
@@ -333,7 +336,7 @@ async def handler(websocket, path):
         first_message = await websocket.recv()  # Erste Nachricht vom Client
         data = json.loads(first_message)
         action = data.get('action')
-        client_id = data.get('player_id')
+        client_id = int(data.get('player_id'))
         
         if action == 'handshake' and client_id:
             if connected_clients.get(client_id):
@@ -358,7 +361,7 @@ async def consume_messages(websocket, client_id):
             data = json.loads(message)
             print(f"Received message from client {client_id}: {data}")
             if data.get('action') == 'request_single_game':
-                player_id = data.get('player_id')
+                player_id = int(data.get('player_id'))
                 print(f"Requesting single game for player {player_id}.")
                 await matchmaker.request_single_game(player_id) 
             elif data.get('action') == 'request_keyboard_game':
