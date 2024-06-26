@@ -16,6 +16,7 @@ from tinyrpc.transports.rabbitmq import RabbitMQServerTransport, RabbitMQClientT
 from tinyrpc import RPCClient
 
 import websockets
+from websockets.exceptions import ConnectionClosed
 from asgiref.sync import sync_to_async
 from datetime import datetime
 
@@ -365,16 +366,19 @@ async def consume_messages(websocket, client_id):
                 print(f"Requesting single game for player {player_id}.")
                 await matchmaker.request_single_game(player_id) 
             elif data.get('action') == 'request_keyboard_game':
-                player_id = data.get('player_id')
+                player_id = int(data.get('player_id'))
                 print(f"Requesting keyboard game for player {player_id}.")
                 await matchmaker.request_keyboard_game(player_id)               
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
+        except ConnectionClosed:
+            print(f"Connection with client {client_id} is closed.")
         except Exception as e:
             print(f"Error in consume_messages: {e}")
 
 async def send_message_to_client(client_id, message):
     client = connected_clients.get(client_id)
+    print("Type send_message_to_client:", type(client_id), "client:", client)
     if client and client.websocket.open:
         try:
             await client.websocket.send(json.dumps(message))
