@@ -193,7 +193,7 @@
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
         // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.7.1:8765');
+            const socket = new WebSocket('ws://10.12.7.7:8765');
 
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -223,7 +223,7 @@
 
         // keyboard_game
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.7.1:8765');
+            const socket = new WebSocket('ws://10.12.7.7:8765');
 
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -238,7 +238,7 @@
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
                 if (data.action === 'game_address') {
                     //window.location.href = "http://www.google.com"
-                    Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
+                    Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
                 }
             };
 

@@ -241,7 +241,7 @@ class MatchMaker:
         print(f'Creating keyboard game for Player {player1_id}.')
         game_id = self.game_id_counter
         self.game_id_counter += 1
-        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, 'guest')
+        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, -1)
         game_address = result['game_address']
         message = {
             'action': 'game_address',
@@ -303,12 +303,12 @@ class MatchmakerService:
 
 
     @public
-    def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
+    async def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
         if winner == -1:
             matchmaker.abort_game(game_id)
             return
-        matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
+        await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
 
 dispatcher = RPCDispatcher()
@@ -382,8 +382,8 @@ async def send_message_to_client(client_id, message):
 
 
 async def start_websocket_server():
-    async with websockets.serve(handler, "localhost", 8765):
-        print("WebSocket server started on ws://localhost:8765")
+    async with websockets.serve(handler, "10.12.7.7", 8765):
+        print("WebSocket server started on ws://10.12.7.7:8765")
         await asyncio.Future()
 
 async def run_servers():
@@ -401,7 +401,7 @@ async def handle_shutdown(loop, executor):
     print("Shutdown complete.")
 
 async def main():
-    await matchmaker.process_game_result(7, 4, 11, 8)
+    #await matchmaker.process_game_result(7, 4, 11, 8)
     try:
         task1 = asyncio.create_task(start_websocket_server())
         task2 = asyncio.create_task(run_servers())

@@ -86,7 +86,10 @@ class AioRPC:
 
     def _send_result(self, delivery_tag: int, properties: BasicProperties, request: RPCRequest, result: Any) -> None:
         try:
-            self._send_body(delivery_tag, properties, request.respond(result).serialize())
+            body = request.respond(result)
+            if body != None:
+                body = body.serialize()
+            self._send_reply(delivery_tag, properties, body)
         except Exception as error:
             self._send_error(delivery_tag, properties, request, error, False)
 
@@ -113,21 +116,23 @@ class AioRPC:
                 else:
                     response = request.error_respond(ServerError())
             if response != None:
-                self._send_body(delivery_tag, properties, response.serialize())
+                response = response.serialize()
+            self._send_reply(delivery_tag, properties, response)
         except Exception:
             # Do not try to recover if error serialization fails
             pass
 
-    def _send_body(self, delivery_tag: int, properties: BasicProperties, body: bytes) -> None:
+    def _send_reply(self, delivery_tag: int, properties: BasicProperties, body: Optional[bytes]) -> None:
         try:
-            self._channel.basic_publish(
-                exchange='',
-                routing_key=properties.reply_to,
-                properties=BasicProperties(
-                    correlation_id=properties.correlation_id
-                ),
-                body=body
-            )
+            if body != None:
+                self._channel.basic_publish(
+                    exchange='',
+                    routing_key=properties.reply_to,
+                    properties=BasicProperties(
+                        correlation_id=properties.correlation_id
+                    ),
+                    body=body
+                )
             self._channel.basic_ack(delivery_tag)
         except Exception:
             # This should never happen, but there is no way to handle it
