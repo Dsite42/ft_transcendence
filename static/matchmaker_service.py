@@ -306,7 +306,7 @@ class MatchmakerService:
     async def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
         if winner == -1:
-            matchmaker.abort_game(game_id)
+            await matchmaker.abort_game(game_id)
             return
         await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
