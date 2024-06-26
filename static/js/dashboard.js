@@ -74,12 +74,29 @@ function prepareDataForGameSessionChart(data) {
             acc[date] = 1;
         }
         return acc;
-    }, {})
+    }, {});
+
+    // Get the range of dates
+    let dates = Object.keys(gamesByDate);
+    let minDate = new Date(Math.min(...dates.map(date => new Date(date).getTime())));
+    let maxDate = new Date(Math.max(...dates.map(date => new Date(date).getTime())));
+
+    // Fill in missing dates with zero
+    let currentDate = minDate;
+    while (currentDate <= maxDate) {
+        let dateString = currentDate.toISOString().split('T')[0];
+        if (!gamesByDate[dateString]) {
+            gamesByDate[dateString] = 0;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
     // Transform data for ApexCharts
     var chartData = Object.entries(gamesByDate).map(([date, count]) => ({
         x: new Date(date).getTime(), // Convert date string to timestamp
         y: count
-    }))
+    }));
+
     // Sort data by date as ApexCharts expects data to be sorted for time series
     chartData.sort((a, b) => a.x - b.x);
     return chartData;
