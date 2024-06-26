@@ -30,8 +30,14 @@ class Server:
                 broadcast(self.clients, build_game_update(self.game_state))
                 await sleep(self.tick_interval)
             # Report the game's final state
+            match self.game_state.winning_side:
+                case 0 | 1:
+                    winner = self.player_order[self.game_state.winning_side]
+                case _:
+                    winner = -1
+            print(winner)
             self.notifier.notify_finished(
-                self.game_state.winning_side,
+                winner,
                 self.game_state.paddle_a.score,
                 self.game_state.paddle_b.score
             )

@@ -81,11 +81,11 @@ class GameServer:
             # The server has become ready, finish the future for the waiting task
             self.ready_future.set_result(None)
 
-    def on_game_finished(self, winning_side: int, score_a: int, score_b: int) -> None:
+    def on_game_finished(self, winner: int, score_a: int, score_b: int) -> None:
         if not self.finish_reported:
             # Prevent a finished game from being reported multiple times
             self.finish_reported = True
-            self.on_finished(self, winning_side, score_a, score_b)
+            self.on_finished(self, winner, score_a, score_b)
 
     def on_process_quit(self) -> None:
         if not self.ready_future.done():

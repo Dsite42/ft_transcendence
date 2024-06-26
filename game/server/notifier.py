@@ -7,8 +7,8 @@ class AbstractNotifier(ABC):
     def notify_ready(self) -> None:
         self.send_message('ready')
 
-    def notify_finished(self, winning_side: int, score_a: int, score_b: int) -> None:
-        self.send_message(f'finished:{winning_side}:{score_a}:{score_b}')
+    def notify_finished(self, winner: int, score_a: int, score_b: int) -> None:
+        self.send_message(f'finished:{winner}:{score_a}:{score_b}')
 
     @abstractmethod
     def send_message(self, message: str) -> None: ...

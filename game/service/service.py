@@ -35,9 +35,9 @@ class GameService:
             self.ports.add(port)
             return None
 
-    def on_server_finished(self, server: GameServer, winning_side: int, score_a: int, score_b: int) -> None:
+    def on_server_finished(self, server: GameServer, winner: int, score_a: int, score_b: int) -> None:
         # Transmit the game's result to the matchmaker
-        self.transmitter.transmit(server.game_id, winning_side, score_a, score_b)
+        self.transmitter.transmit(server.game_id, winner, score_a, score_b)
 
     def on_server_quit(self, server: GameServer) -> None:
         # The server's process has quit, add its port back to the set of available ports
