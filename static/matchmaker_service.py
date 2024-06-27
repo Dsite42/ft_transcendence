@@ -162,6 +162,8 @@ class Database:
         """
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, (tournament.creator, tournament.name, tournament.number_of_players, tournament.start_time, tournament.status, tournament.winner))
+            inserted_row_id = cursor.lastrowid
+        return inserted_row_id
 
 
 ''' from the django-db standalone github
@@ -189,19 +191,21 @@ class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.game_id_counter = 0
-        self.tournament_id_counter = 0
         self.tournaments = []
         self.single_games = []
         self.single_games_queue = []
 
 
     async def create_tournament(self, creator, tournament_name, number_of_players):
-        tournament_id = self.tournament_id_counter
-        self.tournament_id_counter += 1
-        new_tournament = Tournament(tournament_id, creator, tournament_name, number_of_players)
-        await sync_to_async(self.db.add_tournament)(new_tournament)
-
+        new_tournament = Tournament(0, creator, tournament_name, number_of_players)
+        new_tournament.id = await sync_to_async(self.db.add_tournament)(new_tournament)
         self.tournaments.append(new_tournament)
+        message = {
+            'action': 'tournement_created',
+            'message': f'Tournement successfully created. ID: ',
+            'tournement_id': new_tournament.id,
+        }
+        await send_message_to_client(creator, message)
 
         print(f"Tournament created: id {new_tournament.id} name: {new_tournament.name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
@@ -390,7 +394,12 @@ async def consume_messages(websocket, client_id):
                 tournament_name = data.get('tournament_name')
                 number_of_players = int(data.get('number_of_players'))
                 print(f"Requesting tournament for player {player_id}.")
-                await matchmaker.create_tournament(player_id, tournament_name, number_of_players)        
+                await matchmaker.create_tournament(player_id, tournament_name, number_of_players)
+            elif data.get('action') == 'join_tournement':
+                player_id = int(data.get('player_id'))
+                tournament_id = int(data.get('tournament_id'))
+                print(f"Joining tournament {tournament_id} for player {player_id}.")
+                await matchmaker.join_tournament(player_id, tournament_id)      
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except ConnectionClosed:
