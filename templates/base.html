@@ -154,10 +154,13 @@
     </div>
 
     <!-- Game Section -->
-    <div class="container mt-5 text-center">
-        <h1 class="mb-4">{% trans 'Welcome to the Pong Game!' %}</h1>
-        <canvas id="gameCanvas" width="1600" height="800" class="border mt-4"></canvas>
+<div class="container mt-5 text-center">
+    <h1 class="mb-4">{% trans 'Welcome to the Pong Game!' %}</h1>
+    <!-- Responsive Canvas Container -->
+    <div class="aspect-ratio-box" style="max-width: 100%; height: 0; padding-top: 50%; position: relative;">
+        <canvas id="gameCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" class="border mt-4"></canvas>
     </div>
+</div>
 
     <!-- Matchmaker Test Section -->
          <!-- Game Section -->
