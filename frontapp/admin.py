@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Friendship, Game
+from .models import CustomUser, Friendship, Game, Tournament
 from django.contrib.auth.models import User
 from django import forms
 from django.db.models import Q
@@ -50,6 +50,11 @@ class FriendshipAdmin(admin.ModelAdmin):
 class GameAdmin(admin.ModelAdmin):
     list_display = [field.name for field in Game._meta.fields]
 
+class TournamentAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in Tournament._meta.fields]
+
+
 admin.site.register(Friendship, FriendshipAdmin)
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Game, GameAdmin)
+admin.site.register(Tournament, TournamentAdmin)

@@ -764,3 +764,5 @@ const Game = (() => {
 
 Game.onLoading = drawLoadingScreen;
 Game.onError = drawErrorScreen;
+
+

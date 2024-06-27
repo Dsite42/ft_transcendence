@@ -154,3 +154,42 @@ class Game(models.Model):
     # To display the name of the teacher in the admin panel instead of the object name
     def __str__(self):
       return self.player1.username + " vs " + self.player2.username + " (" + self.winner.username + ")"
+    
+
+class Tournament(models.Model):
+    id = models.AutoField(primary_key=True)
+    creator = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='creator')
+    name = models.CharField(max_length=40)
+    number_of_players = models.IntegerField(default=0)
+    start_time = models.DateTimeField(auto_now_add=True)
+    winner = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='tournament_winner', null=True)
+    players = models.ManyToManyField(CustomUser, related_name='players')
+    status = models.CharField(max_length=40, default='waiting')
+    class Status(models.TextChoices):
+        WAITING = 'waiting', 'Waiting'
+        ONGOING = 'ongoing', 'Ongoing'
+        COMPLETED = 'completed', 'Completed'
+        FAILED = 'failed', 'Failed'
+
+    status = models.CharField(
+        max_length=40,
+        choices=Status.choices,
+        default=Status.WAITING,
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'creator': self.creator.username,
+            'name': self.name,
+            'number_of_players': self.number_of_players,
+            'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'winner': self.winner.username if self.winner else None,
+            'players': [player.username for player in self.players.all()],
+            'status': self.status,
+        }
+    
+    # To display the name of the teacher in the admin panel instead of the object name
+    def __str__(self):
+      return self.name
+

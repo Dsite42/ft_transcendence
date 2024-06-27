@@ -18,8 +18,8 @@ matchmaker_service = RPCClient(protocol, matchmaker_transport).get_proxy()
 
 # Spiel starten
 game_id = 1
-player1_id = 'dnebatz'
-player2_id = 'Klaus'
+player1_id = 2 # dnebatz
+player2_id = 3 # cgodecke
 winner = player1_id
 p1_wins = 11
 p2_wins = 7

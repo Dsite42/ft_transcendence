@@ -16,6 +16,7 @@ from tinyrpc.transports.rabbitmq import RabbitMQServerTransport, RabbitMQClientT
 from tinyrpc import RPCClient
 
 import websockets
+from websockets.exceptions import ConnectionClosed
 from asgiref.sync import sync_to_async
 from datetime import datetime
 
@@ -59,6 +60,7 @@ class Database:
 
 
     def game_result_to_user_stats(self, player_id, is_winner, p2_wins, score):
+        print(f"game_result_to_user_stats: Player ID: {player_id}, is_winner: {is_winner}, p2_wins: {p2_wins}, score: {score}")
         sql_query = "SELECT stats FROM auth_user WHERE id = %s;"
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [player_id])
@@ -108,33 +110,34 @@ class Database:
 '''
 
 
-class tournament:
-    def __init__(self, creator, turnement_name, turnement_size):
+class Tournament:
+    def __init__(self, tournament_id, creator, tournament_name, number_of_players):
+        self.id = tournament_id
         self.creator = creator
-        self.turnement_name = turnement_name
-        self.turnement_size = turnement_size
-        self.turnement_start_time = datetime.now()
-        self.turnement_end_time = None
+        self.name = tournament_name
+        self.number_of_players = number_of_players
+        self.start_time = datetime.now()
+        self.end_time = None
         self.players = []
-        self.turnement_status = 'waiting'
-        self.turnement_winner = None
+        self.status = 'waiting'
+        self.winner = None
 
-    def join_turnement(self, player):
-        if len(self.players) == self.turnement_size:
+    def join_tournament(self, player):
+        if len(self.players) == self.number_of_players:
             return False
         self.players.append(player)
 
-    def start_turnement(self):
-        self.turnement_status = 'started'
+    def start_tournament(self):
+        self.status = 'started'
 
-    def abort_turnement(self):
-        self.turnement_winner = None
-        self.turnement_status = 'aborted'
+    def abort_tournament(self):
+        self.winner = None
+        self.status = 'aborted'
 
-    def end_turnement(self, winner):
-        self.turnement_end_time = datetime.now()
-        self.turnement_status = 'ended'
-        self.turnement_winner = winner
+    def end_tournament(self, winner):
+        self.end_time = datetime.now()
+        self.status = 'ended'
+        self.winner = winner
 
 
 class SingleGame:
@@ -178,15 +181,18 @@ class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.game_id_counter = 0
-        self.turnements = []
+        self.tournament_id_counter = 0
+        self.tournaments = []
         self.single_games = []
         self.single_games_queue = []
 
 
-    def create_turnement(self, creator, turnement_name, turnement_size):
-        new_turnement = tournament(creator, turnement_name, turnement_size)
-        self.turnements.append(new_turnement)
-        return new_turnement
+    def create_tournament(self, creator, tournament_name, tournament_size):
+        tournament_id = self.tournament_id_counter
+        self.tournament_id_counter += 1
+        new_tournament = Tournament(tournament_id, creator, tournament_name, tournament_size)
+        self.tournaments.append(new_tournament)
+        print(f"Tournament created: id {new_tournament.id} name: {new_tournament.tournament_name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
     async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
@@ -241,7 +247,7 @@ class MatchMaker:
         print(f'Creating keyboard game for Player {player1_id}.')
         game_id = self.game_id_counter
         self.game_id_counter += 1
-        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, 'guest')
+        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, -1)
         game_address = result['game_address']
         message = {
             'action': 'game_address',
@@ -252,7 +258,6 @@ class MatchMaker:
 
         
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
-        self.single_games.append(SingleGame(game_id, 4, None, 2, None, 'localhost:8000'))
         game = None
         for game in self.single_games:
             if game.game_id == game_id:
@@ -263,10 +268,12 @@ class MatchMaker:
             game.end_game(winner, p1_wins, p2_wins)
             # Player1
             is_winner = 1 if game.player1 == winner else 0
+            print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
             score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
             await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
             #Player2
             is_winner = 1 if game.player2 == winner else 0
+            print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
             score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
             await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
 
@@ -303,12 +310,13 @@ class MatchmakerService:
 
 
     @public
-    def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
+    async def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
         if winner == -1:
-            matchmaker.abort_game(game_id)
+            await matchmaker.abort_game(game_id)
             return
-        matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
+        print("Type:" , type(winner))
+        await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
 
 dispatcher = RPCDispatcher()
@@ -333,7 +341,7 @@ async def handler(websocket, path):
         first_message = await websocket.recv()  # Erste Nachricht vom Client
         data = json.loads(first_message)
         action = data.get('action')
-        client_id = data.get('player_id')
+        client_id = int(data.get('player_id'))
         
         if action == 'handshake' and client_id:
             if connected_clients.get(client_id):
@@ -346,6 +354,7 @@ async def handler(websocket, path):
                 await consume_messages(websocket, client_id)
             finally:
                 del connected_clients[client_id]
+                await websocket.close()
         else:
             print("Error: First message did not contain a valid player_id")
             await websocket.close()
@@ -358,20 +367,29 @@ async def consume_messages(websocket, client_id):
             data = json.loads(message)
             print(f"Received message from client {client_id}: {data}")
             if data.get('action') == 'request_single_game':
-                player_id = data.get('player_id')
+                player_id = int(data.get('player_id'))
                 print(f"Requesting single game for player {player_id}.")
                 await matchmaker.request_single_game(player_id) 
             elif data.get('action') == 'request_keyboard_game':
-                player_id = data.get('player_id')
+                player_id = int(data.get('player_id'))
                 print(f"Requesting keyboard game for player {player_id}.")
-                await matchmaker.request_keyboard_game(player_id)               
+                await matchmaker.request_keyboard_game(player_id)
+            elif data.get('action') == 'request_tournament':
+                player_id = int(data.get('player_id'))
+                tournament_name = data.get('tournament_name')
+                number_of_players = int(data.get('number_of_players'))
+                print(f"Requesting tournament for player {player_id}.")
+                await matchmaker.create_tournament(player_id, tournament_name, number_of_players)        
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
+        except ConnectionClosed:
+            print(f"Connection with client {client_id} is closed.")
         except Exception as e:
             print(f"Error in consume_messages: {e}")
 
 async def send_message_to_client(client_id, message):
     client = connected_clients.get(client_id)
+    print("Type send_message_to_client:", type(client_id), "client:", client)
     if client and client.websocket.open:
         try:
             await client.websocket.send(json.dumps(message))
@@ -382,8 +400,8 @@ async def send_message_to_client(client_id, message):
 
 
 async def start_websocket_server():
-    async with websockets.serve(handler, "localhost", 8765):
-        print("WebSocket server started on ws://localhost:8765")
+    async with websockets.serve(handler, "10.12.7.1", 8765):
+        print("WebSocket server started on ws://10.12.7.1:8765")
         await asyncio.Future()
 
 async def run_servers():
@@ -401,7 +419,7 @@ async def handle_shutdown(loop, executor):
     print("Shutdown complete.")
 
 async def main():
-    await matchmaker.process_game_result(7, 4, 11, 8)
+    #await matchmaker.process_game_result(7, 4, 11, 8)
     try:
         task1 = asyncio.create_task(start_websocket_server())
         task2 = asyncio.create_task(run_servers())

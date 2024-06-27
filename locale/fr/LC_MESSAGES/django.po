@@ -131,7 +131,7 @@ msgstr "(En attente)"
 msgid "Login"
 msgstr "Connexion"
 
-#: templates/base.html:114 templates/tournament.html:4
+#: templates/base.html:114 templates/tournament_list.html:4
 msgid "Tournaments"
 msgstr "Tournois"
 
@@ -246,6 +246,6 @@ msgstr "Supprimer le dispositif OTP actuel"
 msgid "Change Profile Info"
 msgstr "Modifier les informations du profil"
 
-#: templates/tournament.html:5
+#: templates/tournament_list.html:5
 msgid "Join our exciting tournaments!"
 msgstr "Rejoignez nos tournois passionnants !"

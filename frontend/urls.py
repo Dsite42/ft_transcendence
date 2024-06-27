@@ -51,7 +51,7 @@ urlpatterns += i18n_patterns(
     path('accounts/', include('allauth.socialaccount.urls')),
     path('', views.home, name='home'),
     path('i18n/', include('django.conf.urls.i18n')),
-    path('tournament.html', views.tournament, name='tournament'),
+    path('tournament_list.html', views.tournament_list, name='tournament_list'),
     path('login.html', views.login, name='login'),
     path('.html', root_view, name='root'),
     path('logout/', views.logout, name='logout'),

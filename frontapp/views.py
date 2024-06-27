@@ -23,7 +23,7 @@ from .rpc_client import get_matchmaker_service
 
 from django.utils.translation import gettext as _
 import logging
-from frontapp.models import Game
+from frontapp.models import Game, Tournament
 class APIError(Exception):
     pass
 
@@ -108,10 +108,6 @@ def otp_login(request: HttpRequest) -> HttpResponse:
 def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'index.html')
 
-@login_required
-def tournament(request, data):
-    return render(request, 'tournament.html')
-
 def login(request):
     return render(request, 'login.html')
 
@@ -177,7 +173,7 @@ def auth(request: HttpRequest) -> HttpResponse:
         '2FA_Activated': False,
         '2FA_Passed': False,
         'intra_name': user_info['login'],
-        'user_id': False
+        'user_id': CustomUser.objects.get(username=user_info['login']).id
     }
     intra_name = user_info['login']
     if intra_name:
@@ -189,7 +185,7 @@ def auth(request: HttpRequest) -> HttpResponse:
                 # Reset the display name of the existing user
                 existing_user.display_name = existing_user.username
                 existing_user.save()
-            session_token['user_id'] = user.id
+        session_token['user_id'] = user.id
             
 
         if user.two_factor_auth_enabled:
@@ -451,6 +447,12 @@ def rank_list(request, data):
     ranking = [{'name': player.username, 'score': player.stats.get('score'), 'games_won': player.stats.get('games_won'), 'games_lost': player.stats.get('games_lost'), 'games_played': player.stats.get('games_played')} for player in players]
 
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
+
+@login_required
+def tournament_list(request, data):
+    tournaments = Tournament.objects.all().order_by('-start_time')
+    tournament_list = [tournament.to_dict() for tournament in tournaments]
+    return render(request, 'tournament_list.html', {'tournaments': json.dumps(tournament_list)})
 
 @login_required
 def game_sessions(request, data):

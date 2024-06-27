@@ -30,6 +30,71 @@ class Client:
         self.player_id = player_id
         self.websocket = websocket
         
+class Tournament:
+    def __init__(self, tournament_id, creator, tournament_name, number_of_players):
+        self.id = tournament_id
+        self.creator = creator
+        self.name = tournament_name
+        self.number_of_players = number_of_players
+        self.start_time = datetime.now()
+        self.end_time = None
+        self.players = []
+        self.status = 'waiting'
+        self.winner = None
+
+    def join_tournament(self, player):
+        if len(self.players) == self.number_of_players:
+            return False
+        self.players.append(player)
+
+    def start_tournament(self):
+        self.status = 'started'
+
+    def abort_tournament(self):
+        self.winner = None
+        self.status = 'aborted'
+
+    def end_tournament(self, winner):
+        self.end_time = datetime.now()
+        self.status = 'ended'
+        self.winner = winner
+
+
+class SingleGame:
+    def __init__(self, game_id, player1, client1, player2, client2, game_address):
+        self.game_id = game_id
+        self.game_address = game_address
+        self.player1 = player1
+        self.client1 = client1
+        self.player2 = player2
+        self.client2 = client2
+        self.game_start_time = datetime.now()
+        self.game_end_time = None
+        self.game_status = 'waiting'
+        self.game_winner = None
+        self.p1_wins = None
+        self.p2_wins = None
+
+    def join_game(self, player):
+        if self.player2 is None:
+            self.player2 = player
+            return True
+        return False
+    
+    def start_game(self):
+        self.game_status = 'started'
+    
+    def end_game(self, winner, p1_wins, p2_wins):
+        self.game_end_time = datetime.now()
+        self.game_winner = winner
+        self.p1_wins = p1_wins
+        self.p2_wins = p2_wins
+        self.game_status = 'ended'
+
+    
+    def abort_game(self):
+        self.game_winner = None
+        self.game_status = 'aborted'
 
 
 class Database:
@@ -90,6 +155,14 @@ class Database:
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, (player1, player2, winner, p1_wins, p2_wins, current_time))
 
+    def add_tournament(self, tournament: Tournament):
+        sql_query = """
+        INSERT INTO frontapp_tournament (creator_id, name, number_of_players, start_time, status, winner_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, (tournament.creator, tournament.name, tournament.number_of_players, tournament.start_time, tournament.status, tournament.winner))
+
 
 ''' from the django-db standalone github
     def create_table(self, model):
@@ -110,85 +183,27 @@ class Database:
 '''
 
 
-class tournament:
-    def __init__(self, creator, turnement_name, turnement_size):
-        self.creator = creator
-        self.turnement_name = turnement_name
-        self.turnement_size = turnement_size
-        self.turnement_start_time = datetime.now()
-        self.turnement_end_time = None
-        self.players = []
-        self.turnement_status = 'waiting'
-        self.turnement_winner = None
-
-    def join_turnement(self, player):
-        if len(self.players) == self.turnement_size:
-            return False
-        self.players.append(player)
-
-    def start_turnement(self):
-        self.turnement_status = 'started'
-
-    def abort_turnement(self):
-        self.turnement_winner = None
-        self.turnement_status = 'aborted'
-
-    def end_turnement(self, winner):
-        self.turnement_end_time = datetime.now()
-        self.turnement_status = 'ended'
-        self.turnement_winner = winner
-
-
-class SingleGame:
-    def __init__(self, game_id, player1, client1, player2, client2, game_address):
-        self.game_id = game_id
-        self.game_address = game_address
-        self.player1 = player1
-        self.client1 = client1
-        self.player2 = player2
-        self.client2 = client2
-        self.game_start_time = datetime.now()
-        self.game_end_time = None
-        self.game_status = 'waiting'
-        self.game_winner = None
-        self.p1_wins = None
-        self.p2_wins = None
-
-    def join_game(self, player):
-        if self.player2 is None:
-            self.player2 = player
-            return True
-        return False
-    
-    def start_game(self):
-        self.game_status = 'started'
-    
-    def end_game(self, winner, p1_wins, p2_wins):
-        self.game_end_time = datetime.now()
-        self.game_winner = winner
-        self.p1_wins = p1_wins
-        self.p2_wins = p2_wins
-        self.game_status = 'ended'
-
-    
-    def abort_game(self):
-        self.game_winner = None
-        self.game_status = 'aborted'
         
     
 class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.game_id_counter = 0
-        self.turnements = []
+        self.tournament_id_counter = 0
+        self.tournaments = []
         self.single_games = []
         self.single_games_queue = []
 
 
-    def create_turnement(self, creator, turnement_name, turnement_size):
-        new_turnement = tournament(creator, turnement_name, turnement_size)
-        self.turnements.append(new_turnement)
-        return new_turnement
+    async def create_tournament(self, creator, tournament_name, number_of_players):
+        tournament_id = self.tournament_id_counter
+        self.tournament_id_counter += 1
+        new_tournament = Tournament(tournament_id, creator, tournament_name, number_of_players)
+        await sync_to_async(self.db.add_tournament)(new_tournament)
+
+        self.tournaments.append(new_tournament)
+
+        print(f"Tournament created: id {new_tournament.id} name: {new_tournament.name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
     async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
@@ -350,6 +365,7 @@ async def handler(websocket, path):
                 await consume_messages(websocket, client_id)
             finally:
                 del connected_clients[client_id]
+                await websocket.close()
         else:
             print("Error: First message did not contain a valid player_id")
             await websocket.close()
@@ -368,7 +384,13 @@ async def consume_messages(websocket, client_id):
             elif data.get('action') == 'request_keyboard_game':
                 player_id = int(data.get('player_id'))
                 print(f"Requesting keyboard game for player {player_id}.")
-                await matchmaker.request_keyboard_game(player_id)               
+                await matchmaker.request_keyboard_game(player_id)
+            elif data.get('action') == 'request_tournament':
+                player_id = int(data.get('player_id'))
+                tournament_name = data.get('tournament_name')
+                number_of_players = int(data.get('number_of_players'))
+                print(f"Requesting tournament for player {player_id}.")
+                await matchmaker.create_tournament(player_id, tournament_name, number_of_players)        
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except ConnectionClosed:
@@ -389,8 +411,8 @@ async def send_message_to_client(client_id, message):
 
 
 async def start_websocket_server():
-    async with websockets.serve(handler, "10.12.7.7", 8765):
-        print("WebSocket server started on ws://10.12.7.7:8765")
+    async with websockets.serve(handler, "10.12.7.1", 8765):
+        print("WebSocket server started on ws://10.12.7.1:8765")
         await asyncio.Future()
 
 async def run_servers():
