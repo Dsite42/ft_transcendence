@@ -176,6 +176,11 @@ class Database:
             cursor.execute(delete_relationships_sql)
             cursor.execute(delete_tournaments_sql)
 
+    def change_tournament_status(self, tournament_id, status):
+        sql_query = "UPDATE frontapp_tournament SET status = %s WHERE id = %s;"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, [status, tournament_id])
+
 ''' from the django-db standalone github
     def create_table(self, model):
         with connections['default'].schema_editor() as schema_editor:
@@ -223,6 +228,7 @@ class MatchMaker:
     async def check_tournament_readyness(self, tournament):
         if len(tournament.players) == tournament.number_of_players:
             tournament.start_tournament()
+            await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
             message = {
                 'action': 'tournament_started',
                 'message': f'Tournament {tournament.id} has started.',
