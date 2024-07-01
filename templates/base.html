@@ -288,7 +288,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
 </script>
 
 <script>
-function join_tournement() {
+function join_tournement(tournement_id) {
     // Join Tournament
     document.getElementById('tournament-table').addEventListener('click', function() {
             const socket = new WebSocket('ws://10.12.6.1:8765');
@@ -296,7 +296,7 @@ function join_tournement() {
                 console.log('WebSocket is open now.');
                 // Nachricht an den Server senden
                 socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                socket.send(JSON.stringify({ action: 'join_tournement', player_id: "{{ user.user_id }}" }));
+                socket.send(JSON.stringify({ action: 'join_tournement', player_id: "{{ user.user_id }}", tournement_id: tournement_id }));
             };
             socket.onmessage = function(event) {
                 const data = JSON.parse(event.data);

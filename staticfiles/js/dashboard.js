@@ -11,7 +11,7 @@ function populateTable(data, tag) {
                 createDetailChart(row);
             else if (tag == '#tournament-table') {
                 alert('Clicked on row: ' + row.id);
-                join_tournement();
+                join_tournement(row.id);
             }
         }
     });

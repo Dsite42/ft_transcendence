@@ -399,7 +399,7 @@ async def consume_messages(websocket, client_id):
                 player_id = int(data.get('player_id'))
                 tournament_id = int(data.get('tournament_id'))
                 print(f"Joining tournament {tournament_id} for player {player_id}.")
-                await matchmaker.join_tournament(player_id, tournament_id)      
+                #await matchmaker.join_tournament(player_id, tournament_id)      
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except ConnectionClosed:
