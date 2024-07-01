@@ -30,86 +30,6 @@ class Client:
         self.player_id = player_id
         self.websocket = websocket
         
-
-
-class Database:
-    def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
-        self.Model = None
-
-        databases = {
-            'default': {
-                'ENGINE': engine,
-                'NAME': name,
-                'USER': 'chris',
-                'PASSWORD': 'chris',
-                'HOST': '127.0.0.1',
-                'PORT': '8000',
-                'APP_LABEL': 'frontapp',
-            }
-        }
-
-        settings.configure(DATABASES=databases)
-        django.setup()
-
-        class CustomBaseModel(models.Model):
-            class Meta:
-                app_label = 'frontapp'
-                abstract = True
-
-        self.Model = CustomBaseModel
-
-
-    def game_result_to_user_stats(self, player_id, is_winner, p2_wins, score):
-        print(f"game_result_to_user_stats: Player ID: {player_id}, is_winner: {is_winner}, p2_wins: {p2_wins}, score: {score}")
-        sql_query = "SELECT stats FROM auth_user WHERE id = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [player_id])
-            print(f"Player ID: {player_id}")
-            stats = cursor.fetchone()[0]
-
-        stats = json.loads(stats)
-        stats['games_played'] = stats.get('games_played', 0) + 1
-        if is_winner == 1:
-            stats['games_won'] = stats.get('games_won', 0) + 1
-        else:
-            stats['games_lost'] = stats.get('games_lost', 0) + 1
-        if score:
-            stats['score'] = stats.get('score', 0) + score
-        stats = json.dumps(stats)
-
-        sql_query = "UPDATE auth_user SET stats = %s WHERE id = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [stats, player_id])
-
-    def add_game(self, player1, player2, winner, p1_wins, p2_wins):
-        sql_query = """
-        INSERT INTO frontapp_game (player1_id, player2_id, winner_id, p1_wins, p2_wins, date)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """
-        current_time = datetime.now()
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, (player1, player2, winner, p1_wins, p2_wins, current_time))
-
-
-''' from the django-db standalone github
-    def create_table(self, model):
-        with connections['default'].schema_editor() as schema_editor:
-            if model._meta.db_table not in connections['default'].introspection.table_names():
-                schema_editor.create_model(model)
-
-    def update_table(self, model):
-        with connections['default'].schema_editor() as schema_editor:
-            if model._meta.db_table in connections['default'].introspection.table_names():
-                current_columns = [field.column for field in model._meta.fields]
-                database_columns = connections['default'].introspection.get_table_description(connections['default'].cursor(), model._meta.db_table)
-                database_column_names = [column.name for column in database_columns]
-
-                for field in model._meta.fields:
-                    if field.column not in database_column_names:
-                        schema_editor.add_field(model, field)
-'''
-
-
 class Tournament:
     def __init__(self, tournament_id, creator, tournament_name, number_of_players):
         self.id = tournament_id
@@ -175,24 +95,119 @@ class SingleGame:
     def abort_game(self):
         self.game_winner = None
         self.game_status = 'aborted'
+
+
+class Database:
+    def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
+        self.Model = None
+
+        databases = {
+            'default': {
+                'ENGINE': engine,
+                'NAME': name,
+                'USER': 'chris',
+                'PASSWORD': 'chris',
+                'HOST': '127.0.0.1',
+                'PORT': '8000',
+                'APP_LABEL': 'frontapp',
+            }
+        }
+
+        settings.configure(DATABASES=databases)
+        django.setup()
+
+        class CustomBaseModel(models.Model):
+            class Meta:
+                app_label = 'frontapp'
+                abstract = True
+
+        self.Model = CustomBaseModel
+
+
+    def game_result_to_user_stats(self, player_id, is_winner, p2_wins, score):
+        print(f"game_result_to_user_stats: Player ID: {player_id}, is_winner: {is_winner}, p2_wins: {p2_wins}, score: {score}")
+        sql_query = "SELECT stats FROM auth_user WHERE id = %s;"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, [player_id])
+            print(f"Player ID: {player_id}")
+            stats = cursor.fetchone()[0]
+
+        stats = json.loads(stats)
+        stats['games_played'] = stats.get('games_played', 0) + 1
+        if is_winner == 1:
+            stats['games_won'] = stats.get('games_won', 0) + 1
+        else:
+            stats['games_lost'] = stats.get('games_lost', 0) + 1
+        if score:
+            stats['score'] = stats.get('score', 0) + score
+        stats = json.dumps(stats)
+
+        sql_query = "UPDATE auth_user SET stats = %s WHERE id = %s;"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, [stats, player_id])
+
+    def add_game(self, player1, player2, winner, p1_wins, p2_wins):
+        sql_query = """
+        INSERT INTO frontapp_game (player1_id, player2_id, winner_id, p1_wins, p2_wins, date)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """
+        current_time = datetime.now()
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, (player1, player2, winner, p1_wins, p2_wins, current_time))
+
+    def add_tournament(self, tournament: Tournament):
+        sql_query = """
+        INSERT INTO frontapp_tournament (creator_id, name, number_of_players, start_time, status, winner_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, (tournament.creator, tournament.name, tournament.number_of_players, tournament.start_time, tournament.status, tournament.winner))
+            inserted_row_id = cursor.lastrowid
+        return inserted_row_id
+
+
+''' from the django-db standalone github
+    def create_table(self, model):
+        with connections['default'].schema_editor() as schema_editor:
+            if model._meta.db_table not in connections['default'].introspection.table_names():
+                schema_editor.create_model(model)
+
+    def update_table(self, model):
+        with connections['default'].schema_editor() as schema_editor:
+            if model._meta.db_table in connections['default'].introspection.table_names():
+                current_columns = [field.column for field in model._meta.fields]
+                database_columns = connections['default'].introspection.get_table_description(connections['default'].cursor(), model._meta.db_table)
+                database_column_names = [column.name for column in database_columns]
+
+                for field in model._meta.fields:
+                    if field.column not in database_column_names:
+                        schema_editor.add_field(model, field)
+'''
+
+
         
     
 class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.game_id_counter = 0
-        self.tournament_id_counter = 0
         self.tournaments = []
         self.single_games = []
         self.single_games_queue = []
 
 
-    def create_tournament(self, creator, tournament_name, tournament_size):
-        tournament_id = self.tournament_id_counter
-        self.tournament_id_counter += 1
-        new_tournament = Tournament(tournament_id, creator, tournament_name, tournament_size)
+    async def create_tournament(self, creator, tournament_name, number_of_players):
+        new_tournament = Tournament(0, creator, tournament_name, number_of_players)
+        new_tournament.id = await sync_to_async(self.db.add_tournament)(new_tournament)
         self.tournaments.append(new_tournament)
-        print(f"Tournament created: id {new_tournament.id} name: {new_tournament.tournament_name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
+        message = {
+            'action': 'tournement_created',
+            'message': f'Tournement successfully created. ID: ',
+            'tournement_id': new_tournament.id,
+        }
+        await send_message_to_client(creator, message)
+
+        print(f"Tournament created: id {new_tournament.id} name: {new_tournament.name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
     async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
@@ -379,7 +394,12 @@ async def consume_messages(websocket, client_id):
                 tournament_name = data.get('tournament_name')
                 number_of_players = int(data.get('number_of_players'))
                 print(f"Requesting tournament for player {player_id}.")
-                await matchmaker.create_tournament(player_id, tournament_name, number_of_players)        
+                await matchmaker.create_tournament(player_id, tournament_name, number_of_players)
+            elif data.get('action') == 'join_tournement':
+                player_id = int(data.get('player_id'))
+                tournament_id = int(data.get('tournament_id'))
+                print(f"Joining tournament {tournament_id} for player {player_id}.")
+                await matchmaker.join_tournament(player_id, tournament_id)      
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except ConnectionClosed:
@@ -400,8 +420,8 @@ async def send_message_to_client(client_id, message):
 
 
 async def start_websocket_server():
-    async with websockets.serve(handler, "10.12.7.1", 8765):
-        print("WebSocket server started on ws://10.12.7.1:8765")
+    async with websockets.serve(handler, "10.12.6.1", 8765):
+        print("WebSocket server started on ws://10.12.6.1:8765")
         await asyncio.Future()
 
 async def run_servers():

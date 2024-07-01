@@ -178,7 +178,7 @@
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
         // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.7.1:8765');
+            const socket = new WebSocket('ws://10.12.6.1:8765');
 
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -208,7 +208,7 @@
 
         // keyboard_game
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.7.1:8765');
+            const socket = new WebSocket('ws://10.12.6.1:8765');
 
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -257,7 +257,7 @@
 // Create Tournament
 document.getElementById('createTournamentMM').addEventListener('click', function() {
     console.log("user_id: {{ user.user_id }}");
-    const socket = new WebSocket('ws://10.12.7.1:8765')
+    const socket = new WebSocket('ws://10.12.6.1:8765')
     socket.onopen = function(event) {
         console.log('WebSocket is open now.');
         // Nachricht an den Server senden
@@ -274,6 +274,8 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         }
         else if (data.action === 'tournement_created') {
                     alert('Tournement created: ' + data.tournement_id);
+                    // refresh tournement list
+                    window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
     }
     socket.onclose = function(event) {
@@ -289,7 +291,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
 function join_tournement() {
     // Join Tournament
     document.getElementById('tournament-table').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.7.1:8765');
+            const socket = new WebSocket('ws://10.12.6.1:8765');
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
                 // Nachricht an den Server senden

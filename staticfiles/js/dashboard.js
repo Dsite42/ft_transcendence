@@ -9,9 +9,14 @@ function populateTable(data, tag) {
         onClickRow: function(row, $element, field) {
             if (tag == '#player-table')
                 createDetailChart(row);
+            else if (tag == '#tournament-table') {
+                alert('Clicked on row: ' + row.id);
+                join_tournement();
+            }
         }
     });
 }
+
 
 // Function to filter the table by user
 function filterTableByUser(username) {
