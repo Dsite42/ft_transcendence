@@ -244,7 +244,6 @@
 <div class="container mt-5 text-center">
     {% if user.is_authenticated %}
     <button id="createTournamentMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Create a new Tournament via MM' %}</button>
-    <button id="joinTournamentMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Join a new Tournament via MM' %}</button>
     <br>
     <br>
     {% else %}
@@ -262,19 +261,19 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         console.log('WebSocket is open now.');
         // Nachricht an den Server senden
         socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier', number_of_players: 4 }));
+        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier', number_of_players: 1 }));
     }
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
         console.log('WebSocket message received:', data);
-        alert('Nachricht vom Server: ' + data.message + data.tournement_id);
+        alert('Nachricht vom Server: ' + data.message + data.tournament_id);
         if (data.action === 'game_address') {
             //window.location.href = "http://www.google.com"
             Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
         }
-        else if (data.action === 'tournement_created') {
-                    alert('Tournement created: ' + data.tournement_id);
-                    // refresh tournement list
+        else if (data.action === 'tournament_created') {
+                    alert('Tournament created: ' + data.tournament_id);
+                    // refresh tournament list
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
     }
@@ -288,7 +287,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
 </script>
 
 <script>
-function join_tournement(tournement_id) {
+function join_tournament(tournament_id) {
     // Join Tournament
     document.getElementById('tournament-table').addEventListener('click', function() {
             const socket = new WebSocket('ws://10.12.6.1:8765');
@@ -296,7 +295,7 @@ function join_tournement(tournement_id) {
                 console.log('WebSocket is open now.');
                 // Nachricht an den Server senden
                 socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                socket.send(JSON.stringify({ action: 'join_tournement', player_id: "{{ user.user_id }}", tournement_id: tournement_id }));
+                socket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
             };
             socket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
@@ -305,6 +304,14 @@ function join_tournement(tournement_id) {
                 if (data.action === 'game_address') {
                     //window.location.href = "http://www.google.com"
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
+                }
+                else if (data.action === 'tournament_not_found') {
+                    alert('Tournament not found or not longer available: ' + data.tournament_id);
+                    window.location.href = "{% url 'home' %}" + '#tournament_list';
+                }
+                else if (data.action === 'tournament_full') {
+                    alert('Tournament is full: ' + data.tournament_id + ' Name: ' + data.tournament_name);
+                    window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
             };
             socket.onclose = function(event) {
