@@ -165,7 +165,16 @@ class Database:
             cursor.execute(sql_query, (tournament.creator, tournament.name, tournament.number_of_players, tournament.start_time, tournament.status, tournament.winner))
             inserted_row_id = cursor.lastrowid
         return inserted_row_id
-
+    
+    def delete_all_tournaments(self):
+        # First, delete any dependent Tournament-customuser relationships
+        delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id IN (SELECT id FROM frontapp_tournament);"
+        # Then, delete the tournaments
+        delete_tournaments_sql = "DELETE FROM frontapp_tournament;"
+        
+        with connections['default'].cursor() as cursor:
+            cursor.execute(delete_relationships_sql)
+            cursor.execute(delete_tournaments_sql)
 
 ''' from the django-db standalone github
     def create_table(self, model):
@@ -191,6 +200,7 @@ class Database:
 class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
+        self.db.delete_all_tournaments()
         self.game_id_counter = 0
         self.tournaments = []
         self.single_games = []
