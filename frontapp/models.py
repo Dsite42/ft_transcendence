@@ -179,9 +179,9 @@ class Tournament(models.Model):
 
     def to_dict(self):
         return {
+            'name': self.name,
             'id': self.id,
             'creator': self.creator.username,
-            'name': self.name,
             'number_of_players': self.number_of_players,
             'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S'),
             'winner': self.winner.username if self.winner else None,

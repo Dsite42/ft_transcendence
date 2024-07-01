@@ -455,6 +455,12 @@ def tournament_list(request, data):
     return render(request, 'tournament_list.html', {'tournaments': json.dumps(tournament_list)})
 
 @login_required
+def tournament_view(request, data):
+    tournament_id = request.GET.get('tournament_id')
+    tournament = (Tournament.objects.get(id=tournament_id)).to_dict()
+    return render(request, 'tournament.html', {'tournament': json.dumps(tournament)})
+
+@login_required
 def game_sessions(request, data):
     data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
     user = CustomUser.objects.get(username=data['intra_name'])

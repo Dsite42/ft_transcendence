@@ -42,6 +42,9 @@ urlpatterns = [
     path('rank_list.html', views.rank_list, name='rank_list'),
     path('game_sessions.html', views.game_sessions, name='game_sessions'),
     path('request_single_game/', request_single_game_view, name='request_single_game'),
+    path('tournament.html/', views.tournament_view, name='tournament'),
+
+
 ]
 
 urlpatterns += i18n_patterns(
@@ -76,6 +79,7 @@ urlpatterns += i18n_patterns(
     path('rank_list.html', views.rank_list, name='rank_list'),
     path('game_sessions.html', views.game_sessions, name='game_sessions'),
     path('request_single_game/', request_single_game_view, name='request_single_game'),
+    path('tournament.html/', views.tournament_view, name='tournament'),
 )
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

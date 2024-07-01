@@ -314,6 +314,9 @@ function join_tournament(tournament_id) {
                     alert('Tournament is full: ' + data.tournament_id + ' Name: ' + data.tournament_name);
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
+                else if (data.action === 'tournament_started') {
+                    window.location.href = "{% url 'tournament' %}" + '?tournament_id=' + data.tournament_id;
+                }
             };
             socket.onclose = function(event) {
                 console.log('WebSocket is closed now.');

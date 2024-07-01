@@ -232,6 +232,7 @@ class MatchMaker:
             message = {
                 'action': 'tournament_started',
                 'message': f'Tournament {tournament.id} has started.',
+                'tournament_id': tournament.id,
             }
             for player in tournament.players:
                 await send_message_to_client(player, message)
