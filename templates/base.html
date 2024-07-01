@@ -222,7 +222,7 @@
                 console.log('WebSocket message received:', data);
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
                 if (data.action === 'game_address') {
-                    //window.location.href = "http://www.google.com"
+                    socket.close();
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
                 }
             };
@@ -274,6 +274,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         else if (data.action === 'tournament_created') {
                     alert('Tournament created: ' + data.tournament_id);
                     // refresh tournament list
+                    socket.close();
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
     }
