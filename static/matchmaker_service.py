@@ -181,6 +181,18 @@ class Database:
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [status, tournament_id])
 
+    def add_players_to_tournament(self, tournament_id, players):
+        print(f"Adding players to tournament {tournament_id}: {json.dumps(players)}")
+        join_table = 'tournament_players'
+        tournament_col = 'tournament_id'
+        player_col = 'customuser_id'
+        sql_query = f"INSERT INTO frontapp_{join_table} ({tournament_col}, {player_col}) VALUES (%s, %s);"
+        with connections['default'].cursor() as cursor:
+            for player in players:
+                cursor.execute(sql_query, [tournament_id, player])
+
+                
+
 ''' from the django-db standalone github
     def create_table(self, model):
         with connections['default'].schema_editor() as schema_editor:
@@ -229,6 +241,7 @@ class MatchMaker:
         if len(tournament.players) == tournament.number_of_players:
             tournament.start_tournament()
             await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
+            await sync_to_async(self.db.add_players_to_tournament)(tournament.id, tournament.players)
             message = {
                 'action': 'tournament_started',
                 'message': f'Tournament {tournament.id} has started.',
@@ -479,8 +492,8 @@ async def send_message_to_client(client_id, message):
 
 
 async def start_websocket_server():
-    async with websockets.serve(handler, "10.12.6.1", 8765):
-        print("WebSocket server started on ws://10.12.6.1:8765")
+    async with websockets.serve(handler, "10.12.5.1", 8765):
+        print("WebSocket server started on ws://10.12.5.1:8765")
         await asyncio.Future()
 
 async def run_servers():

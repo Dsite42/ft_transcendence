@@ -178,7 +178,7 @@
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
         // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.6.1:8765');
+            const socket = new WebSocket('ws://10.12.5.1:8765');
 
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -208,7 +208,7 @@
 
         // keyboard_game
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.6.1:8765');
+            const socket = new WebSocket('ws://10.12.5.1:8765');
 
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -256,7 +256,7 @@
 // Create Tournament
 document.getElementById('createTournamentMM').addEventListener('click', function() {
     console.log("user_id: {{ user.user_id }}");
-    const socket = new WebSocket('ws://10.12.6.1:8765')
+    const socket = new WebSocket('ws://10.12.5.1:8765')
     socket.onopen = function(event) {
         console.log('WebSocket is open now.');
         // Nachricht an den Server senden
@@ -288,10 +288,38 @@ document.getElementById('createTournamentMM').addEventListener('click', function
 </script>
 
 <script>
+
+function fetchTournamentData(tournamentId) {
+    fetch(`api/tournament/${tournamentId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Tournament data:', data);
+            updatePageWithTournamentData(data);
+        })
+        .catch(error => console.error('Failed to fetch tournament data:', error));
+}
+
+function updatePageWithTournamentData(tournamentData) {
+    document.getElementById('main-content').innerHTML = `
+    <div class="container mt-5 text-center">
+        <h1> Tournament Details </h1>
+        <br> Creator: ${tournamentData.creator} </br>
+        <br> Number of Players: ${tournamentData.number_of_players} </br>
+        <br> Status: ${tournamentData.status} </br>
+        <br> Players: ${tournamentData.players.join(', ')} </br>
+    </div>
+    `;
+}
+
 function join_tournament(tournament_id) {
     // Join Tournament
     document.getElementById('tournament-table').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.6.1:8765');
+            const socket = new WebSocket('ws://10.12.5.1:8765');
             socket.onopen = function(event) {
                 console.log('WebSocket is open now.');
                 // Nachricht an den Server senden
@@ -315,7 +343,7 @@ function join_tournament(tournament_id) {
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
                 else if (data.action === 'tournament_started') {
-                    window.location.href = "{% url 'tournament' %}" + '?tournament_id=' + data.tournament_id;
+                    fetchTournamentData(data.tournament_id);
                 }
             };
             socket.onclose = function(event) {

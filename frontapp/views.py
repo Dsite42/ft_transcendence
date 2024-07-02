@@ -49,7 +49,7 @@ def json_request(callable: Callable[[HttpRequest, dict], dict]):
 
 #Login Required Wrapper
 def login_required(callable):
-    def wrapper(request: HttpRequest) -> HttpResponse:
+    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
         if (session := request.COOKIES.get('session', None)) == None:
             return render(request, 'login.html')
         try:
@@ -62,8 +62,7 @@ def login_required(callable):
             return render(request, 'otp_login.html')
         user.last_active = timezone.now()
         user.save()
-        
-        return callable(request, data)
+        return callable(request, data, *args, **kwargs)
     return wrapper
 
 #Simple Website Renderer Functions
@@ -455,10 +454,23 @@ def tournament_list(request, data):
     return render(request, 'tournament_list.html', {'tournaments': json.dumps(tournament_list)})
 
 @login_required
-def tournament_view(request, data):
+def tournament_view1(request, data):
     tournament_id = request.GET.get('tournament_id')
     tournament = (Tournament.objects.get(id=tournament_id)).to_dict()
-    return render(request, 'tournament.html', {'tournament': json.dumps(tournament)})
+    return render(request, 'tournament.html', {'name': tournament['name'] ,'tournament': json.dumps(tournament)})
+
+@login_required
+def tournament_view(request, data, tournament_id):
+    print("tournament_id2: ", tournament_id)
+    try:
+        tournament = Tournament.objects.get(id=tournament_id)
+        # Assuming your `to_dict` method correctly converts the model instance to a dictionary
+        tournament_dict = tournament.to_dict()
+        return JsonResponse(tournament_dict)
+    except Tournament.DoesNotExist:
+        return JsonResponse({'error': 'Tournament not found'}, status=404)
+
+
 
 @login_required
 def game_sessions(request, data):
