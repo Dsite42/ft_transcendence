@@ -14,13 +14,32 @@ function fetchTournamentData(tournamentId) {
 }
 
 function updatePageWithTournamentData(tournamentData) {
+    console.log('Updating page with tournament data:', tournamentData);
+    let matchesHtml = '';
+    if (tournamentData.matches && tournamentData.matches.length > 0) {
+        matchesHtml = '<div class="matches"><h2>Matches:</h2>';
+        tournamentData.matches.forEach(match => {
+            matchesHtml += `
+                <div class="match">
+                    <p>
+                        <span>Players: ${match.players.join(' vs ')}</span> |
+                        <span>Status: ${match.status}</span> |
+                        <span>Winner: ${match.winner || 'N/A'}</span>
+                    </p> 
+                </div>
+            `;
+        });
+        matchesHtml += '</div>';
+    }
+
     document.getElementById('main-content').innerHTML = `
     <div class="container mt-5 text-center">
-        <h1> Welcome to Tournament: ${tournamentData.name} </h1>
-        <br> Creator: ${tournamentData.creator} </br>
-        <br> Number of Players joined: ${tournamentData.players.length} / ${ tournamentData.number_of_players} </br>
-        <br> Status: ${tournamentData.status} </br>
-        <br> Players: ${tournamentData.players.join(', ')} </br>
+        <h1>Welcome to Tournament: ${tournamentData.name}</h1>
+        <p>Creator: ${tournamentData.creator}</p>
+        <p>Number of Players joined: ${tournamentData.players.length} / ${tournamentData.number_of_players}</p>
+        <p>Status: ${tournamentData.status}</p>
+        <p>Players: ${tournamentData.players.join(', ')}</p>
+        ${matchesHtml}
     </div>
     `;
 }

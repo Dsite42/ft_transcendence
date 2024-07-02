@@ -22,6 +22,7 @@ from datetime import datetime
 
 from aiorpc import AioRPC
 from asyncio import Future, sleep, run
+from itertools import combinations
 
 #define classes
 
@@ -39,27 +40,63 @@ class Tournament:
         self.start_time = datetime.now()
         self.end_time = None
         self.players = []
+        self.matches = []
+        self.current_match_index = 0
         self.status = 'waiting'
         self.winner = None
 
     def join_tournament(self, player_id):
-        if len(self.players) == self.number_of_players:
-            return False
-        self.players.append(player_id)
-        return True
+        if len(self.players) < self.number_of_players:
+            self.players.append(player_id)
+            return True
+        return False
+    
+    def generate_matches(self):
+        self.matches = [{'players': match, 'status': 'pending', 'result': None} for match in combinations(self.players, 2)]
 
     def start_tournament(self):
-        self.status = 'started'
+        self.status = 'ongoing'
+        self.generate_matches()
+
+    def update_match_result(self, match_index, winner):
+        if 0 <= match_index < len(self.matches):
+            self.matches[match_index]['status'] = 'completed'
+            self.matches[match_index]['result'] = winner
+            self.current_match_index += 1
+            if self.current_match_index >= len(self.matches):
+                self.end_tournament()
+
+    def calculate_winner(self):
+        win_counts = {player: 0 for player in self.players}
+        for match in self.matches:
+            if match['result'] is not None:
+                win_counts[match['result']] += 1
+        self.winner = max(win_counts, key=win_counts.get)
 
     def abort_tournament(self):
         self.winner = None
         self.status = 'aborted'
 
-    def end_tournament(self, winner):
+    def end_tournament(self):
+        self.calculate_winner()
         self.end_time = datetime.now()
         self.status = 'ended'
-        self.winner = winner
-
+    
+    def to_dict(self):
+        serialized_data = {
+            'id': self.id,
+            'creator': self.creator,
+            'name': self.name,
+            'number_of_players': self.number_of_players,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'players': self.players,
+            'status': self.status,
+            'winner': self.winner,
+            'matches': self.matches,
+            'current_match_index': self.current_match_index,
+        }
+        return serialized_data
 
 class SingleGame:
     def __init__(self, game_id, player1, client1, player2, client2, game_address):
@@ -247,13 +284,14 @@ class MatchMaker:
         print(f"Tournament created: id {new_tournament.id} name: {new_tournament.name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
     async def check_tournament_readyness(self, tournament):
-        if len(tournament.players) == tournament.number_of_players - 1: # HACK
+        if len(tournament.players) == tournament.number_of_players:
             tournament.start_tournament()
             await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
             message = {
                 'action': 'tournament_started',
                 'message': f'Tournament {tournament.id} has started.',
                 'tournament_id': tournament.id,
+                'tournament' : tournament.to_dict()
             }
             for player in tournament.players:
                 await send_message_to_client(player, message)
@@ -274,7 +312,8 @@ class MatchMaker:
                     'tournament_id': tournament.id,
                 }
                 await sync_to_async(self.db.add_player_to_tournament)(tournament_id, player_id)
-                await send_message_to_client(player_id, message)
+                if len(tournament.players) < tournament.number_of_players:
+                    await send_message_to_client(player_id, message)
                 print(f"Player {player_id} joined tournament {tournament_id}.")
                 await self.check_tournament_readyness(tournament)
             else:
