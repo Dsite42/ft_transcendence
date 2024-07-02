@@ -40,6 +40,7 @@ class Tournament:
         self.start_time = datetime.now()
         self.end_time = None
         self.players = []
+        self.display_names = {}
         self.matches = []
         self.current_match_index = 0
         self.status = 'waiting'
@@ -91,6 +92,7 @@ class Tournament:
             'start_time': self.start_time.isoformat() if self.start_time else None,
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'players': self.players,
+            'display_names': self.display_names,
             'status': self.status,
             'winner': self.winner,
             'matches': self.matches,
@@ -218,6 +220,15 @@ class Database:
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [status, tournament_id])
 
+    def get_display_names(self, player_ids):
+        # Generate placeholders for each item in player_ids
+        placeholders = ','.join(['%s'] * len(player_ids))
+        sql_query = f"SELECT id, display_name FROM auth_user WHERE id IN ({placeholders});"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, player_ids)
+            result = {row[0]: row[1] for row in cursor.fetchall()}
+        return result
+
     #def add_players_to_tournament(self, tournament_id, players):
     #    print(f"Adding players to tournament {tournament_id}: {json.dumps(players)}")
     #    join_table = 'tournament_players'
@@ -285,6 +296,8 @@ class MatchMaker:
     
     async def check_tournament_readyness(self, tournament):
         if len(tournament.players) == tournament.number_of_players:
+            tournament.display_names = await sync_to_async(self.db.get_display_names)(tournament.players)
+            print(f"display_names: {tournament.display_names}")
             tournament.start_tournament()
             await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
             message = {
