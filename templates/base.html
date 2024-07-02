@@ -261,7 +261,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         console.log('WebSocket is open now.');
         // Nachricht an den Server senden
         socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier', number_of_players: 1 }));
+        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier2', number_of_players: 2 }));
     }
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
@@ -289,32 +289,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
 
 <script>
 
-function fetchTournamentData(tournamentId) {
-    fetch(`api/tournament/${tournamentId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Tournament data:', data);
-            updatePageWithTournamentData(data);
-        })
-        .catch(error => console.error('Failed to fetch tournament data:', error));
-}
 
-function updatePageWithTournamentData(tournamentData) {
-    document.getElementById('main-content').innerHTML = `
-    <div class="container mt-5 text-center">
-        <h1> Tournament Details </h1>
-        <br> Creator: ${tournamentData.creator} </br>
-        <br> Number of Players: ${tournamentData.number_of_players} </br>
-        <br> Status: ${tournamentData.status} </br>
-        <br> Players: ${tournamentData.players.join(', ')} </br>
-    </div>
-    `;
-}
 
 function join_tournament(tournament_id) {
     // Join Tournament
@@ -343,6 +318,9 @@ function join_tournament(tournament_id) {
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
                 else if (data.action === 'tournament_started') {
+                    //fetchTournamentData(data.tournament_id);
+                }
+                else if (data.action === 'tournament_joined') {
                     fetchTournamentData(data.tournament_id);
                 }
             };
@@ -364,6 +342,7 @@ function join_tournament(tournament_id) {
     </footer>
     <!-- Scripts -->
     <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+    <script src="{% static 'js/tournament.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="{% static 'js/spa.js' %}"></script>
 

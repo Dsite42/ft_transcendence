@@ -453,11 +453,6 @@ def tournament_list(request, data):
     tournament_list = [tournament.to_dict() for tournament in tournaments]
     return render(request, 'tournament_list.html', {'tournaments': json.dumps(tournament_list)})
 
-@login_required
-def tournament_view1(request, data):
-    tournament_id = request.GET.get('tournament_id')
-    tournament = (Tournament.objects.get(id=tournament_id)).to_dict()
-    return render(request, 'tournament.html', {'name': tournament['name'] ,'tournament': json.dumps(tournament)})
 
 @login_required
 def tournament_view(request, data, tournament_id):

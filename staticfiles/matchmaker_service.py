@@ -42,10 +42,11 @@ class Tournament:
         self.status = 'waiting'
         self.winner = None
 
-    def join_tournament(self, player):
+    def join_tournament(self, player_id):
         if len(self.players) == self.number_of_players:
             return False
-        self.players.append(player)
+        self.players.append(player_id)
+        return True
 
     def start_tournament(self):
         self.status = 'started'
@@ -164,7 +165,33 @@ class Database:
             cursor.execute(sql_query, (tournament.creator, tournament.name, tournament.number_of_players, tournament.start_time, tournament.status, tournament.winner))
             inserted_row_id = cursor.lastrowid
         return inserted_row_id
+    
+    def delete_all_tournaments(self):
+        # First, delete any dependent Tournament-customuser relationships
+        delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id IN (SELECT id FROM frontapp_tournament);"
+        # Then, delete the tournaments
+        delete_tournaments_sql = "DELETE FROM frontapp_tournament;"
+        
+        with connections['default'].cursor() as cursor:
+            cursor.execute(delete_relationships_sql)
+            cursor.execute(delete_tournaments_sql)
 
+    def change_tournament_status(self, tournament_id, status):
+        sql_query = "UPDATE frontapp_tournament SET status = %s WHERE id = %s;"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, [status, tournament_id])
+
+    def add_players_to_tournament(self, tournament_id, players):
+        print(f"Adding players to tournament {tournament_id}: {json.dumps(players)}")
+        join_table = 'tournament_players'
+        tournament_col = 'tournament_id'
+        player_col = 'customuser_id'
+        sql_query = f"INSERT INTO frontapp_{join_table} ({tournament_col}, {player_col}) VALUES (%s, %s);"
+        with connections['default'].cursor() as cursor:
+            for player in players:
+                cursor.execute(sql_query, [tournament_id, player])
+
+                
 
 ''' from the django-db standalone github
     def create_table(self, model):
@@ -190,6 +217,7 @@ class Database:
 class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
+        self.db.delete_all_tournaments()
         self.game_id_counter = 0
         self.tournaments = []
         self.single_games = []
@@ -201,14 +229,59 @@ class MatchMaker:
         new_tournament.id = await sync_to_async(self.db.add_tournament)(new_tournament)
         self.tournaments.append(new_tournament)
         message = {
-            'action': 'tournement_created',
-            'message': f'Tournement successfully created. ID: ',
-            'tournement_id': new_tournament.id,
+            'action': 'tournament_created',
+            'message': f'tournament successfully created. ID: ',
+            'tournament_id': new_tournament.id,
         }
         await send_message_to_client(creator, message)
 
         print(f"Tournament created: id {new_tournament.id} name: {new_tournament.name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
+    async def check_tournament_readyness(self, tournament):
+        if len(tournament.players) == tournament.number_of_players:
+            tournament.start_tournament()
+            await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
+            await sync_to_async(self.db.add_players_to_tournament)(tournament.id, tournament.players)
+            message = {
+                'action': 'tournament_started',
+                'message': f'Tournament {tournament.id} has started.',
+                'tournament_id': tournament.id,
+            }
+            for player in tournament.players:
+                await send_message_to_client(player, message)
+            print(f"Tournament {tournament.id} has started.")
+
+
+    async def join_tournament(self, player_id, tournament_id):
+        tournament = None
+        for t in self.tournaments:
+            if t.id == tournament_id:
+                tournament = t
+                break
+        if tournament is not None:
+            if tournament.join_tournament(player_id):
+                message = {
+                    'action': 'tournament_joined',
+                    'message': f'Player {player_id} successfully joined tournament {tournament_id}.',
+                }
+                await send_message_to_client(player_id, message)
+                print(f"Player {player_id} joined tournament {tournament_id}.")
+                await self.check_tournament_readyness(tournament)
+            else:
+                message = {
+                    'action': 'tournament_full',
+                    'message': f'Tournament {tournament_id} is full.',
+                }
+                await send_message_to_client(player_id, message)
+                print(f"Tournament {tournament_id} is full.")
+        else:
+            message = {
+                'action': 'tournament_not_found',
+                'message': f'Tournament {tournament_id} not found.',
+            }
+            await send_message_to_client(player_id, message)
+            print(f"Tournament {tournament_id} not found.")
+
     async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
         await self.check_single_game_queue()
@@ -395,21 +468,20 @@ async def consume_messages(websocket, client_id):
                 number_of_players = int(data.get('number_of_players'))
                 print(f"Requesting tournament for player {player_id}.")
                 await matchmaker.create_tournament(player_id, tournament_name, number_of_players)
-            elif data.get('action') == 'join_tournement':
+            elif data.get('action') == 'join_tournament':
                 player_id = int(data.get('player_id'))
-                tournament_id = int(data.get('tournament_id'))
+                tournament_id = data.get('tournament_id')
                 print(f"Joining tournament {tournament_id} for player {player_id}.")
-                #await matchmaker.join_tournament(player_id, tournament_id)      
+                await matchmaker.join_tournament(player_id, tournament_id)      
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except ConnectionClosed:
             print(f"Connection with client {client_id} is closed.")
         except Exception as e:
-            print(f"Error in consume_messages: {e}")
+            print(f"Error in consume_messages: {e}. Message: {message}")
 
 async def send_message_to_client(client_id, message):
     client = connected_clients.get(client_id)
-    print("Type send_message_to_client:", type(client_id), "client:", client)
     if client and client.websocket.open:
         try:
             await client.websocket.send(json.dumps(message))
