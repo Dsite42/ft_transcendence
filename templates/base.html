@@ -175,19 +175,26 @@
         {% endif %}
     </div>
     <script>
+        var globalSocket = null;
+
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
         // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.5.1:8765');
+        // Close existing WebSocket connection if open
+            if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
+                globalSocket.close();
+            }
 
-            socket.onopen = function(event) {
+            // Create a new WebSocket connection
+            globalSocket = new WebSocket('ws://10.12.5.1:8765');
+
+            globalSocket.onopen = function(event) {
                 console.log('WebSocket is open now.');
-                // Nachricht an den Server senden
-                socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                socket.send(JSON.stringify({ action: 'request_single_game', player_id: "{{ user.user_id }}" }));
+                globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+                globalSocket.send(JSON.stringify({ action: 'request_single_game', player_id: "{{ user.user_id }}" }));
             };
 
-            socket.onmessage = function(event) {
+            globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('WebSocket message received:', data);
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
@@ -197,41 +204,46 @@
                 }
             };
 
-            socket.onclose = function(event) {
+            globalSocket.onclose = function(event) {
                 console.log('WebSocket is closed now.');
             };
 
-            socket.onerror = function(error) {
+            globalSocket.onerror = function(error) {
                 console.error('WebSocket error:', error);
             };
         });
 
         // keyboard_game
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.5.1:8765');
+        // Close existing WebSocket connection if open
+        if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
+                globalSocket.close();
+            }
+            
+            // Create a new WebSocket connection
+            globalSocket = new WebSocket('ws://10.12.5.1:8765');
 
-            socket.onopen = function(event) {
+            globalSocket.onopen = function(event) {
                 console.log('WebSocket is open now.');
-                // Nachricht an den Server senden
-                socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                socket.send(JSON.stringify({ action: 'request_keyboard_game', player_id: "{{ user.user_id }}" }));
+                globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+                globalSocket.send(JSON.stringify({ action: 'request_keyboard_game', player_id: "{{ user.user_id }}" }));
             };
 
-            socket.onmessage = function(event) {
+            globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('WebSocket message received:', data);
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
                 if (data.action === 'game_address') {
-                    socket.close();
+                    globalSocket.close();
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
                 }
             };
 
-            socket.onclose = function(event) {
+            globalSocket.onclose = function(event) {
                 console.log('WebSocket is closed now.');
             };
 
-            socket.onerror = function(error) {
+            globalSocket.onerror = function(error) {
                 console.error('WebSocket error:', error);
             };
         });
@@ -255,15 +267,20 @@
 <script>
 // Create Tournament
 document.getElementById('createTournamentMM').addEventListener('click', function() {
-    console.log("user_id: {{ user.user_id }}");
-    const socket = new WebSocket('ws://10.12.5.1:8765')
-    socket.onopen = function(event) {
-        console.log('WebSocket is open now.');
-        // Nachricht an den Server senden
-        socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier3', number_of_players: 3 }));
+    // Close existing WebSocket connection if open
+    if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
+            globalSocket.close();
     }
-    socket.onmessage = function(event) {
+
+    // Create a new WebSocket connection
+    globalSocket = new WebSocket('ws://10.12.5.1:8765');
+    globalSocket.onopen = function(event) {
+        console.log('WebSocket is open now.');
+        globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+        globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier2', number_of_players: 2 }));
+    };
+
+    globalSocket.onmessage = function(event) {
         const data = JSON.parse(event.data);
         console.log('WebSocket message received:', data);
         alert('Nachricht vom Server: ' + data.message + data.tournament_id);
@@ -274,14 +291,14 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         else if (data.action === 'tournament_created') {
                     alert('Tournament created: ' + data.tournament_id);
                     // refresh tournament list
-                    socket.close();
+                    globalSocket.close();
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
     }
-    socket.onclose = function(event) {
+    globalSocket.onclose = function(event) {
         console.log('WebSocket is closed now.');
     }
-    socket.onerror = function(error) {
+    globalSocket.onerror = function(error) {
         console.error('WebSocket error:', error);
     };
 });
@@ -289,19 +306,23 @@ document.getElementById('createTournamentMM').addEventListener('click', function
 
 <script>
 
-
-
-function join_tournament(tournament_id) {
-    // Join Tournament
-    document.getElementById('tournament-table').addEventListener('click', function() {
-            const socket = new WebSocket('ws://10.12.5.1:8765');
-            socket.onopen = function(event) {
+    function join_tournament(tournament_id) {
+        // Join Tournament
+        document.getElementById('tournament-table').addEventListener('click', function() {
+            // Close existing WebSocket connection if open
+            if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
+                    globalSocket.close();
+            }
+            
+            // Create a new WebSocket connection
+            globalSocket = new WebSocket('ws://10.12.5.1:8765');
+            globalSocket.onopen = function(event) {
                 console.log('WebSocket is open now.');
-                // Nachricht an den Server senden
-                socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                socket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
+                globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+                globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
             };
-            socket.onmessage = function(event) {
+
+            globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('WebSocket message received:', data);
                 alert('Nachricht vom Server: ' + data.message );
@@ -331,16 +352,15 @@ function join_tournament(tournament_id) {
                 else if (data.action === 'tournament_ended') {
                     updatePageWithTournamentDataJson(data.tournament);
                 }
-
             };
-            socket.onclose = function(event) {
+            globalSocket.onclose = function(event) {
                 console.log('WebSocket is closed now.');
             };
-            socket.onerror = function(error) {
+            globalSocket.onerror = function(error) {
                 console.error('WebSocket error:', error);
             };
         });
-}
+    }
 </script>
 
 
