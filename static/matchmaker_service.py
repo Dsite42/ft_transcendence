@@ -65,6 +65,12 @@ class Tournament:
             game_id_counter += 1
             self.matches.append({'id': game_id_counter, 'players': match, 'status': 'pending', 'winner': None, 'p1_wins': None, 'p2_wins': None})
 
+    def add_draw_matches(self, draw_players):
+        global game_id_counter
+        for match in combinations(draw_players, 2):
+            game_id_counter += 1
+            self.matches.append({'id': game_id_counter, 'players': match, 'status': 'pending', 'winner': None, 'p1_wins': None, 'p2_wins': None})
+
     def start_tournament(self):
         self.status = 'ongoing'
         self.generate_matches()
@@ -89,16 +95,27 @@ class Tournament:
         for match in self.matches:
             if match['winner'] is not None:
                 win_counts[match['winner']] += 1
-        self.winner = max(win_counts, key=win_counts.get)
+        # check if we have several players with the maximum number of wins
+        max_wins = max(win_counts.values())
+        if list(win_counts.values()).count(max_wins) > 1:
+            draw_players = [player for player, wins in win_counts.items() if wins == max_wins]
+            self.add_draw_matches(draw_players)
+            return False
+        else:
+            self.winner = max(win_counts, key=win_counts.get)
+            return True
 
     def abort_tournament(self):
         self.winner = None
         self.status = 'aborted'
 
     def end_tournament(self):
-        self.calculate_winner()
-        self.end_time = datetime.now()
-        self.status = 'ended'
+        if self.calculate_winner():
+            self.end_time = datetime.now()
+            self.status = 'ended'
+            return True
+        else:
+            return False
     
     def to_dict(self):
         serialized_data = {
@@ -486,33 +503,40 @@ class MatchMaker:
         await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
         await sync_to_async(self.db.add_game)(game.player1, game.player2, winner, p1_wins, p2_wins)
 
+    async def start_next_match(self, tournament):
+        message = {
+            'action': 'tournament_updated',
+            'message': f'Tournament {tournament.id} has ended.',
+            'tournament_id': tournament.id,
+            'tournament': tournament.to_dict()
+        }
+        for player in tournament.players:
+            await send_message_to_client(player, message)
+        next_match = tournament.matches[tournament.current_match_index]
+        await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
+
 
     async def process_tournament_match_result(self, tournament, match, winner, p1_wins, p2_wins):
         match_index = tournament.matches.index(match)
         tournament.update_match_result(match_index, winner, p1_wins, p2_wins)
         if tournament.current_match_index < len(tournament.matches):
-            message = {
-                'action': 'tournament_updated',
-                'message': f'Tournament {tournament.id} has ended.',
-                'tournament_id': tournament.id,
-                'tournament': tournament.to_dict()
-            }
-            for player in tournament.players:
-                await send_message_to_client(player, message)
-            next_match = tournament.matches[tournament.current_match_index]
-            await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
+            await self.start_next_match(tournament)
         else:
-            tournament.end_tournament()
-            message = {
-                'action': 'tournament_ended',
-                'message': f'Tournament {tournament.id} has ended.',
-                'tournament_id': tournament.id,
-                'tournament': tournament.to_dict()
-            }
-            for player in tournament.players:
-                await send_message_to_client(player, message)
-            await sync_to_async(self.db.delete_tournament)(tournament.id)
-            print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
+            if tournament.end_tournament():
+                message = {
+                    'action': 'tournament_ended',
+                    'message': f'Tournament {tournament.id} has ended.',
+                    'tournament_id': tournament.id,
+                    'tournament': tournament.to_dict()
+                }
+                for player in tournament.players:
+                    await send_message_to_client(player, message)
+                await sync_to_async(self.db.delete_tournament)(tournament.id)
+                print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
+            else:
+                #Draw matches
+                self.start_next_match(tournament)
+
 
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
         for game in self.single_games:
