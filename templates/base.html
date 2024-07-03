@@ -261,7 +261,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         console.log('WebSocket is open now.');
         // Nachricht an den Server senden
         socket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier3', number_of_players: 3 }));
+        socket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier2', number_of_players: 2 }));
     }
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
@@ -323,7 +323,7 @@ function join_tournament(tournament_id) {
                     //window.location.href = "http://www.google.com";
                 }
                 else if (data.action === 'tournament_joined') {
-                    fetchTournamentData(data.tournament_id);
+                    updatePageWithTournamentDataJson(data.tournament);
                 }
                 else if (data.action === 'tournament_updated') {
                     updatePageWithTournamentDataJson(data.tournament);

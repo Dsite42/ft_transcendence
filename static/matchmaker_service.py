@@ -69,6 +69,11 @@ class Tournament:
         self.status = 'ongoing'
         self.generate_matches()
 
+    def change_match_status(self, match_index, status):
+        if 0 <= match_index < len(self.matches):
+            self.matches[match_index]['status'] = status
+
+
     def update_match_result(self, match_index, winner, p1_wins, p2_wins):
         if 0 <= match_index < len(self.matches):
             self.matches[match_index]['status'] = 'completed'
@@ -253,6 +258,13 @@ class Database:
             cursor.execute(sql_query, player_ids)
             result = {row[0]: row[1] for row in cursor.fetchall()}
         return result
+    
+    def get_display_name(self, player_id):
+        sql_query = "SELECT display_name FROM auth_user WHERE id = %s;"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, [player_id])
+            result = cursor.fetchone()
+        return result[0] if result else None
 
     #def add_players_to_tournament(self, tournament_id, players):
     #    print(f"Adding players to tournament {tournament_id}: {json.dumps(players)}")
@@ -320,9 +332,10 @@ class MatchMaker:
     
     async def check_tournament_readyness(self, tournament):
         if len(tournament.players) == tournament.number_of_players:
-            tournament.display_names = await sync_to_async(self.db.get_display_names)(tournament.players)
+            #tournament.display_names = await sync_to_async(self.db.get_display_names)(tournament.players)
             print(f"display_names: {tournament.display_names}")
             tournament.start_tournament()
+            tournament.change_match_status(0, 'ongoing')
             await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
             message = {
                 'action': 'tournament_started',
@@ -366,10 +379,12 @@ class MatchMaker:
                 break
         if tournament is not None:
             if tournament.join_tournament(player_id):
+                tournament.display_names[player_id] = await sync_to_async(self.db.get_display_name)(player_id)
                 message = {
                     'action': 'tournament_joined',
                     'message': f'Player {player_id} successfully joined tournament {tournament_id}.',
                     'tournament_id': tournament.id,
+                    'tournament': tournament.to_dict()
                 }
                 await sync_to_async(self.db.add_player_to_tournament)(tournament_id, player_id)
                 if len(tournament.players) < tournament.number_of_players:
