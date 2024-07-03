@@ -183,6 +183,7 @@ class Tournament(models.Model):
             'id': self.id,
             'creator': self.creator.username,
             'number_of_players': self.number_of_players,
+            'free_slots': self.number_of_players - self.players.count(),
             'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S'),
             'winner': self.winner.username if self.winner else None,
             'players': [player.username for player in self.players.all()],
