@@ -84,7 +84,7 @@ function prepareDataForGameSessionChart(data) {
     // Get the range of dates
     let dates = Object.keys(gamesByDate);
     let minDate = new Date(Math.min(...dates.map(date => new Date(date).getTime())));
-    let maxDate = new Date(Math.max(...dates.map(date => new Date(date).getTime())));
+    let maxDate = new Date();
 
     // Fill in missing dates with zero
     let currentDate = minDate;
