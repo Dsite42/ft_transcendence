@@ -325,9 +325,13 @@ function join_tournament(tournament_id) {
                 else if (data.action === 'tournament_joined') {
                     fetchTournamentData(data.tournament_id);
                 }
+                else if (data.action === 'tournament_updated') {
+                    updatePageWithTournamentDataJson(data.tournament);
+                }
                 else if (data.action === 'tournament_ended') {
                     updatePageWithTournamentDataJson(data.tournament);
                 }
+
             };
             socket.onclose = function(event) {
                 console.log('WebSocket is closed now.');

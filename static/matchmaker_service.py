@@ -217,6 +217,19 @@ class Database:
             inserted_row_id = cursor.lastrowid
         return inserted_row_id
     
+    def delete_tournament(self, tournament_id):
+        print(f"Deleting tournament {tournament_id}")
+        # First, delete any dependent Tournament-customuser relationships for this tournament
+        delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id = %s;"
+        # Then, delete the tournament
+        delete_tournament_sql = "DELETE FROM frontapp_tournament WHERE id = %s;"
+        
+        with connections['default'].cursor() as cursor:
+            # Delete dependent relationships
+            cursor.execute(delete_relationships_sql, [tournament_id])
+            # Delete the tournament
+            cursor.execute(delete_tournament_sql, [tournament_id])
+    
     def delete_all_tournaments(self):
         # First, delete any dependent Tournament-customuser relationships
         delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id IN (SELECT id FROM frontapp_tournament);"
@@ -463,6 +476,14 @@ class MatchMaker:
         match_index = tournament.matches.index(match)
         tournament.update_match_result(match_index, winner, p1_wins, p2_wins)
         if tournament.current_match_index < len(tournament.matches):
+            message = {
+                'action': 'tournament_updated',
+                'message': f'Tournament {tournament.id} has ended.',
+                'tournament_id': tournament.id,
+                'tournament': tournament.to_dict()
+            }
+            for player in tournament.players:
+                await send_message_to_client(player, message)
             next_match = tournament.matches[tournament.current_match_index]
             await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
         else:
@@ -475,6 +496,7 @@ class MatchMaker:
             }
             for player in tournament.players:
                 await send_message_to_client(player, message)
+            await sync_to_async(self.db.delete_tournament)(tournament.id)
             print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
 
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
