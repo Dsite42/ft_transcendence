@@ -24,6 +24,12 @@ from aiorpc import AioRPC
 from asyncio import Future, sleep, run
 from itertools import combinations
 
+
+connected_clients = {}
+game_id_counter = 0
+
+
+
 #define classes
 
 class Client:
@@ -53,16 +59,22 @@ class Tournament:
         return False
     
     def generate_matches(self):
-        self.matches = [{'players': match, 'status': 'pending', 'result': None} for match in combinations(self.players, 2)]
+        global game_id_counter
+        self.matches = []
+        for match in combinations(self.players, 2):
+            game_id_counter += 1
+            self.matches.append({'id': game_id_counter, 'players': match, 'status': 'pending', 'winner': None, 'p1_wins': None, 'p2_wins': None})
 
     def start_tournament(self):
         self.status = 'ongoing'
         self.generate_matches()
 
-    def update_match_result(self, match_index, winner):
+    def update_match_result(self, match_index, winner, p1_wins, p2_wins):
         if 0 <= match_index < len(self.matches):
             self.matches[match_index]['status'] = 'completed'
-            self.matches[match_index]['result'] = winner
+            self.matches[match_index]['winner'] = winner
+            self.matches[match_index]['p1_wins'] = p1_wins
+            self.matches[match_index]['p2_wins'] = p2_wins
             self.current_match_index += 1
             if self.current_match_index >= len(self.matches):
                 self.end_tournament()
@@ -70,8 +82,8 @@ class Tournament:
     def calculate_winner(self):
         win_counts = {player: 0 for player in self.players}
         for match in self.matches:
-            if match['result'] is not None:
-                win_counts[match['result']] += 1
+            if match['winner'] is not None:
+                win_counts[match['winner']] += 1
         self.winner = max(win_counts, key=win_counts.get)
 
     def abort_tournament(self):
@@ -275,7 +287,6 @@ class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
         self.db.delete_all_tournaments()
-        self.game_id_counter = 0
         self.tournaments = []
         self.single_games = []
         self.single_games_queue = []
@@ -309,7 +320,30 @@ class MatchMaker:
             for player in tournament.players:
                 await send_message_to_client(player, message)
             print(f"Tournament {tournament.id} has started.")
+            print(f"Match_id: {tournament.matches[0]['id']}, player1: {tournament.matches[0]['players'][0]}, player2: {tournament.matches[0]['players'][1]}")
+            await self.start_tournament_match(tournament.matches[0]['id'], tournament.matches[0]['players'][0], tournament.matches[0]['players'][1])
 
+    async def start_tournament_match(self, game_id, player1_id, player2_id):
+        print(f'Creating tournament match between Player {player1_id} and Player {player2_id}.')
+        result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, player2_id)
+        game_address = result['game_address']
+        message = {
+            'action': 'game_address',
+            'message': f'Tournament match successfully created. Join via: ',
+            'game_address': game_address,
+        }
+        client1, client2 = await self.search_single_game_clients(player1_id, player2_id)
+        if not client1 or not client2:
+            print("Error: Could not find both clients.")
+            return
+        #new_game = SingleGame(game_id, player1_id, client1, player2_id, client2, game_address)
+        #print("New game created.", new_game.player1, new_game.player2, new_game.game_address)
+        #self.single_games.append(new_game)
+        
+        # Send message to both players
+        await send_message_to_client(player1_id, message)
+        await send_message_to_client(player2_id, message)
+        
 
     async def join_tournament(self, player_id, tournament_id):
         tournament = None
@@ -369,8 +403,9 @@ class MatchMaker:
     async def create_single_game(self, player1_id, player2_id):
         start_time = time.time()
         print(f'Creating single game between Player {player1_id} and Player {player2_id}.')
-        game_id = self.game_id_counter
-        self.game_id_counter += 1
+        global game_id_counter
+        game_id = game_id_counter
+        game_id_counter += 1
         result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, player2_id)
         game_address = result['game_address']
         message = {
@@ -395,8 +430,9 @@ class MatchMaker:
     
     async def create_keyboard_game(self, player1_id):
         print(f'Creating keyboard game for Player {player1_id}.')
-        game_id = self.game_id_counter
-        self.game_id_counter += 1
+        global game_id_counter
+        game_id = game_id_counter
+        game_id_counter += 1
         result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, -1)
         game_address = result['game_address']
         message = {
@@ -406,30 +442,55 @@ class MatchMaker:
         }
         await send_message_to_client(player1_id, message)
 
-        
+
+    async def process_single_game_result(self, game, winner, p1_wins, p2_wins): 
+        general_points_for_winning = 5
+        game.end_game(winner, p1_wins, p2_wins)
+        # Player1
+        is_winner = 1 if game.player1 == winner else 0
+        print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
+        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
+        #Player2
+        is_winner = 1 if game.player2 == winner else 0
+        print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
+        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
+        await sync_to_async(self.db.add_game)(game.player1, game.player2, winner, p1_wins, p2_wins)
+
+
+    async def process_tournament_match_result(self, tournament, match, winner, p1_wins, p2_wins):
+        match_index = tournament.matches.index(match)
+        tournament.update_match_result(match_index, winner, p1_wins, p2_wins)
+        if tournament.current_match_index < len(tournament.matches):
+            next_match = tournament.matches[tournament.current_match_index]
+            await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
+        else:
+            tournament.end_tournament()
+            message = {
+                'action': 'tournament_ended',
+                'message': f'Tournament {tournament.id} has ended.',
+                'tournament_id': tournament.id,
+                'tournament': tournament.to_dict()
+            }
+            for player in tournament.players:
+                await send_message_to_client(player, message)
+            print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
+
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
-        game = None
         for game in self.single_games:
             if game.game_id == game_id:
-                game = game
-                break
-        general_points_for_winning = 5
-        if game is not None:
-            game.end_game(winner, p1_wins, p2_wins)
-            # Player1
-            is_winner = 1 if game.player1 == winner else 0
-            print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
-            score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
-            await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
-            #Player2
-            is_winner = 1 if game.player2 == winner else 0
-            print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
-            score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
-            await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
-
-            await sync_to_async(self.db.add_game)(game.player1, game.player2, winner, p1_wins, p2_wins)
-        else:
-            print(f"Game ID {game_id} not found.")
+                await self.process_single_game_result(game, winner, p1_wins, p2_wins)
+                self.single_games.remove(game)
+                return
+            
+        for tournament in self.tournaments:
+            for match in tournament.matches:
+                if match['id'] == game_id:
+                    await self.process_tournament_match_result(tournament, match, winner, p1_wins, p2_wins)
+                    return
+        
+        print(f"Game ID {game_id} not found.")
         return
     
     async def abort_game(self, game_id):
@@ -473,7 +534,6 @@ dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
-connected_clients = {}
 
 class ExampleService:
     @public

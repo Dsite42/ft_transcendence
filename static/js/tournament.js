@@ -44,7 +44,7 @@ function updatePageWithTournamentData(tournamentData) {
     `;
 }
 
-function updatePageWithTournamentData2(tournamentData) {
+function updatePageWithTournamentDataJson(tournamentData) {
     console.log('Updating page with tournament data:', tournamentData);
     let matchesHtml = '';
     if (tournamentData.matches && tournamentData.matches.length > 0) {
@@ -63,6 +63,11 @@ function updatePageWithTournamentData2(tournamentData) {
         matchesHtml += '</div>';
     }
 
+    let tournamentWinnerHtml = '';
+    if (tournamentData.status == 'ended') {
+        tournamentWinnerHtml = `<h2>And the Tournament winner is: ${tournamentData.display_names[tournamentData.winner]} Congratulations!</h2>`;
+    }
+
     document.getElementById('main-content').innerHTML = `
     <div class="container mt-5 text-center">
         <h1>Welcome to Tournament: ${tournamentData.name}</h1>
@@ -70,7 +75,8 @@ function updatePageWithTournamentData2(tournamentData) {
         <p>Number of Players joined: ${tournamentData.players.length} / ${tournamentData.number_of_players}</p>
         <p>Status: ${tournamentData.status}</p>
         ${matchesHtml}
-        </div>
+        ${tournamentWinnerHtml}
+        </div>   
         `;
         //<p>Players: ${tournamentData.display_names.join(', ')}</p>
 }
