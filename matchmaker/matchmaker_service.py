@@ -1,18 +1,16 @@
 import asyncio
-import asyncstdlib as astd
-import signal
+from asyncio import Future
 import json
-import time
 
 import django
 from django.conf import settings
 from django.db import models, connections
 
+from aiorpc import AioRPC
 import pika
-from tinyrpc.server import RPCServer
 from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 from tinyrpc.dispatch import public, RPCDispatcher
-from tinyrpc.transports.rabbitmq import RabbitMQServerTransport, RabbitMQClientTransport
+from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 from tinyrpc import RPCClient
 
 import websockets
@@ -20,23 +18,18 @@ from websockets.exceptions import ConnectionClosed
 from asgiref.sync import sync_to_async
 from datetime import datetime
 
-from aiorpc import AioRPC
-from asyncio import Future, sleep, run
 from itertools import combinations
 
 
-connected_clients = {}
-game_id_counter = 0
+# Class definitions
 
-
-
-#define classes
-
+# Client class for handling clients
 class Client:
     def __init__(self, player_id, websocket):
         self.player_id = player_id
         self.websocket = websocket
-        
+
+# Tournament class for handling tournaments   
 class Tournament:
     def __init__(self, tournament_id, creator, tournament_name, number_of_players):
         self.id = tournament_id
@@ -134,6 +127,7 @@ class Tournament:
         }
         return serialized_data
 
+# SingleGame class for handling single games
 class SingleGame:
     def __init__(self, game_id, player1, client1, player2, client2, game_address):
         self.game_id = game_id
@@ -164,13 +158,13 @@ class SingleGame:
         self.p1_wins = p1_wins
         self.p2_wins = p2_wins
         self.game_status = 'ended'
-
     
     def abort_game(self):
         self.game_winner = None
         self.game_status = 'aborted'
 
 
+# Database class for handling database operations via Django database connection
 class Database:
     def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
         self.Model = None
@@ -247,11 +241,10 @@ class Database:
         delete_tournament_sql = "DELETE FROM frontapp_tournament WHERE id = %s;"
         
         with connections['default'].cursor() as cursor:
-            # Delete dependent relationships
             cursor.execute(delete_relationships_sql, [tournament_id])
-            # Delete the tournament
             cursor.execute(delete_tournament_sql, [tournament_id])
     
+    # On game_service start, all open tournaments in the db are deleted, because they can not be handled anymore and are invalid
     def delete_all_tournaments(self):
         # First, delete any dependent Tournament-customuser relationships
         delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id IN (SELECT id FROM frontapp_tournament);"
@@ -283,16 +276,6 @@ class Database:
             result = cursor.fetchone()
         return result[0] if result else None
 
-    #def add_players_to_tournament(self, tournament_id, players):
-    #    print(f"Adding players to tournament {tournament_id}: {json.dumps(players)}")
-    #    join_table = 'tournament_players'
-    #    tournament_col = 'tournament_id'
-    #    player_col = 'customuser_id'
-    #    sql_query = f"INSERT INTO frontapp_{join_table} ({tournament_col}, {player_col}) VALUES (%s, %s);"
-    #    with connections['default'].cursor() as cursor:
-    #        for player in players:
-    #            cursor.execute(sql_query, [tournament_id, player])
-
     def add_player_to_tournament(self, tournament_id, player_id):
         print(f"Adding players to tournament {tournament_id}: {player_id}")
         join_table = 'tournament_players'
@@ -301,30 +284,8 @@ class Database:
         sql_query = f"INSERT INTO frontapp_{join_table} ({tournament_col}, {player_col}) VALUES (%s, %s);"
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [tournament_id, player_id])
-
-
-
-''' from the django-db standalone github
-    def create_table(self, model):
-        with connections['default'].schema_editor() as schema_editor:
-            if model._meta.db_table not in connections['default'].introspection.table_names():
-                schema_editor.create_model(model)
-
-    def update_table(self, model):
-        with connections['default'].schema_editor() as schema_editor:
-            if model._meta.db_table in connections['default'].introspection.table_names():
-                current_columns = [field.column for field in model._meta.fields]
-                database_columns = connections['default'].introspection.get_table_description(connections['default'].cursor(), model._meta.db_table)
-                database_column_names = [column.name for column in database_columns]
-
-                for field in model._meta.fields:
-                    if field.column not in database_column_names:
-                        schema_editor.add_field(model, field)
-'''
-
-
         
-    
+# The MatchMaker class handles the matchmaking process for keyboard games, single games and tournaments. It is the main service that communicates with the game_service and the clients.    
 class MatchMaker:
     def __init__(self):
         self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
@@ -333,7 +294,7 @@ class MatchMaker:
         self.single_games = []
         self.single_games_queue = []
 
-
+    # Creates a new tournament and sends the tournament ID to the creator
     async def create_tournament(self, creator, tournament_name, number_of_players):
         new_tournament = Tournament(0, creator, tournament_name, number_of_players)
         new_tournament.id = await sync_to_async(self.db.add_tournament)(new_tournament)
@@ -347,10 +308,9 @@ class MatchMaker:
 
         print(f"Tournament created: id {new_tournament.id} name: {new_tournament.name}, creator: {new_tournament.creator}, size: {new_tournament.number_of_players}")
     
+    # Checks if a tournament is ready to start
     async def check_tournament_readyness(self, tournament):
         if len(tournament.players) == tournament.number_of_players:
-            #tournament.display_names = await sync_to_async(self.db.get_display_names)(tournament.players)
-            print(f"display_names: {tournament.display_names}")
             tournament.start_tournament()
             tournament.change_match_status(0, 'ongoing')
             await sync_to_async(self.db.change_tournament_status)(tournament.id, 'ongoing')
@@ -366,6 +326,7 @@ class MatchMaker:
             print(f"Match_id: {tournament.matches[0]['id']}, player1: {tournament.matches[0]['players'][0]}, player2: {tournament.matches[0]['players'][1]}")
             await self.start_tournament_match(tournament.matches[0]['id'], tournament.matches[0]['players'][0], tournament.matches[0]['players'][1])
 
+    # Requests via game_service a new tournament match and sends the game address to the players
     async def start_tournament_match(self, game_id, player1_id, player2_id):
         print(f'Creating tournament match between Player {player1_id} and Player {player2_id}.')
         result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, player2_id)
@@ -379,15 +340,11 @@ class MatchMaker:
         if not client1 or not client2:
             print("Error: Could not find both clients.")
             return
-        #new_game = SingleGame(game_id, player1_id, client1, player2_id, client2, game_address)
-        #print("New game created.", new_game.player1, new_game.player2, new_game.game_address)
-        #self.single_games.append(new_game)
         
-        # Send message to both players
         await send_message_to_client(player1_id, message)
         await send_message_to_client(player2_id, message)
         
-
+    # Adds a player to a tournament and checks if the tournament is full
     async def join_tournament(self, player_id, tournament_id):
         tournament = None
         for t in self.tournaments:
@@ -423,30 +380,33 @@ class MatchMaker:
             await send_message_to_client(player_id, message)
             print(f"Tournament {tournament_id} not found.")
 
+    # Adds a player to the single game queue and checks if there are enough players to start a game
     async def request_single_game(self, player1):
         self.single_games_queue.append(player1)
         await self.check_single_game_queue()
 
+    # Forwards the request to create a keyboard game
     async def request_keyboard_game(self, player1):
         await self.create_keyboard_game(player1)
-                
+
+    # Checks if there are enough players in the queue to start a single game
     async def check_single_game_queue(self):
         print(f'Checking single game queue. Length: {len(self.single_games_queue)}')
         if len(self.single_games_queue) >= 2:
             player1 = self.single_games_queue.pop(0)
             player2 = self.single_games_queue.pop(0)
             await self.create_single_game(player1, player2)
-            
+
+
     async def search_single_game_clients(self, player1_id, player2_id):
         client1 = connected_clients.get(player1_id)
         client2 = connected_clients.get(player2_id)
         if client1 and client2:
             return client1, client2
         return None, None
-        
-    
+
+    # Requests via game_service a new (single) game address and sends it to the players
     async def create_single_game(self, player1_id, player2_id):
-        start_time = time.time()
         print(f'Creating single game between Player {player1_id} and Player {player2_id}.')
         global game_id_counter
         game_id = game_id_counter
@@ -466,13 +426,10 @@ class MatchMaker:
         print("New game created.", new_game.player1, new_game.player2, new_game.game_address)
         self.single_games.append(new_game)
         
-        # Send message to both players
         await send_message_to_client(player1_id, message)
         await send_message_to_client(player2_id, message)
-        
-        end_time = time.time()
-        print(f"create_single_game took {end_time - start_time:.2f} seconds")
-    
+
+    # Requests via game_service a new (keyboard)game address and sends it to the player
     async def create_keyboard_game(self, player1_id):
         print(f'Creating keyboard game for Player {player1_id}.')
         global game_id_counter
@@ -487,22 +444,7 @@ class MatchMaker:
         }
         await send_message_to_client(player1_id, message)
 
-
-    async def process_single_game_result(self, game, winner, p1_wins, p2_wins): 
-        general_points_for_winning = 5
-        game.end_game(winner, p1_wins, p2_wins)
-        # Player1
-        is_winner = 1 if game.player1 == winner else 0
-        print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
-        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
-        await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
-        #Player2
-        is_winner = 1 if game.player2 == winner else 0
-        print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
-        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
-        await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
-        await sync_to_async(self.db.add_game)(game.player1, game.player2, winner, p1_wins, p2_wins)
-
+    # Sends updated match information to the clients and starts the next match
     async def start_next_match(self, tournament):
         message = {
             'action': 'tournament_updated',
@@ -515,7 +457,28 @@ class MatchMaker:
         next_match = tournament.matches[tournament.current_match_index]
         await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
 
+    # Processes the result of a single game and updates the user stats and game history
+    async def process_single_game_result(self, game, winner, p1_wins, p2_wins): 
+        general_points_for_winning = 5
+        game.end_game(winner, p1_wins, p2_wins)
 
+        # Player1, add game result to user stats
+        is_winner = 1 if game.player1 == winner else 0
+        print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
+        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
+
+        #Player2, add game result to user stats
+        is_winner = 1 if game.player2 == winner else 0
+        print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
+        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
+
+        # Add game to game history
+        await sync_to_async(self.db.add_game)(game.player1, game.player2, winner, p1_wins, p2_wins)
+
+
+    # Updates the result of a tournament match and starts the next match if there are any left or ends the tournament and sends the results to all players
     async def process_tournament_match_result(self, tournament, match, winner, p1_wins, p2_wins):
         match_index = tournament.matches.index(match)
         tournament.update_match_result(match_index, winner, p1_wins, p2_wins)
@@ -531,13 +494,14 @@ class MatchMaker:
                 }
                 for player in tournament.players:
                     await send_message_to_client(player, message)
+                # As the tournament has ended, delete it from the database
                 await sync_to_async(self.db.delete_tournament)(tournament.id)
                 print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
             else:
                 #Draw matches
                 self.start_next_match(tournament)
 
-
+    # Checks if game is a single game or a tournament match and processes the result accordingly
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
         for game in self.single_games:
             if game.game_id == game_id:
@@ -554,6 +518,7 @@ class MatchMaker:
         print(f"Game ID {game_id} not found.")
         return
     
+    # If game_service sends -1 as winner, the game is aborted and gets removed
     async def abort_game(self, game_id):
         game = None
         for game in self.single_games:
@@ -567,18 +532,14 @@ class MatchMaker:
             print(f"Game ID {game_id} not found.")
         return
         
-
+# MatchmakerService class for RPC to call methods externally from the game_service
 class MatchmakerService:
     def __init__(self):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         protocol = JSONRPCProtocol()
 
-        transport_django = RabbitMQClientTransport(self.connection, 'django_service_queue')
-        self.django_service = RPCClient(protocol, transport_django).get_proxy()
-
         transport_game = RabbitMQClientTransport(self.connection, 'game_service')
         self.game_service = RPCClient(protocol, transport_game).get_proxy()
-
 
 
     @public
@@ -587,29 +548,22 @@ class MatchmakerService:
         if winner == -1:
             await matchmaker.abort_game(game_id)
             return
-        print("Type:" , type(winner))
         await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
+
+# Global variables
+connected_clients = {}
+game_id_counter = 0
 
 dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
 
-class ExampleService:
-    @public
-    def ping(self) -> str:
-        return 'Pong!'
-
-    @public
-    async def ping_with_delay(self) -> str:
-        await sleep(5.0)
-        return 'Pong! (with delay :D)'
-
-
+# Websocket handler gets called when a new connection is made or a message is received
 async def handler(websocket, path):
     try:
-        first_message = await websocket.recv()  # Erste Nachricht vom Client
+        first_message = await websocket.recv()  # First message from client
         data = json.loads(first_message)
         action = data.get('action')
         client_id = int(data.get('player_id'))
@@ -632,6 +586,7 @@ async def handler(websocket, path):
     except Exception as e:
         print(f"Error in handler: {e}")
 
+# Consume messages from the client
 async def consume_messages(websocket, client_id):
     async for message in websocket:
         try:
@@ -663,6 +618,7 @@ async def consume_messages(websocket, client_id):
         except Exception as e:
             print(f"Error in consume_messages: {e}. Message: {message}")
 
+# Send a message to a client
 async def send_message_to_client(client_id, message):
     client = connected_clients.get(client_id)
     if client and client.websocket.open:
@@ -673,28 +629,20 @@ async def send_message_to_client(client_id, message):
     else:
         print(f"Client {client_id} is not connected")
 
-
+# Start the websocket server
 async def start_websocket_server():
     async with websockets.serve(handler, "10.12.7.1", 8765):
         print("WebSocket server started on ws://10.12.7.1:8765")
         await asyncio.Future()
 
+# Start the RPC server
 async def run_servers():
     async with AioRPC('localhost', 'matchmaker_service_queue', MatchmakerService()):
         # Do anything else here
         await Future()
 
-async def handle_shutdown(loop, executor):
-    print("Shutting down...")
-    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    [task.cancel() for task in tasks]
-    await asyncio.gather(*tasks, return_exceptions=True)
-    await loop.shutdown_asyncgens()
-    executor.shutdown(wait=False)
-    print("Shutdown complete.")
 
 async def main():
-    #await matchmaker.process_game_result(7, 4, 11, 8)
     try:
         task1 = asyncio.create_task(start_websocket_server())
         task2 = asyncio.create_task(run_servers())
