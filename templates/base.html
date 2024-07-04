@@ -203,9 +203,11 @@
                     document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game started. Have fun!</p>';
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
                 }
-
-                if (data.action === 'single_game_ended') {
+                else if (data.action === 'single_game_ended') {
                     document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game ended.  <span style="color:blue;">' + data.winner + '</span> won and earned <span style="color:blue;">' + data.score + '</span> points.</p>';
+                }
+                else if (data.action === 'single_game_aborted') {
+                    document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game aborted! </p>';
                 }
             };
 
@@ -373,6 +375,11 @@
                     else if (data.action === 'tournament_ended') {
                         updatePageWithTournamentDataJson(data.tournament);
                     }
+                    else if (data.action === 'tournament_aborted') {
+                        updatePageTournamentAborted();
+                    }
+
+
                 };
                 globalSocket.onclose = function(event) {
                     console.log('WebSocket is closed now.');

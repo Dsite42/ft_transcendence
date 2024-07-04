@@ -32,3 +32,12 @@ function updatePageWithTournamentDataJson(tournamentData) {
         </div>   
         `;
 }
+
+function updatePageTournamentAborted() {
+    document.getElementById('main-content').innerHTML = `
+    <div class="container mt-5 text-center">
+        <h1>Tournament has been aborted</h1>
+        <p> A player has left the tournament. </p>
+    </div>
+    `;
+}

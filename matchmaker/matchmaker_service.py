@@ -324,10 +324,10 @@ class MatchMaker:
                 await send_message_to_client(player, message)
             print(f"Tournament {tournament.id} has started.")
             print(f"Match_id: {tournament.matches[0]['id']}, player1: {tournament.matches[0]['players'][0]}, player2: {tournament.matches[0]['players'][1]}")
-            await self.start_tournament_match(tournament.matches[0]['id'], tournament.matches[0]['players'][0], tournament.matches[0]['players'][1])
+            await self.start_tournament_match(tournament, tournament.matches[0]['id'], tournament.matches[0]['players'][0], tournament.matches[0]['players'][1])
 
     # Requests via game_service a new tournament match and sends the game address to the players
-    async def start_tournament_match(self, game_id, player1_id, player2_id):
+    async def start_tournament_match(self, tournament, game_id, player1_id, player2_id):
         print(f'Creating tournament match between Player {player1_id} and Player {player2_id}.')
         result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, player2_id)
         game_address = result['game_address']
@@ -339,6 +339,7 @@ class MatchMaker:
         client1, client2 = await self.search_single_game_clients(player1_id, player2_id)
         if not client1 or not client2:
             print("Error: Could not find both clients.")
+            self.abort_tournament(tournament)
             return
         
         await send_message_to_client(player1_id, message)
@@ -444,8 +445,18 @@ class MatchMaker:
         }
         await send_message_to_client(player1_id, message)
 
+
     # Sends updated match information to the clients and starts the next match
     async def start_next_match(self, tournament):
+        next_match = tournament.matches[tournament.current_match_index]
+
+        # Check if players are still connected
+        client1, client2 = await self.search_single_game_clients(next_match['players'][0], next_match['players'][1])
+        if not client1 or not client2:
+            print("Error: Could not find both clients.")
+            await self.abort_tournament(tournament)
+            return
+        
         message = {
             'action': 'tournament_updated',
             'message': f'Tournament {tournament.id} has ended.',
@@ -454,7 +465,6 @@ class MatchMaker:
         }
         for player in tournament.players:
             await send_message_to_client(player, message)
-        next_match = tournament.matches[tournament.current_match_index]
         await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
 
     # Processes the result of a single game and updates the user stats and game history
@@ -517,32 +527,55 @@ class MatchMaker:
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
         for game in self.single_games:
             if game.game_id == game_id:
-                await self.process_single_game_result(game, winner, p1_wins, p2_wins)
-                self.single_games.remove(game)
-                return
+                if winner == -1:
+                    await self.abort_single_game(game)
+                    return
+                else:
+                    await self.process_single_game_result(game, winner, p1_wins, p2_wins)
+                    self.single_games.remove(game)
+                    return
             
         for tournament in self.tournaments:
             for match in tournament.matches:
                 if match['id'] == game_id:
-                    await self.process_tournament_match_result(tournament, match, winner, p1_wins, p2_wins)
-                    return
+                    if winner == -1:
+                        await self.abort_tournament(tournament)
+                        return
+                    else:
+                        await self.process_tournament_match_result(tournament, match, winner, p1_wins, p2_wins)
+                        return
         
         print(f"Game ID {game_id} not found.")
         return
     
     # If game_service sends -1 as winner, the game is aborted and gets removed
-    async def abort_game(self, game_id):
-        game = None
-        for game in self.single_games:
-            if game.game_id == game_id:
-                game = game
-                break
-        if game is not None:
-            game.abort_game()
-            self.single_games.remove(game)
-        else:
-            print(f"Game ID {game_id} not found.")
-        return
+    async def abrot_single_game(self, game):
+        game.abort_game()
+        self.single_games.remove(game)
+        message = {
+            'action': 'single_game_aborted',
+            'message': f'Game {game.game_id} has been aborted.',
+            'game_id': game.game_id,
+        }
+        await send_message_to_client(game.player1, message)
+        await send_message_to_client(game.player2, message)
+
+    async def abort_tournament(self, tournament):
+        tournament.abort_tournament()
+        message = {
+            'action': 'tournament_aborted',
+            'message': f'Tournament {tournament.id} has been aborted.',
+            'tournament_id': tournament.id,
+        }
+        for player in tournament.players:
+            await send_message_to_client(player, message)
+        await sync_to_async(self.db.delete_tournament)(tournament.id)
+        self.tournaments.remove(tournament)
+        print(f"Tournament {tournament.id} has been aborted.")
+
+
+
+
         
 # MatchmakerService class for RPC to call methods externally from the game_service
 class MatchmakerService:
