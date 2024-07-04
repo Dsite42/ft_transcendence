@@ -162,8 +162,11 @@
     </div>
 </div>
 
-    <!-- Matchmaker Test Section -->
-         <!-- Game Section -->
+<!-- Matchmaker Test Section -->
+    <script>
+            var globalSocket = null;
+    </script>
+
     <div class="container mt-5 text-center">
         {% if user.is_authenticated %}
         <button id="startGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Game via MM' %}</button>
@@ -174,20 +177,16 @@
         <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
         {% endif %}
     </div>
-    <script>
-        var globalSocket = null;
 
-        console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
-        // single_game
+    <!-- Single Game -->
+    <script>
         document.getElementById('startGameMM').addEventListener('click', function() {
             document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Waiting for second player. Don\'t leave this page!</p>';
 
-        // Close existing WebSocket connection if open
             if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
                 globalSocket.close();
             }
 
-            // Create a new WebSocket connection
             globalSocket = new WebSocket('ws://10.12.7.1:8765');
 
             globalSocket.onopen = function(event) {
@@ -201,9 +200,7 @@
                 console.log('WebSocket message received:', data);
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
                 if (data.action === 'game_address') {
-                    //window.location.href = "http://www.google.com"
                     document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game started. Have fun!</p>';
-
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
                 }
             };
@@ -216,18 +213,17 @@
                 console.error('WebSocket error:', error);
             };
         });
+        </script>
 
-        // keyboard_game
+    <!-- Keyboard Game -->
+    <script>
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
             document.getElementById('main-content').innerHTML = '<h1>Keyboard Game</h1>';
 
-
-        // Close existing WebSocket connection if open
         if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
                 globalSocket.close();
             }
             
-            // Create a new WebSocket connection
             globalSocket = new WebSocket('ws://10.12.7.1:8765');
 
             globalSocket.onopen = function(event) {
@@ -254,142 +250,135 @@
                 console.error('WebSocket error:', error);
             };
         });
-
-
     </script>
 
 
-<!-- Tournament Section -->
-<div class="container mt-5 text-center">
-    {% if user.is_authenticated %}
-    <form method="post" id="tournamentForm">
-        {% csrf_token %}
-        <div class="row">
-            <div class="col-md-4">
-                <label for="tournamentName" class="form-label">{% trans 'Tournament Name' %}</label>
-                <input type="text" class="form-control" id="tournamentName" name="tournament_name" required>
+    <!-- Tournament Section -->
+    <div class="container mt-5 text-center">
+        {% if user.is_authenticated %}
+        <form method="post" id="tournamentForm">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="tournamentName" class="form-label">{% trans 'Tournament Name' %}</label>
+                    <input type="text" class="form-control" id="tournamentName" name="tournament_name" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="numberOfPlayers" class="form-label">{% trans 'Number of Players' %}</label>
+                    <input type="number" class="form-control" id="numberOfPlayers" name="number_of_players" min="2" required>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-dark btn-lg w-100" style="border-radius: 0;">{% trans 'Create a new Tournament via MM' %}</button>
+                </div>
             </div>
-            <div class="col-md-4">
-                <label for="numberOfPlayers" class="form-label">{% trans 'Number of Players' %}</label>
-                <input type="number" class="form-control" id="numberOfPlayers" name="number_of_players" min="2" required>
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button type="submit" class="btn btn-dark btn-lg w-100" style="border-radius: 0;">{% trans 'Create a new Tournament via MM' %}</button>
-            </div>
-        </div>
-    </form>
-    <br>
-    <br>
-    {% else %}
-    <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
-    {% endif %}
-</div>
+        </form>
+        <br>
+        <br>
+        {% else %}
+        <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
+        {% endif %}
+    </div>
 
 
-<script>
-// Create Tournament
-document.getElementById('tournamentForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Verhindert das automatische Absenden des Formulars
 
-    // Turniernamen und Anzahl der Spieler aus dem Formular lesen
-    var tournamentName = document.getElementById('tournamentName').value;
-    var numberOfPlayers = document.getElementById('numberOfPlayers').value;
+    <!-- Create Tournament -->
+    <script>
+    document.getElementById('tournamentForm').addEventListener('submit', function(event) {
+        event.preventDefault();
 
-    // Schließen Sie die bestehende WebSocket-Verbindung, falls sie geöffnet ist
-    if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-        globalSocket.close();
-    }
+        var tournamentName = document.getElementById('tournamentName').value;
+        var numberOfPlayers = document.getElementById('numberOfPlayers').value;
 
-    // Erstellen Sie eine neue WebSocket-Verbindung
-    globalSocket = new WebSocket('ws://10.12.7.1:8765');
-    globalSocket.onopen = function(event) {
-        console.log('WebSocket is open now.');
-        globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-        globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: tournamentName, number_of_players: numberOfPlayers }));
-    };
-
-    globalSocket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
-        alert('Nachricht vom Server: ' + data.message + data.tournament_id);
-        if (data.action === 'game_address') {
-            Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
-        } else if (data.action === 'tournament_created') {
-            alert('Tournament created: ' + data.tournament_id);
+        if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
             globalSocket.close();
-            window.location.href = "{% url 'home' %}" + '#tournament_list';
         }
-    };
 
-    globalSocket.onclose = function(event) {
-        console.log('WebSocket is closed now.');
-    };
+        globalSocket = new WebSocket('ws://10.12.7.1:8765');
 
-    globalSocket.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
-});
-</script>
+        globalSocket.onopen = function(event) {
+            console.log('WebSocket is open now.');
+            globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+            globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: tournamentName, number_of_players: numberOfPlayers }));
+        };
 
-<script>
-
-    function join_tournament(tournament_id) {
-        // Join Tournament
-        document.getElementById('tournament-table').addEventListener('click', function() {
-            // Close existing WebSocket connection if open
-            if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-                    globalSocket.close();
+        globalSocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('WebSocket message received:', data);
+            alert('Nachricht vom Server: ' + data.message + data.tournament_id);
+            if (data.action === 'game_address') {
+                Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
+            } else if (data.action === 'tournament_created') {
+                alert('Tournament created: ' + data.tournament_id);
+                globalSocket.close();
+                window.location.href = "{% url 'home' %}" + '#tournament_list';
             }
-            
-            // Create a new WebSocket connection
-            globalSocket = new WebSocket('ws://10.12.7.1:8765');
-            globalSocket.onopen = function(event) {
-                console.log('WebSocket is open now.');
-                globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
-            };
+        };
 
-            globalSocket.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                console.log('WebSocket message received:', data);
-                alert('Nachricht vom Server: ' + data.message );
-                if (data.action === 'game_address') {
-                    //window.location.href = "http://www.google.com"
-                    Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
-                }
-                else if (data.action === 'tournament_not_found') {
-                    alert('Tournament not found or not longer available: ' + data.tournament_id);
-                    window.location.href = "{% url 'home' %}" + '#tournament_list';
-                }
-                else if (data.action === 'tournament_full') {
-                    alert('Tournament is full: ' + data.tournament_id + ' Name: ' + data.tournament_name);
-                    window.location.href = "{% url 'home' %}" + '#tournament_list';
-                }
-                else if (data.action === 'tournament_started') {
-                    //fetchTournamentData(data.tournament_id);
-                    updatePageWithTournamentDataJson(data.tournament);
-                    //window.location.href = "http://www.google.com";
-                }
-                else if (data.action === 'tournament_joined') {
-                    updatePageWithTournamentDataJson(data.tournament);
-                }
-                else if (data.action === 'tournament_updated') {
-                    updatePageWithTournamentDataJson(data.tournament);
-                }
-                else if (data.action === 'tournament_ended') {
-                    updatePageWithTournamentDataJson(data.tournament);
-                }
-            };
-            globalSocket.onclose = function(event) {
-                console.log('WebSocket is closed now.');
-            };
-            globalSocket.onerror = function(error) {
-                console.error('WebSocket error:', error);
-            };
-        });
-    }
-</script>
+        globalSocket.onclose = function(event) {
+            console.log('WebSocket is closed now.');
+        };
 
+        globalSocket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    });
+    </script>
+
+
+    <!-- Join Tournament -->
+    <script>
+        function join_tournament(tournament_id) {
+            document.getElementById('tournament-table').addEventListener('click', function() {
+
+                if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
+                        globalSocket.close();
+                }
+                
+                globalSocket = new WebSocket('ws://10.12.7.1:8765');
+                
+                globalSocket.onopen = function(event) {
+                    console.log('WebSocket is open now.');
+                    globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+                    globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
+                };
+
+                globalSocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket message received:', data);
+                    alert('Nachricht vom Server: ' + data.message );
+                    if (data.action === 'game_address') {
+                        Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
+                    }
+                    else if (data.action === 'tournament_not_found') {
+                        alert('Tournament not found or not longer available: ' + data.tournament_id);
+                        window.location.href = "{% url 'home' %}" + '#tournament_list';
+                    }
+                    else if (data.action === 'tournament_full') {
+                        alert('Tournament is full: ' + data.tournament_id + ' Name: ' + data.tournament_name);
+                        window.location.href = "{% url 'home' %}" + '#tournament_list';
+                    }
+                    else if (data.action === 'tournament_started') {
+                        updatePageWithTournamentDataJson(data.tournament);
+                    }
+                    else if (data.action === 'tournament_joined') {
+                        updatePageWithTournamentDataJson(data.tournament);
+                    }
+                    else if (data.action === 'tournament_updated') {
+                        updatePageWithTournamentDataJson(data.tournament);
+                    }
+                    else if (data.action === 'tournament_ended') {
+                        updatePageWithTournamentDataJson(data.tournament);
+                    }
+                };
+                globalSocket.onclose = function(event) {
+                    console.log('WebSocket is closed now.');
+                };
+                globalSocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                };
+            });
+        }
+    </script>
 
 
     <!-- Footer -->
