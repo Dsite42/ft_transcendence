@@ -492,8 +492,8 @@ async def send_message_to_client(client_id, message):
 
 
 async def start_websocket_server():
-    async with websockets.serve(handler, "10.12.5.1", 8765):
-        print("WebSocket server started on ws://10.12.5.1:8765")
+    async with websockets.serve(handler, "10.12.7.1", 8765):
+        print("WebSocket server started on ws://10.12.7.1:8765")
         await asyncio.Future()
 
 async def run_servers():

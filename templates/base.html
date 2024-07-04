@@ -186,7 +186,7 @@
             }
 
             // Create a new WebSocket connection
-            globalSocket = new WebSocket('ws://10.12.5.1:8765');
+            globalSocket = new WebSocket('ws://10.12.7.1:8765');
 
             globalSocket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -221,7 +221,7 @@
             }
             
             // Create a new WebSocket connection
-            globalSocket = new WebSocket('ws://10.12.5.1:8765');
+            globalSocket = new WebSocket('ws://10.12.7.1:8765');
 
             globalSocket.onopen = function(event) {
                 console.log('WebSocket is open now.');
@@ -255,7 +255,22 @@
 <!-- Tournament Section -->
 <div class="container mt-5 text-center">
     {% if user.is_authenticated %}
-    <button id="createTournamentMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Create a new Tournament via MM' %}</button>
+    <form method="post" id="tournamentForm">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-4">
+                <label for="tournamentName" class="form-label">{% trans 'Tournament Name' %}</label>
+                <input type="text" class="form-control" id="tournamentName" name="tournament_name" required>
+            </div>
+            <div class="col-md-4">
+                <label for="numberOfPlayers" class="form-label">{% trans 'Number of Players' %}</label>
+                <input type="number" class="form-control" id="numberOfPlayers" name="number_of_players" min="2" required>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-dark btn-lg w-100" style="border-radius: 0;">{% trans 'Create a new Tournament via MM' %}</button>
+            </div>
+        </div>
+    </form>
     <br>
     <br>
     {% else %}
@@ -266,18 +281,24 @@
 
 <script>
 // Create Tournament
-document.getElementById('createTournamentMM').addEventListener('click', function() {
-    // Close existing WebSocket connection if open
+document.getElementById('tournamentForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Verhindert das automatische Absenden des Formulars
+
+    // Turniernamen und Anzahl der Spieler aus dem Formular lesen
+    var tournamentName = document.getElementById('tournamentName').value;
+    var numberOfPlayers = document.getElementById('numberOfPlayers').value;
+
+    // Schließen Sie die bestehende WebSocket-Verbindung, falls sie geöffnet ist
     if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-            globalSocket.close();
+        globalSocket.close();
     }
 
-    // Create a new WebSocket connection
-    globalSocket = new WebSocket('ws://10.12.5.1:8765');
+    // Erstellen Sie eine neue WebSocket-Verbindung
+    globalSocket = new WebSocket('ws://10.12.7.1:8765');
     globalSocket.onopen = function(event) {
         console.log('WebSocket is open now.');
         globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-        globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: 'Krasses Turnier2', number_of_players: 2 }));
+        globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: tournamentName, number_of_players: numberOfPlayers }));
     };
 
     globalSocket.onmessage = function(event) {
@@ -285,19 +306,18 @@ document.getElementById('createTournamentMM').addEventListener('click', function
         console.log('WebSocket message received:', data);
         alert('Nachricht vom Server: ' + data.message + data.tournament_id);
         if (data.action === 'game_address') {
-            //window.location.href = "http://www.google.com"
             Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
+        } else if (data.action === 'tournament_created') {
+            alert('Tournament created: ' + data.tournament_id);
+            globalSocket.close();
+            window.location.href = "{% url 'home' %}" + '#tournament_list';
         }
-        else if (data.action === 'tournament_created') {
-                    alert('Tournament created: ' + data.tournament_id);
-                    // refresh tournament list
-                    globalSocket.close();
-                    window.location.href = "{% url 'home' %}" + '#tournament_list';
-                }
-    }
+    };
+
     globalSocket.onclose = function(event) {
         console.log('WebSocket is closed now.');
-    }
+    };
+
     globalSocket.onerror = function(error) {
         console.error('WebSocket error:', error);
     };
@@ -315,7 +335,7 @@ document.getElementById('createTournamentMM').addEventListener('click', function
             }
             
             // Create a new WebSocket connection
-            globalSocket = new WebSocket('ws://10.12.5.1:8765');
+            globalSocket = new WebSocket('ws://10.12.7.1:8765');
             globalSocket.onopen = function(event) {
                 console.log('WebSocket is open now.');
                 globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
