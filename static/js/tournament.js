@@ -34,7 +34,7 @@ function updatePageWithTournamentData(tournamentData) {
 
     document.getElementById('main-content').innerHTML = `
     <div class="container mt-5 text-center">
-        <h1>Welcome to Tournament: ${tournamentData.name}</h1>
+        <h1>Welcome to Tournament: <em>${tournamentData.name}</em></h1>
         <p>Creator: ${tournamentData.creator}</p>
         <p>Number of Players joined: ${tournamentData.players.length} / ${tournamentData.number_of_players}</p>
         <p>Status: ${tournamentData.status}</p>
@@ -65,12 +65,11 @@ function updatePageWithTournamentDataJson(tournamentData) {
 
     let tournamentWinnerHtml = '';
     if (tournamentData.status == 'ended') {
-        tournamentWinnerHtml = `<h2>And the Tournament winner is: ${tournamentData.display_names[tournamentData.winner]} Congratulations!</h2>`;
-    }
+        tournamentWinnerHtml = `<h2>And the Tournament winner is: <span style="color: blue;">${tournamentData.display_names[tournamentData.winner]}</span></h2> <h2> Congratulations!</h2>`;    }
 
     document.getElementById('main-content').innerHTML = `
     <div class="container mt-5 text-center">
-        <h1>Welcome to Tournament: ${tournamentData.name}</h1>
+        <h1>Welcome to Tournament: <em>${tournamentData.name}</em></h1>
         <p>Creator: ${tournamentData.display_names[tournamentData.creator]}</p>
         <p>Number of Players joined: ${tournamentData.players.length} / ${tournamentData.number_of_players}</p>
         <p>Status: ${tournamentData.status}</p>

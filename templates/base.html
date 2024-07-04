@@ -180,6 +180,8 @@
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
         // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
+            document.getElementById('main-content').innerHTML = '<h1>Single Game</h1>';
+
         // Close existing WebSocket connection if open
             if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
                 globalSocket.close();
@@ -215,6 +217,9 @@
 
         // keyboard_game
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
+            document.getElementById('main-content').innerHTML = '<h1>Keyboard Game</h1>';
+
+
         // Close existing WebSocket connection if open
         if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
                 globalSocket.close();
