@@ -180,7 +180,7 @@
         console.log('Matchmaker Test Section: "{{ user.intra_name }}"');
         // single_game
         document.getElementById('startGameMM').addEventListener('click', function() {
-            document.getElementById('main-content').innerHTML = '<h1>Single Game</h1>';
+            document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Waiting for second player. Don\'t leave this page!</p>';
 
         // Close existing WebSocket connection if open
             if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
@@ -202,6 +202,8 @@
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
                 if (data.action === 'game_address') {
                     //window.location.href = "http://www.google.com"
+                    document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game started. Have fun!</p>';
+
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
                 }
             };
