@@ -339,7 +339,7 @@
                 if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
                         globalSocket.close();
                 }
-                
+                    
                 globalSocket = new WebSocket('ws://10.12.7.1:8765');
                 
                 globalSocket.onopen = function(event) {
@@ -362,6 +362,10 @@
                     else if (data.action === 'tournament_full') {
                         alert('Tournament is full: ' + data.tournament_id + ' Name: ' + data.tournament_name);
                         window.location.href = "{% url 'home' %}" + '#tournament_list';
+                    }
+                    else if (data.action === 'already_in_tournament') {
+                        alert('You are already in this tournament: ' + data.tournament.id + ' Name: ' + data.tournament.name);
+                        updatePageWithTournamentDataJson(data.tournament);
                     }
                     else if (data.action === 'tournament_started') {
                         updatePageWithTournamentDataJson(data.tournament);

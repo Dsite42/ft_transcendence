@@ -46,10 +46,12 @@ class Tournament:
         self.winner = None
 
     def join_tournament(self, player_id):
-        if len(self.players) < self.number_of_players:
+        if player_id in self.players:
+            return -1
+        elif len(self.players) < self.number_of_players:
             self.players.append(player_id)
-            return True
-        return False
+            return 1
+        return 0
     
     def generate_matches(self):
         global game_id_counter
@@ -353,27 +355,42 @@ class MatchMaker:
                 tournament = t
                 break
         if tournament is not None:
-            if tournament.join_tournament(player_id):
-                tournament.display_names[player_id] = await sync_to_async(self.db.get_display_name)(player_id)
-                message = {
-                    'action': 'tournament_joined',
-                    'message': f'Player {player_id} successfully joined tournament {tournament_id}.',
-                    'tournament_id': tournament.id,
-                    'tournament': tournament.to_dict()
-                }
-                await sync_to_async(self.db.add_player_to_tournament)(tournament_id, player_id)
-                if len(tournament.players) < tournament.number_of_players:
-                    for player in tournament.players:
-                        await send_message_to_client(player, message)
-                print(f"Player {player_id} joined tournament {tournament_id}.")
-                await self.check_tournament_readyness(tournament)
-            else:
-                message = {
-                    'action': 'tournament_full',
-                    'message': f'Tournament {tournament_id} is full.',
-                }
-                await send_message_to_client(player_id, message)
-                print(f"Tournament {tournament_id} is full.")
+            join_tournament_result = tournament.join_tournament(player_id)
+            print(f"Join tournament result: {join_tournament_result}")
+            match join_tournament_result:
+                # Player successfully joined the tournament
+                case 1: 
+                    tournament.display_names[player_id] = await sync_to_async(self.db.get_display_name)(player_id)
+                    message = {
+                        'action': 'tournament_joined',
+                        'message': f'Player {player_id} successfully joined tournament {tournament_id}.',
+                        'tournament_id': tournament.id,
+                        'tournament': tournament.to_dict()
+                    }
+                    await sync_to_async(self.db.add_player_to_tournament)(tournament_id, player_id)
+                    if len(tournament.players) < tournament.number_of_players:
+                        for player in tournament.players:
+                            await send_message_to_client(player, message)
+                    print(f"Player {player_id} joined tournament {tournament_id}.")
+                    await self.check_tournament_readyness(tournament)
+                # Tournament is full
+                case 0:
+                    message = {
+                        'action': 'tournament_full',
+                        'message': f'Tournament {tournament_id} is full.',
+                    }
+                    await send_message_to_client(player_id, message)
+                    print(f"Tournament {tournament_id} is full.")
+                # Player is already in the tournament
+                case -1:
+                    print(f"Player {player_id} is already in tournament {tournament_id}.")
+                    message = {
+                        'action': 'already_in_tournament',
+                        'message': f'Player {player_id} is already in tournament {tournament_id}.',
+                        'tournament': tournament.to_dict()
+                    }
+                    await send_message_to_client(player_id, message)
+        
         else:
             message = {
                 'action': 'tournament_not_found',
