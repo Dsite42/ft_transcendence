@@ -198,10 +198,14 @@
             globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('WebSocket message received:', data);
-                alert('Nachricht vom Server: ' + data.message + data.game_address);
+                alert('Nachricht vom Server: ' + data.message);
                 if (data.action === 'game_address') {
                     document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game started. Have fun!</p>';
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
+                }
+
+                if (data.action === 'single_game_ended') {
+                    document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Game ended.  <span style="color:blue;">' + data.winner + '</span> won and earned <span style="color:blue;">' + data.score + '</span> points.</p>';
                 }
             };
 

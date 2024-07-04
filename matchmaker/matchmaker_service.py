@@ -465,17 +465,29 @@ class MatchMaker:
         # Player1, add game result to user stats
         is_winner = 1 if game.player1 == winner else 0
         print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
-        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
-        await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, score)
+        p1_score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        await sync_to_async(self.db.game_result_to_user_stats)(game.player1, is_winner, p1_wins, p1_score)
 
         #Player2, add game result to user stats
         is_winner = 1 if game.player2 == winner else 0
         print(f"p1: {game.player1}, p2: {game.player2}, winner: {winner}", 'gam.winner: ', game.game_winner, 'is_winner: ', is_winner)
-        score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
-        await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, score)
+        p2_score = general_points_for_winning + abs(p1_wins - p2_wins) if is_winner else 0
+        await sync_to_async(self.db.game_result_to_user_stats)(game.player2, is_winner, p2_wins, p2_score)
 
         # Add game to game history
         await sync_to_async(self.db.add_game)(game.player1, game.player2, winner, p1_wins, p2_wins)
+
+        # Send game result to clients
+        winner_name = await sync_to_async(self.db.get_display_name)(game.game_winner)
+        message = {
+            'action': 'single_game_ended',
+            'message': f'Game {game.game_id} has ended.',
+            'game_id': game.game_id,
+            'winner': winner_name,
+            'score': p1_score if game.player1 == game.game_winner else p2_score
+        }
+        await send_message_to_client(game.player1, message)
+        await send_message_to_client(game.player2, message)
 
 
     # Updates the result of a tournament match and starts the next match if there are any left or ends the tournament and sends the results to all players
