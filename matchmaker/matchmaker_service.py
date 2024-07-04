@@ -363,7 +363,8 @@ class MatchMaker:
                 }
                 await sync_to_async(self.db.add_player_to_tournament)(tournament_id, player_id)
                 if len(tournament.players) < tournament.number_of_players:
-                    await send_message_to_client(player_id, message)
+                    for player in tournament.players:
+                        await send_message_to_client(player, message)
                 print(f"Player {player_id} joined tournament {tournament_id}.")
                 await self.check_tournament_readyness(tournament)
             else:
