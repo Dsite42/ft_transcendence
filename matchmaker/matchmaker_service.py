@@ -286,6 +286,15 @@ class Database:
         sql_query = f"INSERT INTO frontapp_{join_table} ({tournament_col}, {player_col}) VALUES (%s, %s);"
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [tournament_id, player_id])
+
+    def delete_player_from_tournament(self, tournament_id, player_id):
+        print(f"Deleting player {player_id} from tournament {tournament_id}")
+        join_table = 'tournament_players'
+        tournament_col = 'tournament_id'
+        player_col = 'customuser_id'
+        sql_query = f"DELETE FROM frontapp_{join_table} WHERE {tournament_col} = %s AND {player_col} = %s;"
+        with connections['default'].cursor() as cursor:
+            cursor.execute(sql_query, [tournament_id, player_id])
         
 # The MatchMaker class handles the matchmaking process for keyboard games, single games and tournaments. It is the main service that communicates with the game_service and the clients.    
 class MatchMaker:
@@ -363,7 +372,7 @@ class MatchMaker:
                     tournament.display_names[player_id] = await sync_to_async(self.db.get_display_name)(player_id)
                     message = {
                         'action': 'tournament_joined',
-                        'message': f'Player {player_id} successfully joined tournament {tournament_id}.',
+                        'message': f'Player {tournament.display_names[player_id]} successfully joined tournament {tournament_id}.',
                         'tournament_id': tournament.id,
                         'tournament': tournament.to_dict()
                     }
@@ -591,6 +600,20 @@ class MatchMaker:
         self.tournaments.remove(tournament)
         print(f"Tournament {tournament.id} has been aborted.")
 
+    async def check_and_delete_player_from_waiting_tournament(self, player_id):
+        for tournament in self.tournaments:
+            if player_id in tournament.players and tournament.status == 'waiting':
+                tournament.players.remove(player_id)
+                await sync_to_async(self.db.delete_player_from_tournament)(tournament.id, player_id)
+                message = {
+                    'action': 'tournament_updated',
+                    'message': f'Player {tournament.display_names[player_id]} has left tournament {tournament.id}.',
+                    'tournament_id': tournament.id,
+                    'tournament': tournament.to_dict()
+                }
+                for player in tournament.players:
+                    await send_message_to_client(player, message)
+
 
 
 
@@ -642,6 +665,7 @@ async def handler(websocket, path):
                 await consume_messages(websocket, client_id)
             finally:
                 del connected_clients[client_id]
+                await matchmaker.check_and_delete_player_from_waiting_tournament(client_id)
                 await websocket.close()
         else:
             print("Error: First message did not contain a valid player_id")
