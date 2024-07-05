@@ -296,6 +296,8 @@ class Database:
         with connections['default'].cursor() as cursor:
             cursor.execute(sql_query, [tournament_id, player_id])
         
+
+
 # The MatchMaker class handles the matchmaking process for keyboard games, single games and tournaments. It is the main service that communicates with the game_service and the clients.    
 class MatchMaker:
     def __init__(self):
@@ -304,6 +306,7 @@ class MatchMaker:
         self.tournaments = []
         self.single_games = []
         self.single_games_queue = []
+        self.keyboard_games = []
 
     # Creates a new tournament and sends the tournament ID to the creator
     async def create_tournament(self, creator, tournament_name, number_of_players):
@@ -358,6 +361,8 @@ class MatchMaker:
         
     # Adds a player to a tournament and checks if the tournament is full
     async def join_tournament(self, player_id, tournament_id):
+        if await self.is_client_already_playing(player_id):
+            return
         tournament = None
         for t in self.tournaments:
             if t.id == tournament_id:
@@ -410,6 +415,8 @@ class MatchMaker:
 
     # Adds a player to the single game queue and checks if there are enough players to start a game
     async def request_single_game(self, player1):
+        if await self.is_client_already_playing(player1):
+            return
         self.single_games_queue.append(player1)
         await self.check_single_game_queue()
 
@@ -459,6 +466,8 @@ class MatchMaker:
 
     # Requests via game_service a new (keyboard)game address and sends it to the player
     async def create_keyboard_game(self, player1_id):
+        if await self.is_client_already_playing(player1_id):
+            return
         print(f'Creating keyboard game for Player {player1_id}.')
         global game_id_counter
         game_id = game_id_counter
@@ -470,6 +479,8 @@ class MatchMaker:
             'message': f'Keyboard Game successfully created. Join via: ',
             'game_address': game_address,
         }
+        new_game = SingleGame(game_id, player1_id, connected_clients.get(player1_id), -1, None, game_address)
+        self.keyboard_games.append(new_game)
         await send_message_to_client(player1_id, message)
 
 
@@ -552,6 +563,11 @@ class MatchMaker:
 
     # Checks if game is a single game or a tournament match and processes the result accordingly
     async def process_game_result(self, game_id, winner, p1_wins, p2_wins):
+        for game in self.keyboard_games:
+            if game.game_id == game_id:
+                self.keyboard_games.remove(game)
+                return
+
         for game in self.single_games:
             if game.game_id == game_id:
                 if winner == -1:
@@ -576,7 +592,7 @@ class MatchMaker:
         return
     
     # If game_service sends -1 as winner, the game is aborted and gets removed
-    async def abrot_single_game(self, game):
+    async def abort_single_game(self, game):
         game.abort_game()
         self.single_games.remove(game)
         message = {
@@ -613,6 +629,32 @@ class MatchMaker:
                 }
                 for player in tournament.players:
                     await send_message_to_client(player, message)
+
+    async def is_client_already_playing(self, player_id):
+        is_already_playing = False
+        for game in self.single_games:
+            if game.player1 == player_id or game.player2 == player_id:
+                is_already_playing = True
+            
+        for tournament in self.tournaments:
+            if player_id in tournament.players:
+                is_already_playing = True
+ 
+        for game in self.keyboard_games:
+            if game.player1 == player_id:
+                is_already_playing = True
+
+        
+        if is_already_playing:
+            message = {
+            'action': 'already_playing',
+            'message': f'You are already playing a game.',
+            }
+            await send_message_to_client(player_id, message)
+
+        if is_already_playing:
+            print(f"Player {player_id} is already playing a game.")
+        return is_already_playing
 
 
 
