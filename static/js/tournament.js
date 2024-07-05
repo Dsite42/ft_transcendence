@@ -26,6 +26,7 @@ function updatePageWithTournamentDataJson(tournamentData) {
         <h1>Welcome to Tournament: <em>${tournamentData.name}</em></h1>
         <p>Creator: ${tournamentData.display_names[tournamentData.creator]}</p>
         <p>Number of Players joined: ${tournamentData.players.length} / ${tournamentData.number_of_players}</p>
+        <p>Players joined: ${tournamentData.players.map(player => tournamentData.display_names[player]).join(', ')}</p>
         <p>Status: ${tournamentData.status}</p>
         ${matchesHtml}
         ${tournamentWinnerHtml}
