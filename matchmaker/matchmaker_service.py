@@ -14,14 +14,49 @@ from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 from tinyrpc import RPCClient
 
 import websockets
+from websockets import WebSocketServerProtocol, Headers, HeadersLike
 from websockets.exceptions import ConnectionClosed
 from asgiref.sync import sync_to_async
 from datetime import datetime
+from jwt import decode as jwt_decode
+from typing import Optional, Tuple
+
 
 from itertools import combinations
 
 
 # Class definitions
+
+# WebsocketClient class for handling websocket connections via create_protocol and checking if the token is valid (means can be decoded)
+class WebsocketClient(WebSocketServerProtocol):
+    TEXT_RESPONSE_HEADERS = {'Content-Type': 'text/plain'}
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.user_id: Optional[int] = None
+
+    async def process_request(self, query: str, headers: Headers) -> Optional[Tuple[int, HeadersLike, bytes]]:
+        path, _, parameters = query.partition('?')
+        match path:
+            case '/':
+                # A game session has been requested, collect and process the token parameters
+                if len(parameters) > 0:
+                    for parameter in parameters.split('&'):
+                        key, _, value = parameter.partition('=')
+                        if key != 'with_token' or not self.process_token(value):
+                            return 400, WebsocketClient.TEXT_RESPONSE_HEADERS, b'Bad Request'
+                if self.user_id == None:
+                    return 401, WebsocketClient.TEXT_RESPONSE_HEADERS, b'Unauthorized'
+                return None
+        return 404, WebsocketClient.TEXT_RESPONSE_HEADERS, b'Not Found'
+
+    def process_token(self, token: str) -> bool:
+        try:
+            payload = jwt_decode(token, "super-secret", algorithms=['HS256'])
+            self.user_id = payload['user_id']
+        except:
+            return False
+        return True
 
 # Client class for handling clients
 class Client:
@@ -556,6 +591,7 @@ class MatchMaker:
                     await send_message_to_client(player, message)
                 # As the tournament has ended, delete it from the database
                 await sync_to_async(self.db.delete_tournament)(tournament.id)
+                self.tournaments.remove(tournament)
                 print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
             else:
                 #Draw matches
@@ -632,19 +668,20 @@ class MatchMaker:
 
     async def is_client_already_playing(self, player_id):
         is_already_playing = False
-        for game in self.single_games:
-            if game.player1 == player_id or game.player2 == player_id:
-                is_already_playing = True
-            
-        for tournament in self.tournaments:
-            if player_id in tournament.players:
-                is_already_playing = True
- 
+
         for game in self.keyboard_games:
             if game.player1 == player_id:
+                print(f"Player {player_id} is already playing a keyboard game.")
                 is_already_playing = True
-
-        
+        for game in self.single_games:
+            if game.player1 == player_id or game.player2 == player_id:
+                print(f"Player {player_id} is already playing a single game.")
+                is_already_playing = True
+        for tournament in self.tournaments:
+            if player_id in tournament.players:
+                print(f"Player {player_id} is already in a tournament.")
+                is_already_playing = True
+ 
         if is_already_playing:
             message = {
             'action': 'already_playing',
@@ -652,8 +689,6 @@ class MatchMaker:
             }
             await send_message_to_client(player_id, message)
 
-        if is_already_playing:
-            print(f"Player {player_id} is already playing a game.")
         return is_already_playing
 
 
@@ -673,9 +708,6 @@ class MatchmakerService:
     @public
     async def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
         print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
-        if winner == -1:
-            await matchmaker.abort_game(game_id)
-            return
         await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
 
@@ -688,32 +720,19 @@ matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
 
-# Websocket handler gets called when a new connection is made or a message is received
-async def handler(websocket, path):
+# Websocket handler gets called on a new connection
+async def handler(websocket):
     try:
-        first_message = await websocket.recv()  # First message from client
-        data = json.loads(first_message)
-        action = data.get('action')
-        client_id = int(data.get('player_id'))
-        
-        if action == 'handshake' and client_id:
-            if connected_clients.get(client_id):
-                print(f"Client {client_id} already connected.")
-                await websocket.close()
-                return
-            client = Client(client_id, websocket)
-            connected_clients[client_id] = client
-            try:
-                await consume_messages(websocket, client_id)
-            finally:
-                del connected_clients[client_id]
-                await matchmaker.check_and_delete_player_from_waiting_tournament(client_id)
-                await websocket.close()
-        else:
-            print("Error: First message did not contain a valid player_id")
-            await websocket.close()
+        client_id = websocket.user_id
+        client = Client(client_id, websocket)
+        connected_clients[client_id] = client
+        await consume_messages(websocket, client_id)
     except Exception as e:
         print(f"Error in handler: {e}")
+    finally:
+        del connected_clients[client_id]
+        await matchmaker.check_and_delete_player_from_waiting_tournament(client_id)
+        await websocket.close()
 
 # Consume messages from the client
 async def consume_messages(websocket, client_id):
@@ -722,21 +741,21 @@ async def consume_messages(websocket, client_id):
             data = json.loads(message)
             print(f"Received message from client {client_id}: {data}")
             if data.get('action') == 'request_single_game':
-                player_id = int(data.get('player_id'))
+                player_id = websocket.user_id
                 print(f"Requesting single game for player {player_id}.")
                 await matchmaker.request_single_game(player_id) 
             elif data.get('action') == 'request_keyboard_game':
-                player_id = int(data.get('player_id'))
+                player_id = websocket.user_id
                 print(f"Requesting keyboard game for player {player_id}.")
                 await matchmaker.request_keyboard_game(player_id)
             elif data.get('action') == 'request_tournament':
-                player_id = int(data.get('player_id'))
+                player_id = websocket.user_id
                 tournament_name = data.get('tournament_name')
                 number_of_players = int(data.get('number_of_players'))
                 print(f"Requesting tournament for player {player_id}.")
                 await matchmaker.create_tournament(player_id, tournament_name, number_of_players)
             elif data.get('action') == 'join_tournament':
-                player_id = int(data.get('player_id'))
+                player_id = websocket.user_id
                 tournament_id = data.get('tournament_id')
                 print(f"Joining tournament {tournament_id} for player {player_id}.")
                 await matchmaker.join_tournament(player_id, tournament_id)      
@@ -760,7 +779,7 @@ async def send_message_to_client(client_id, message):
 
 # Start the websocket server
 async def start_websocket_server():
-    async with websockets.serve(handler, "10.12.7.1", 8765):
+    async with websockets.serve(handler, "10.12.7.1", 8765, create_protocol=WebsocketClient):
         print("WebSocket server started on ws://10.12.7.1:8765")
         await asyncio.Future()
 

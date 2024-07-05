@@ -183,17 +183,19 @@
         document.getElementById('startGameMM').addEventListener('click', function() {
             document.getElementById('main-content').innerHTML = '<h1>Single Game</h1> <p> Waiting for second player. Don\'t leave this page!</p>';
 
-            if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-                globalSocket.close();
-            }
-
-            globalSocket = new WebSocket('ws://10.12.7.1:8765');
-
-            globalSocket.onopen = function(event) {
-                console.log('WebSocket is open now.');
-                globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+            const handleOpen = () => {
                 globalSocket.send(JSON.stringify({ action: 'request_single_game', player_id: "{{ user.user_id }}" }));
             };
+
+            if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
+                globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+                globalSocket.onopen = function(event) {
+                    console.log('WebSocket is open now.');
+                    handleOpen();
+                };
+            } else if (globalSocket.readyState === WebSocket.OPEN) {
+                handleOpen();
+            }
 
             globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
@@ -226,24 +228,26 @@
         document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
             document.getElementById('main-content').innerHTML = '<h1>Keyboard Game</h1>';
 
-        if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-                globalSocket.close();
-            }
-            
-            globalSocket = new WebSocket('ws://10.12.7.1:8765');
-
-            globalSocket.onopen = function(event) {
-                console.log('WebSocket is open now.');
-                globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+            const handleOpen = () => {
                 globalSocket.send(JSON.stringify({ action: 'request_keyboard_game', player_id: "{{ user.user_id }}" }));
             };
+
+            if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
+                globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+                globalSocket.onopen = function(event) {
+                    console.log('WebSocket is open now.');
+                    handleOpen();
+                };
+            } else if (globalSocket.readyState === WebSocket.OPEN) {
+                handleOpen();
+            }
 
             globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('WebSocket message received:', data);
                 alert('Nachricht vom Server: ' + data.message + data.game_address);
                 if (data.action === 'game_address') {
-                    globalSocket.close();
+                    document.getElementById('main-content').innerHTML = '<h1>Keyboard Game</h1> <p> Game started. Have fun!</p>';
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
                 }
             };
@@ -294,18 +298,20 @@
 
         var tournamentName = document.getElementById('tournamentName').value;
         var numberOfPlayers = document.getElementById('numberOfPlayers').value;
-
-        if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-            globalSocket.close();
-        }
-
-        globalSocket = new WebSocket('ws://10.12.7.1:8765');
-
-        globalSocket.onopen = function(event) {
-            console.log('WebSocket is open now.');
-            globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
+     
+        const handleOpen = () => {
             globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: tournamentName, number_of_players: numberOfPlayers }));
-        };
+            };
+
+            if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
+                globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+                globalSocket.onopen = function(event) {
+                    console.log('WebSocket is open now.');
+                    handleOpen();
+                };
+            } else if (globalSocket.readyState === WebSocket.OPEN) {
+                handleOpen();
+            }
 
         globalSocket.onmessage = function(event) {
             const data = JSON.parse(event.data);
@@ -336,18 +342,20 @@
         function join_tournament(tournament_id) {
             document.getElementById('tournament-table').addEventListener('click', function() {
 
-                if (globalSocket !== null && globalSocket.readyState === WebSocket.OPEN) {
-                        globalSocket.close();
-                }
-                    
-                globalSocket = new WebSocket('ws://10.12.7.1:8765');
-                
+            const handleOpen = () => {
+                globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
+            };
+
+            if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
+                globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
                 globalSocket.onopen = function(event) {
                     console.log('WebSocket is open now.');
-                    globalSocket.send(JSON.stringify({ action: 'handshake', player_id: "{{ user.user_id }}" }));
-                    globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
+                    handleOpen();
                 };
-
+            } else if (globalSocket.readyState === WebSocket.OPEN) {
+                handleOpen();
+            }
+                
                 globalSocket.onmessage = function(event) {
                     const data = JSON.parse(event.data);
                     console.log('WebSocket message received:', data);
