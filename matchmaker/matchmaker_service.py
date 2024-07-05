@@ -2,11 +2,9 @@ import asyncio
 from asyncio import Future
 import json
 
-import django
-from django.conf import settings
-from django.db import models, connections
 
-from aiorpc import AioRPC
+
+from .aiorpc import AioRPC
 import pika
 from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 from tinyrpc.dispatch import public, RPCDispatcher
@@ -23,315 +21,19 @@ from typing import Optional, Tuple
 
 
 from itertools import combinations
-
+from .websocket_client import WebsocketClient
+from .game_types import SingleGame, Tournament
+from .database import Database
+from . import my_global_vars
 
 # Class definitions
 
-# WebsocketClient class for handling websocket connections via create_protocol and checking if the token is valid (means can be decoded)
-class WebsocketClient(WebSocketServerProtocol):
-    TEXT_RESPONSE_HEADERS = {'Content-Type': 'text/plain'}
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.user_id: Optional[int] = None
-
-    async def process_request(self, query: str, headers: Headers) -> Optional[Tuple[int, HeadersLike, bytes]]:
-        path, _, parameters = query.partition('?')
-        match path:
-            case '/':
-                # A game session has been requested, collect and process the token parameters
-                if len(parameters) > 0:
-                    for parameter in parameters.split('&'):
-                        key, _, value = parameter.partition('=')
-                        if key != 'with_token' or not self.process_token(value):
-                            return 400, WebsocketClient.TEXT_RESPONSE_HEADERS, b'Bad Request'
-                if self.user_id == None:
-                    return 401, WebsocketClient.TEXT_RESPONSE_HEADERS, b'Unauthorized'
-                return None
-        return 404, WebsocketClient.TEXT_RESPONSE_HEADERS, b'Not Found'
-
-    def process_token(self, token: str) -> bool:
-        try:
-            payload = jwt_decode(token, "super-secret", algorithms=['HS256'])
-            self.user_id = payload['user_id']
-        except:
-            return False
-        return True
 
 # Client class for handling clients
 class Client:
     def __init__(self, player_id, websocket):
         self.player_id = player_id
         self.websocket = websocket
-
-# Tournament class for handling tournaments   
-class Tournament:
-    def __init__(self, tournament_id, creator, tournament_name, number_of_players):
-        self.id = tournament_id
-        self.creator = creator
-        self.name = tournament_name
-        self.number_of_players = number_of_players
-        self.start_time = datetime.now()
-        self.end_time = None
-        self.players = []
-        self.display_names = {}
-        self.matches = []
-        self.current_match_index = 0
-        self.status = 'waiting'
-        self.winner = None
-
-    def join_tournament(self, player_id):
-        if player_id in self.players:
-            return -1
-        elif len(self.players) < self.number_of_players:
-            self.players.append(player_id)
-            return 1
-        return 0
-    
-    def generate_matches(self):
-        global game_id_counter
-        self.matches = []
-        for match in combinations(self.players, 2):
-            game_id_counter += 1
-            self.matches.append({'id': game_id_counter, 'players': match, 'status': 'pending', 'winner': None, 'p1_wins': None, 'p2_wins': None})
-
-    def add_draw_matches(self, draw_players):
-        global game_id_counter
-        for match in combinations(draw_players, 2):
-            game_id_counter += 1
-            self.matches.append({'id': game_id_counter, 'players': match, 'status': 'pending', 'winner': None, 'p1_wins': None, 'p2_wins': None})
-
-    def start_tournament(self):
-        self.status = 'ongoing'
-        self.generate_matches()
-
-    def change_match_status(self, match_index, status):
-        if 0 <= match_index < len(self.matches):
-            self.matches[match_index]['status'] = status
-
-
-    def update_match_result(self, match_index, winner, p1_wins, p2_wins):
-        if 0 <= match_index < len(self.matches):
-            self.matches[match_index]['status'] = 'completed'
-            self.matches[match_index]['winner'] = winner
-            self.matches[match_index]['p1_wins'] = p1_wins
-            self.matches[match_index]['p2_wins'] = p2_wins
-            self.current_match_index += 1
-            if self.current_match_index >= len(self.matches):
-                self.end_tournament()
-
-    def calculate_winner(self):
-        win_counts = {player: 0 for player in self.players}
-        for match in self.matches:
-            if match['winner'] is not None:
-                win_counts[match['winner']] += 1
-        # check if we have several players with the maximum number of wins
-        max_wins = max(win_counts.values())
-        if list(win_counts.values()).count(max_wins) > 1:
-            draw_players = [player for player, wins in win_counts.items() if wins == max_wins]
-            self.add_draw_matches(draw_players)
-            return False
-        else:
-            self.winner = max(win_counts, key=win_counts.get)
-            return True
-
-    def abort_tournament(self):
-        self.winner = None
-        self.status = 'aborted'
-
-    def end_tournament(self):
-        if self.calculate_winner():
-            self.end_time = datetime.now()
-            self.status = 'ended'
-            return True
-        else:
-            return False
-    
-    def to_dict(self):
-        serialized_data = {
-            'id': self.id,
-            'creator': self.creator,
-            'name': self.name,
-            'number_of_players': self.number_of_players,
-            'start_time': self.start_time.isoformat() if self.start_time else None,
-            'end_time': self.end_time.isoformat() if self.end_time else None,
-            'players': self.players,
-            'display_names': self.display_names,
-            'status': self.status,
-            'winner': self.winner,
-            'matches': self.matches,
-            'current_match_index': self.current_match_index,
-        }
-        return serialized_data
-
-# SingleGame class for handling single games
-class SingleGame:
-    def __init__(self, game_id, player1, client1, player2, client2, game_address):
-        self.game_id = game_id
-        self.game_address = game_address
-        self.player1 = player1
-        self.client1 = client1
-        self.player2 = player2
-        self.client2 = client2
-        self.game_start_time = datetime.now()
-        self.game_end_time = None
-        self.game_status = 'waiting'
-        self.game_winner = None
-        self.p1_wins = None
-        self.p2_wins = None
-
-    def join_game(self, player):
-        if self.player2 is None:
-            self.player2 = player
-            return True
-        return False
-    
-    def start_game(self):
-        self.game_status = 'started'
-    
-    def end_game(self, winner, p1_wins, p2_wins):
-        self.game_end_time = datetime.now()
-        self.game_winner = winner
-        self.p1_wins = p1_wins
-        self.p2_wins = p2_wins
-        self.game_status = 'ended'
-    
-    def abort_game(self):
-        self.game_winner = None
-        self.game_status = 'aborted'
-
-
-# Database class for handling database operations via Django database connection
-class Database:
-    def __init__(self, engine='django.db.backends.sqlite3', name=None, user=None, password=None, host=None, port=None):
-        self.Model = None
-
-        databases = {
-            'default': {
-                'ENGINE': engine,
-                'NAME': name,
-                'USER': 'chris',
-                'PASSWORD': 'chris',
-                'HOST': '127.0.0.1',
-                'PORT': '8000',
-                'APP_LABEL': 'frontapp',
-            }
-        }
-
-        settings.configure(DATABASES=databases)
-        django.setup()
-
-        class CustomBaseModel(models.Model):
-            class Meta:
-                app_label = 'frontapp'
-                abstract = True
-
-        self.Model = CustomBaseModel
-
-
-    def game_result_to_user_stats(self, player_id, is_winner, p2_wins, score):
-        print(f"game_result_to_user_stats: Player ID: {player_id}, is_winner: {is_winner}, p2_wins: {p2_wins}, score: {score}")
-        sql_query = "SELECT stats FROM auth_user WHERE id = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [player_id])
-            print(f"Player ID: {player_id}")
-            stats = cursor.fetchone()[0]
-
-        stats = json.loads(stats)
-        stats['games_played'] = stats.get('games_played', 0) + 1
-        if is_winner == 1:
-            stats['games_won'] = stats.get('games_won', 0) + 1
-        else:
-            stats['games_lost'] = stats.get('games_lost', 0) + 1
-        if score:
-            stats['score'] = stats.get('score', 0) + score
-        stats = json.dumps(stats)
-
-        sql_query = "UPDATE auth_user SET stats = %s WHERE id = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [stats, player_id])
-
-    def add_game(self, player1, player2, winner, p1_wins, p2_wins):
-        sql_query = """
-        INSERT INTO frontapp_game (player1_id, player2_id, winner_id, p1_wins, p2_wins, date)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """
-        current_time = datetime.now()
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, (player1, player2, winner, p1_wins, p2_wins, current_time))
-
-    def add_tournament(self, tournament: Tournament):
-        sql_query = """
-        INSERT INTO frontapp_tournament (creator_id, name, number_of_players, start_time, status, winner_id)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, (tournament.creator, tournament.name, tournament.number_of_players, tournament.start_time, tournament.status, tournament.winner))
-            inserted_row_id = cursor.lastrowid
-        return inserted_row_id
-    
-    def delete_tournament(self, tournament_id):
-        print(f"Deleting tournament {tournament_id}")
-        # First, delete any dependent Tournament-customuser relationships for this tournament
-        delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id = %s;"
-        # Then, delete the tournament
-        delete_tournament_sql = "DELETE FROM frontapp_tournament WHERE id = %s;"
-        
-        with connections['default'].cursor() as cursor:
-            cursor.execute(delete_relationships_sql, [tournament_id])
-            cursor.execute(delete_tournament_sql, [tournament_id])
-    
-    # On game_service start, all open tournaments in the db are deleted, because they can not be handled anymore and are invalid
-    def delete_all_tournaments(self):
-        # First, delete any dependent Tournament-customuser relationships
-        delete_relationships_sql = "DELETE FROM frontapp_tournament_players WHERE tournament_id IN (SELECT id FROM frontapp_tournament);"
-        # Then, delete the tournaments
-        delete_tournaments_sql = "DELETE FROM frontapp_tournament;"
-        
-        with connections['default'].cursor() as cursor:
-            cursor.execute(delete_relationships_sql)
-            cursor.execute(delete_tournaments_sql)
-
-    def change_tournament_status(self, tournament_id, status):
-        sql_query = "UPDATE frontapp_tournament SET status = %s WHERE id = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [status, tournament_id])
-
-    def get_display_names(self, player_ids):
-        # Generate placeholders for each item in player_ids
-        placeholders = ','.join(['%s'] * len(player_ids))
-        sql_query = f"SELECT id, display_name FROM auth_user WHERE id IN ({placeholders});"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, player_ids)
-            result = {row[0]: row[1] for row in cursor.fetchall()}
-        return result
-    
-    def get_display_name(self, player_id):
-        sql_query = "SELECT display_name FROM auth_user WHERE id = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [player_id])
-            result = cursor.fetchone()
-        return result[0] if result else None
-
-    def add_player_to_tournament(self, tournament_id, player_id):
-        print(f"Adding players to tournament {tournament_id}: {player_id}")
-        join_table = 'tournament_players'
-        tournament_col = 'tournament_id'
-        player_col = 'customuser_id'
-        sql_query = f"INSERT INTO frontapp_{join_table} ({tournament_col}, {player_col}) VALUES (%s, %s);"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [tournament_id, player_id])
-
-    def delete_player_from_tournament(self, tournament_id, player_id):
-        print(f"Deleting player {player_id} from tournament {tournament_id}")
-        join_table = 'tournament_players'
-        tournament_col = 'tournament_id'
-        player_col = 'customuser_id'
-        sql_query = f"DELETE FROM frontapp_{join_table} WHERE {tournament_col} = %s AND {player_col} = %s;"
-        with connections['default'].cursor() as cursor:
-            cursor.execute(sql_query, [tournament_id, player_id])
-        
-
 
 # The MatchMaker class handles the matchmaking process for keyboard games, single games and tournaments. It is the main service that communicates with the game_service and the clients.    
 class MatchMaker:
@@ -478,9 +180,8 @@ class MatchMaker:
     # Requests via game_service a new (single) game address and sends it to the players
     async def create_single_game(self, player1_id, player2_id):
         print(f'Creating single game between Player {player1_id} and Player {player2_id}.')
-        global game_id_counter
-        game_id = game_id_counter
-        game_id_counter += 1
+        game_id = my_global_vars.game_id_counter
+        my_global_vars.game_id_counter += 1
         result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, player2_id)
         game_address = result['game_address']
         message = {
@@ -504,9 +205,8 @@ class MatchMaker:
         if await self.is_client_already_playing(player1_id):
             return
         print(f'Creating keyboard game for Player {player1_id}.')
-        global game_id_counter
-        game_id = game_id_counter
-        game_id_counter += 1
+        game_id = my_global_vars.game_id_counter
+        my_global_vars.game_id_counter += 1
         result = await sync_to_async(matchmaker_service.game_service.create_game)(game_id, player1_id, -1)
         game_address = result['game_address']
         message = {
@@ -713,7 +413,6 @@ class MatchmakerService:
 
 # Global variables
 connected_clients = {}
-game_id_counter = 0
 
 dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
