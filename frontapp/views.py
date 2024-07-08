@@ -17,9 +17,13 @@ import os
 from django.contrib import messages
 from typing import Callable
 from PIL import Image
+
+
+from .rpc_client import get_matchmaker_service
+
 from django.utils.translation import gettext as _
 import logging
-from frontapp.models import Game
+from frontapp.models import Game, Tournament
 class APIError(Exception):
     pass
 
@@ -45,7 +49,7 @@ def json_request(callable: Callable[[HttpRequest, dict], dict]):
 
 #Login Required Wrapper
 def login_required(callable):
-    def wrapper(request: HttpRequest) -> HttpResponse:
+    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
         if (session := request.COOKIES.get('session', None)) == None:
             return render(request, 'login.html')
         try:
@@ -58,8 +62,7 @@ def login_required(callable):
             return render(request, 'otp_login.html')
         user.last_active = timezone.now()
         user.save()
-
-        return callable(request, data)
+        return callable(request, data, *args, **kwargs)
     return wrapper
 
 #Simple Website Renderer Functions
@@ -103,10 +106,6 @@ def otp_login(request: HttpRequest) -> HttpResponse:
 
 def index(request: HttpRequest) -> HttpResponse:
     return render(request, 'index.html')
-
-@login_required
-def tournament(request, data):
-    return render(request, 'tournament.html')
 
 def login(request):
     return render(request, 'login.html')
@@ -167,16 +166,11 @@ def auth(request: HttpRequest) -> HttpResponse:
         alert = oauth_response.get('error_description')
         messages.error(request, f'Error: {alert}')
         return render(request, 'base.html')
+    print("oauth_response: ", oauth_response)
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
         'Authorization': 'Bearer ' + oauth_response['access_token']
     }).json()
 
-    session_token = {
-        'access_token': oauth_response['access_token'],
-        '2FA_Activated': False,
-        '2FA_Passed': False,
-        'intra_name': user_info['login'],
-    }
     intra_name = user_info['login']
     if intra_name:
         user, created = CustomUser.objects.get_or_create(username=intra_name)
@@ -187,7 +181,14 @@ def auth(request: HttpRequest) -> HttpResponse:
                 # Reset the display name of the existing user
                 existing_user.display_name = existing_user.username
                 existing_user.save()
-
+        session_token = {
+        'access_token': oauth_response['access_token'],
+        '2FA_Activated': False,
+        '2FA_Passed': False,
+        'intra_name': user_info['login'],
+        'user_id': CustomUser.objects.get(username=user_info['login']).id
+    }
+            
 
         if user.two_factor_auth_enabled:
             response = HttpResponseRedirect('/')
@@ -444,16 +445,37 @@ def get_pending_friend_requests(request, data):
 
 @login_required
 def rank_list(request, data):
-    players = CustomUser.objects.all()#.order_by('-points')
-    ranking = [{'name': player.username, 'points': player.stats.get('highest_score'), 'wins': player.stats.get('games_won'), 'losses': player.stats.get('games_lost')} for player in players]
-
+    players = CustomUser.objects.all()#.order_by('-points') 
+    ranking = [{'name': player.username, 'score': player.stats.get('score'), 'games_won': player.stats.get('games_won'), 'games_lost': player.stats.get('games_lost'), 'games_played': player.stats.get('games_played')} for player in players]
     return render(request, 'rank_list.html', {'ranking': json.dumps(ranking)})
 
 @login_required
+def tournament_list(request, data):
+    tournaments = Tournament.objects.all().order_by('-start_time')
+    tournament_list = [tournament.to_dict() for tournament in tournaments]
+    return render(request, 'tournament_list.html', {'tournaments': json.dumps(tournament_list)})
+
+
+@login_required
+def tournament_view(request, data, tournament_id):
+    print("tournament_id2: ", tournament_id)
+    try:
+        tournament = Tournament.objects.get(id=tournament_id)
+        # Assuming your `to_dict` method correctly converts the model instance to a dictionary
+        tournament_dict = tournament.to_dict()
+        return JsonResponse(tournament_dict)
+    except Tournament.DoesNotExist:
+        return JsonResponse({'error': 'Tournament not found'}, status=404)
+
+
+
+@login_required
 def game_sessions(request, data):
+    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    user = CustomUser.objects.get(username=data['intra_name'])
     games = Game.objects.all().order_by('-date')
     game_sessions = [game.to_dict() for game in games]
-    return render(request, 'game_sessions.html', {'game_sessions': json.dumps(game_sessions)})
+    return render(request, 'game_sessions.html', {'game_sessions': json.dumps(game_sessions), 'current_user': user.username})
 
 #Helper Functions
 
@@ -470,3 +492,16 @@ def is_image_url(url):
         return response.headers['Content-Type'].startswith('image/')
     except:
         return False
+    
+
+#RPC Functions
+def request_single_game_view(request):
+    player_id = request.GET.get('player_id')
+    # RPC-Funktion aufrufen
+    #matchmaker_service, connection = get_matchmaker_service()
+    #response = matchmaker_service.create_single_game('dnebatz')
+    #connection.close()
+    return render(request, 'request_single_game.html', {'player_id': player_id})
+
+def websocket_test(request):
+    return render(request, 'websocket_test.html')

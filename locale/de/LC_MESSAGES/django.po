@@ -130,7 +130,7 @@ msgstr "(Ausstehend)"
 msgid "Login"
 msgstr "Anmelden"
 
-#: templates/base.html:114 templates/tournament.html:4
+#: templates/base.html:114 templates/tournament_list.html:4
 msgid "Tournaments"
 msgstr "Turniere"
 

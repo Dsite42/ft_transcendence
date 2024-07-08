@@ -25,8 +25,12 @@ from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
 from django.views.i18n import JavaScriptCatalog
 from django.contrib import admin
+from frontapp.views import request_single_game_view
+from frontapp.views import tournament_view
 
 urlpatterns = [
+    path('de/api/tournament/<int:tournament_id>/', tournament_view, name='tournament-api'),
+
     path('decline_friend_request/', views.decline_friend_request, name='decline_friend_request'),
     path('change_info/', views.change_info, name='change_info'),
     path('enable_otp/', views.enable_otp, name='enable_otp'),
@@ -40,6 +44,10 @@ urlpatterns = [
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     path('rank_list.html', views.rank_list, name='rank_list'),
     path('game_sessions.html', views.game_sessions, name='game_sessions'),
+    path('request_single_game/', request_single_game_view, name='request_single_game'),
+
+
+
 ]
 
 urlpatterns += i18n_patterns(
@@ -49,7 +57,7 @@ urlpatterns += i18n_patterns(
     path('accounts/', include('allauth.socialaccount.urls')),
     path('', views.home, name='home'),
     path('i18n/', include('django.conf.urls.i18n')),
-    path('tournament.html', views.tournament, name='tournament'),
+    path('tournament_list.html', views.tournament_list, name='tournament_list'),
     path('login.html', views.login, name='login'),
     path('.html', root_view, name='root'),
     path('logout/', views.logout, name='logout'),
@@ -73,6 +81,7 @@ urlpatterns += i18n_patterns(
     path('get_pending_friend_requests/', views.get_pending_friend_requests, name='get_pending_friend_requests'),
     path('rank_list.html', views.rank_list, name='rank_list'),
     path('game_sessions.html', views.game_sessions, name='game_sessions'),
+    path('request_single_game/', request_single_game_view, name='request_single_game'),
 )
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#if settings.DEBUG:
+#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

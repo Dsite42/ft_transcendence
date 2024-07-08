@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const socket = new WebSocket('ws://localhost:8765');
+
+            socket.onopen = function(event) {
+                console.log('WebSocket is open now.');
+                // Nachricht an den Server senden
+                socket.send(JSON.stringify({ action: 'start_game', player1_id: 'Player1', player2_id: 'Player2' }));
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('WebSocket message received:', data);
+                alert('Nachricht vom Server: ' + data.message);
+            };
+
+            socket.onclose = function(event) {
+                console.log('WebSocket is closed now.');
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        });
+    </script>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+</body>
+</html>

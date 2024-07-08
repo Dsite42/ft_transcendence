@@ -1,17 +1,19 @@
-
 <div class="container">
     <h1>Game Sessions</h1>
+    <button id="filter-btn" class="btn btn-primary">Show only my Game Sessions</button>
     <table  class="table table-striped table-hover"
             id="game_sessions-table"
             data-toggle="table"
             data-sortable="true"
-            data-click-to-select="true">
+            data-click-to-select="false">
         <thead>
             <tr>
-                <th data-field="id" data-sortable="true">ID</th>
+                <th data-field="game_id" data-sortable="true">ID</th>
                 <th data-field="date" data-sortable="true">Date</th>
                 <th data-field="player1" data-sortable="true">Player 1</th>
+                <th data-field="p1_wins" data-sortable="true">P1 Wins</th>
                 <th data-field="player2" data-sortable="true">Player 2</th>
+                <th data-field="p2_wins" data-sortable="true">P2 Wins</th>
                 <th data-field="winner" data-sortable="true">Winner</th>
             </tr>
         </thead>
@@ -26,9 +28,16 @@
 
 <script type="text/javascript">
     var gameSessionData = JSON.parse('{{ game_sessions|escapejs }}');
-</script>
+    var currentUser = '{{ current_user|escapejs  }}';
+    console.log('html_currentUser:', currentUser);
 
-<script type="text/javascript">
-        populateTable(gameSessionData, '#game_sessions-table');
-</script>
+    populateTable(gameSessionData, '#game_sessions-table');
+    chartData = prepareDataForGameSessionChart(gameSessionData);
+    createGameSessionChart(chartData);
 
+    document.getElementById('filter-btn').addEventListener('click', function() {
+        response = filterTableByUser(currentUser);
+        chartData = prepareDataForGameSessionChart(response)
+        createGameSessionChart(chartData);
+    });
+</script>

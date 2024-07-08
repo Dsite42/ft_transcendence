@@ -131,28 +131,66 @@ class Friendship(models.Model):
 #       return self.name
     
 class Game(models.Model):
-    id = models.AutoField(primary_key=True)
-    player1 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='player1')
-    player2 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='player2')
-    player1_score = models.IntegerField(default=0)
-    player2_score = models.IntegerField(default=0)
-    winner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='winner')
-    loser = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='loser')
+    game_id = models.AutoField(primary_key=True)
+    player1 = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='player1')
+    player2 = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='player2')
+    p1_wins = models.IntegerField(default=0)
+    p2_wins = models.IntegerField(default=0)
+    winner = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='winner')
 
     date = models.DateTimeField(auto_now_add=True)
     
     def to_dict(self):
         return {
-            'id': self.id,
+            'game_id': self.game_id,
             'player1': self.player1.username,
             'player2': self.player2.username,
-            'player1_score': self.player1_score,
-            'player2_score': self.player2_score,
+            'p1_wins': self.p1_wins,
+            'p2_wins': self.p2_wins,
             'winner': self.winner.username,
-            'loser': self.loser.username,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S'),
         }
 
     # To display the name of the teacher in the admin panel instead of the object name
     def __str__(self):
       return self.player1.username + " vs " + self.player2.username + " (" + self.winner.username + ")"
+    
+
+class Tournament(models.Model):
+    id = models.AutoField(primary_key=True)
+    creator = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='creator')
+    name = models.CharField(max_length=40)
+    number_of_players = models.IntegerField(default=0)
+    start_time = models.DateTimeField(auto_now_add=True)
+    winner = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='tournament_winner', null=True)
+    players = models.ManyToManyField(CustomUser, related_name='players')
+    status = models.CharField(max_length=40, default='waiting')
+    class Status(models.TextChoices):
+        WAITING = 'waiting', 'Waiting'
+        ONGOING = 'ongoing', 'Ongoing'
+        COMPLETED = 'completed', 'Completed'
+        FAILED = 'failed', 'Failed'
+
+    status = models.CharField(
+        max_length=40,
+        choices=Status.choices,
+        default=Status.WAITING,
+    )
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'id': self.id,
+            'creator': self.creator.username,
+            'number_of_players': self.number_of_players,
+            'free_slots': self.number_of_players - self.players.count(),
+            'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'winner': self.winner.username if self.winner else None,
+            'players': [player.username for player in self.players.all()],
+            'status': self.status,
+        }
+    
+    # To display the name of the teacher in the admin panel instead of the object name
+    def __str__(self):
+      return self.name
+
