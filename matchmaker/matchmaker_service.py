@@ -232,13 +232,16 @@ class MatchMaker:
         
         message = {
             'action': 'tournament_updated',
-            'message': f'Tournament {tournament.id} has ended.',
+            'message': f'Tournament {tournament.id} results update.',
             'tournament_id': tournament.id,
             'tournament': tournament.to_dict()
         }
         for player in tournament.players:
             await send_message_to_client(player, message)
-        await self.start_tournament_match(next_match['id'], next_match['players'][0], next_match['players'][1])
+        try:
+            await self.start_tournament_match(tournament, next_match['id'], next_match['players'][0], next_match['players'][1])
+        except Exception as e:
+            print(f"Error starting next match: {e}")
 
     # Processes the result of a single game and updates the user stats and game history
     async def process_single_game_result(self, game, winner, p1_wins, p2_wins): 
