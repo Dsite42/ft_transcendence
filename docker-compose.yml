@@ -12,6 +12,8 @@ services:
     build: .
     ports:
       - "8765:8765"
+    volumes:
+      - DEBUG_ONLY:/app
   game:
     init: true
     build: ../../gamev3
@@ -22,3 +24,11 @@ services:
       GAME_HOST: ${GAME_HOST}
       PORT_RANGE: ${PORT_RANGE}
       JWT_SECRET: ${JWT_SECRET}
+
+volumes:
+  DEBUG_ONLY:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft
+      o: bind

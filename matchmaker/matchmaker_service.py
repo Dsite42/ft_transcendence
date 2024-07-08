@@ -3,6 +3,7 @@ from asyncio import Future, sleep
 import json
 import os
 import time
+from sys import stderr
 
 
 from .aiorpc import AioRPC
@@ -38,8 +39,9 @@ class Client:
 # The MatchMaker class handles the matchmaking process for keyboard games, single games and tournaments. It is the main service that communicates with the game_service and the clients.    
 class MatchMaker:
     def __init__(self):
-        db_path = os.path.join(os.getcwd(), 'db.sqlite3')
-        self.db = Database(engine='django.db.backends.sqlite3', name=db_path)
+        self.db_path = os.path.join(os.getcwd(), 'db.sqlite3')
+        self.db = Database(engine='django.db.backends.sqlite3', name=self.db_path)
+        print("db_path1: ", self.db_path)
         self.db.delete_all_tournaments()
         self.tournaments = []
         self.single_games = []
@@ -411,7 +413,7 @@ class MatchmakerService:
 
     @public
     async def transmit_game_result(self, game_id, winner, p1_wins, p2_wins):
-        print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}')
+        print(f'Updating game result for Game ID: {game_id}, Winner: {winner}, P1 Wins: {p1_wins}, P2 Wins: {p2_wins}', file=stderr)
         await matchmaker.process_game_result(game_id, winner, p1_wins, p2_wins)
 
 
@@ -423,6 +425,9 @@ dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
+print("db_path: ", matchmaker.db_path)
+print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx")
+
 
 # Websocket handler gets called on a new connection
 async def handler(websocket):
@@ -490,7 +495,7 @@ async def start_websocket_server():
 
 # Start the RPC server
 async def run_servers():
-    async with AioRPC('localhost', 'matchmaker_service_queue', MatchmakerService()):
+    async with AioRPC('rabbitmq', 'matchmaker_service_queue', MatchmakerService()):
         # Do anything else here
         await Future()
 
