@@ -1,0 +1,24 @@
+# This file is only for testing the game service
+# NOTE: The RPC_HOST environment variable is ignored because a RabbitMQ container is provided
+
+services:
+  rabbitmq:
+    image: 'rabbitmq:latest'
+    ports: 
+      - '5672:5672'
+      - '15672:15672'
+  matchmaker:
+    init: true
+    build: .
+    ports:
+      - "8765:8765"
+  game:
+    init: true
+    build: ../../gamev3
+    ports:
+      - ${PORT_RANGE}:${PORT_RANGE}
+    environment:
+      RPC_HOST: rabbitmq
+      GAME_HOST: ${GAME_HOST}
+      PORT_RANGE: ${PORT_RANGE}
+      JWT_SECRET: ${JWT_SECRET}
