@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-08 18:35+0200\n"
+"POT-Creation-Date: 2024-07-08 14:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,165 +94,89 @@ msgstr "Konnte Freundschaftsanfrage nicht ablehnen"
 msgid "Transcendence Testpage"
 msgstr "Transcendence Testseite"
 
-#: templates/base.html:57 templates/base.html:108
+#: templates/base.html:56 templates/base.html:107
 msgid "Friends"
 msgstr "Freunde"
 
-#: templates/base.html:64
+#: templates/base.html:63
 msgid "Enter friends intra-name"
 msgstr "Intraname des Freundes"
 
-#: templates/base.html:65
+#: templates/base.html:64
 msgid "Add Friend"
 msgstr "Freund hinzufügen"
 
-#: templates/base.html:75
+#: templates/base.html:74
 msgid "Online"
 msgstr "Online"
 
-#: templates/base.html:77
+#: templates/base.html:76
 msgid "Last online:"
 msgstr "Zuletzt online:"
 
-#: templates/base.html:86
+#: templates/base.html:85
 msgid "No friends yet:"
 msgstr "Noch keine Freunde:"
 
-#: templates/base.html:90
+#: templates/base.html:89
 msgid "Pending Friend Requests"
 msgstr "Ausstehende Freundschaftsanfragen"
 
-#: templates/base.html:94
+#: templates/base.html:93
 msgid "(Pending)"
 msgstr "(Ausstehend)"
 
-#: templates/base.html:125 templates/login.html:12
+#: templates/base.html:124 templates/login.html:12
 msgid "Login"
 msgstr "Anmelden"
 
-#: templates/base.html:129 templates/tournament_list.html:4
-#: templates/tournament_list.html:8
+#: templates/base.html:128 templates/tournament_list.html:4
 msgid "Tournaments"
 msgstr "Turniere"
 
-#: templates/base.html:133 templates/game_sessions.html:4
+#: templates/base.html:132
 msgid "Game Sessions"
 msgstr "Spiel Sessions"
 
-#: templates/base.html:136
+#: templates/base.html:135
 msgid "Rank List"
 msgstr "Rangliste"
 
-#: templates/base.html:159
+#: templates/base.html:158
 msgid "Change language"
 msgstr "Sprache ändern"
 
-#: templates/base.html:167
+#: templates/base.html:166
 msgid "Welcome to the Pong Game!"
 msgstr "Willkommen beim Pong-Spiel!"
 
-#: templates/base.html:181
+#: templates/base.html:180
+#, fuzzy
+#| msgid "Start Game"
 msgid "Start Game"
 msgstr "Spiel starten"
 
-#: templates/base.html:182
+#: templates/base.html:181
 msgid "Start Keyboard Game"
 msgstr "Tastaturspiel starten"
 
-#: templates/base.html:186 templates/base.html:295
+#: templates/base.html:185 templates/base.html:294
 msgid "Login to play"
 msgstr "Zum Spielen einloggen"
 
-#: templates/base.html:193 templates/base.html:214 templates/base.html:218
-#: templates/base.html:221
-msgid "Single Game"
-msgstr "Einzelspiel"
-
-#: templates/base.html:193
-#| msgid "Waiting for second player. Don\\'t leave this page!"
-msgid "Waiting for second player. Don\\'t leave this page!"
-msgstr "Warten auf den zweiten Spieler. Diese Seite nicht verlassen!"
-
-#: templates/base.html:202 templates/base.html:246 templates/base.html:316
-#: templates/base.html:358
-msgid "WebSocket is open now."
-msgstr "WebSocket ist jetzt geöffnet."
-
-#: templates/base.html:211 templates/base.html:255 templates/base.html:325
-#: templates/base.html:367
-msgid "WebSocket message received:"
-msgstr "WebSocket-Nachricht empfangen:"
-
-#: templates/base.html:212 templates/base.html:256 templates/base.html:326
-#: templates/base.html:368
-msgid "Message from server: "
-msgstr "Nachricht vom Server:"
-
-#: templates/base.html:214 templates/base.html:258
-msgid "Game started. Have fun!"
-msgstr "Spiel gestartet. Viel Spaß!"
-
-#: templates/base.html:218
-msgid "Game ended."
-msgstr "Spiel beendet."
-
-#: templates/base.html:218
-msgid "won and earned"
-msgstr "hat gewonnen und verdient"
-
-#: templates/base.html:218
-msgid "points."
-msgstr "Punkte."
-
-#: templates/base.html:221
-msgid "Game aborted!"
-msgstr "Spiel abgebrochen!"
-
-#: templates/base.html:226 templates/base.html:264 templates/base.html:337
-#: templates/base.html:403
-msgid "WebSocket is closed now."
-msgstr "WebSocket ist jetzt geschlossen."
-
-#: templates/base.html:230 templates/base.html:268 templates/base.html:341
-#: templates/base.html:406
-msgid "WebSocket error:"
-msgstr "WebSocket-Fehler:"
-
-#: templates/base.html:237 templates/base.html:258
-msgid "Keyboard Game"
-msgstr "Tastaturspiel starten"
-
-#: templates/base.html:280
+#: templates/base.html:279
+#, fuzzy
+#| msgid "Tournaments"
 msgid "Tournament Name"
 msgstr "Turniername"
 
-#: templates/base.html:284
+#: templates/base.html:283
 msgid "Number of Players"
 msgstr "Anzahl der Spieler"
 
-#: templates/base.html:288
+#: templates/base.html:287
 msgid "Create a new Tournament"
 msgstr "Neues Turnier erstellen"
-
-#: templates/base.html:330
-msgid "Tournament created: "
-msgstr "Turnier erstellt:"
-
-#: templates/base.html:373
-msgid "Tournament not found or not longer available: "
-msgstr "Turnier nicht gefunden oder nicht mehr verfügbar: "
-
-#: templates/base.html:377
-msgid "Tournament is full: "
-msgstr "Turnier ist voll: "
-
-#: templates/base.html:377 templates/base.html:381
-msgid "Name: "
-msgstr "Name: "
-
-#: templates/base.html:381
-msgid "You are already in this tournament: "
-msgstr "Sie sind bereits in diesem Turnier: "
 
 #: templates/base.html:414
 msgid "2024 Transcendence. All Rights Reserved."
@@ -321,39 +245,6 @@ msgstr "OTP verifizieren"
 msgid "Enter OTP"
 msgstr "OTP eingeben"
 
-#: templates/game_sessions.html:5
-#| msgid "Game Sessions"
-msgid "Show only my Game Sessions"
-msgstr "Zeige nur meine Spielsitzungen"
-
-#: templates/game_sessions.html:13 templates/tournament_list.html:16
-msgid "ID"
-msgstr "ID"
-
-#: templates/game_sessions.html:14 templates/tournament_list.html:21
-msgid "Date"
-msgstr "Datum"
-
-#: templates/game_sessions.html:15
-msgid "Player 1"
-msgstr "Spieler 1"
-
-#: templates/game_sessions.html:16
-msgid "P1 Wins"
-msgstr "P1 Siege"
-
-#: templates/game_sessions.html:17
-msgid "Player 2"
-msgstr "Spieler 2"
-
-#: templates/game_sessions.html:18
-msgid "P2 Wins"
-msgstr "P2 Siege"
-
-#: templates/game_sessions.html:19
-msgid "Winner"
-msgstr "Gewinner"
-
 #: templates/login.html:9
 msgid "you wanna login using the 42 api?"
 msgstr "Möchten Sie sich über die 42 API anmelden?"
@@ -382,46 +273,9 @@ msgstr "Aktuelles OTP-Gerät entfernen"
 msgid "Change Profile Info"
 msgstr "Profilinformationen ändern"
 
-#: templates/rank_list.html:4
-msgid "Player Ranking"
-msgstr "Spieler-Rangliste"
-
-#: templates/rank_list.html:12 templates/tournament_list.html:17
-msgid "Name"
-msgstr "Name"
-
-#: templates/rank_list.html:13
-msgid "Score"
-msgstr "Punktzahl"
-
-#: templates/rank_list.html:14
-msgid "Wins"
-msgstr "Siege"
-
-#: templates/rank_list.html:15
-msgid "Losses"
-msgstr "Niederlagen"
-
-#: templates/rank_list.html:16
-msgid "Games Played"
-msgstr "Gespielte Spiele"
-
 #: templates/tournament_list.html:5
 msgid "Join our exciting tournaments!"
 msgstr "Nehmen Sie an unseren spannenden Turnieren teil!"
-
-#: templates/tournament_list.html:18
-msgid "Free slots"
-msgstr "Freie Plätze"
-
-#: templates/tournament_list.html:19
-#| msgid "Number of Players"
-msgid "Number of players"
-msgstr "Anzahl der Spieler"
-
-#: templates/tournament_list.html:20
-msgid "Status"
-msgstr "Status"
 
 #~ msgid "Game will start soon!"
 #~ msgstr "Das Spiel beginnt bald!"

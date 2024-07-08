@@ -1,6 +1,8 @@
+{% load i18n %}
+
 <div class="container">
-    <h1>Game Sessions</h1>
-    <button id="filter-btn" class="btn btn-primary">Show only my Game Sessions</button>
+    <h1>{% trans "Game Sessions" %}</h1>
+    <button id="filter-btn" class="btn btn-primary">{% trans "Show only my Game Sessions" %}</button>
     <table  class="table table-striped table-hover"
             id="game_sessions-table"
             data-toggle="table"
@@ -8,13 +10,13 @@
             data-click-to-select="false">
         <thead>
             <tr>
-                <th data-field="game_id" data-sortable="true">ID</th>
-                <th data-field="date" data-sortable="true">Date</th>
-                <th data-field="player1" data-sortable="true">Player 1</th>
-                <th data-field="p1_wins" data-sortable="true">P1 Wins</th>
-                <th data-field="player2" data-sortable="true">Player 2</th>
-                <th data-field="p2_wins" data-sortable="true">P2 Wins</th>
-                <th data-field="winner" data-sortable="true">Winner</th>
+                <th data-field="game_id" data-sortable="true">{% trans "ID" %}</th>
+                <th data-field="date" data-sortable="true">{% trans "Date" %}</th>
+                <th data-field="player1" data-sortable="true">{% trans "Player 1" %}</th>
+                <th data-field="p1_wins" data-sortable="true">{% trans "P1 Wins" %}</th>
+                <th data-field="player2" data-sortable="true">{% trans "Player 2" %}</th>
+                <th data-field="p2_wins" data-sortable="true">{% trans "P2 Wins" %}</th>
+                <th data-field="winner" data-sortable="true">{% trans "Winner" %}</th>
             </tr>
         </thead>
         <tbody>
