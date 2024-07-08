@@ -167,13 +167,6 @@ def auth(request: HttpRequest) -> HttpResponse:
         'Authorization': 'Bearer ' + oauth_response['access_token']
     }).json()
 
-    session_token = {
-        'access_token': oauth_response['access_token'],
-        '2FA_Activated': False,
-        '2FA_Passed': False,
-        'intra_name': user_info['login'],
-        'user_id': CustomUser.objects.get(username=user_info['login']).id
-    }
     intra_name = user_info['login']
     if intra_name:
         user, created = CustomUser.objects.get_or_create(username=intra_name)
@@ -184,7 +177,14 @@ def auth(request: HttpRequest) -> HttpResponse:
                 # Reset the display name of the existing user
                 existing_user.display_name = existing_user.username
                 existing_user.save()
-        session_token['user_id'] = user.id
+        print("CustomUser: " , CustomUser.objects.get(username=user_info['login']).id)
+        session_token = {
+        'access_token': oauth_response['access_token'],
+        '2FA_Activated': False,
+        '2FA_Passed': False,
+        'intra_name': user_info['login'],
+        'user_id': CustomUser.objects.get(username=user_info['login']).id
+    }
             
 
         if user.two_factor_auth_enabled:
