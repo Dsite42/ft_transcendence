@@ -1,7 +1,8 @@
 import asyncio
-from asyncio import Future
+from asyncio import Future, sleep
 import json
-
+import os
+import time
 
 
 from .aiorpc import AioRPC
@@ -12,7 +13,6 @@ from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 from tinyrpc import RPCClient
 
 import websockets
-from websockets import WebSocketServerProtocol, Headers, HeadersLike
 from websockets.exceptions import ConnectionClosed
 from asgiref.sync import sync_to_async
 from datetime import datetime
@@ -38,7 +38,8 @@ class Client:
 # The MatchMaker class handles the matchmaking process for keyboard games, single games and tournaments. It is the main service that communicates with the game_service and the clients.    
 class MatchMaker:
     def __init__(self):
-        self.db = Database(engine='django.db.backends.sqlite3', name='/home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft/db.sqlite3')
+        db_path = os.path.join(os.getcwd(), 'db.sqlite3')
+        self.db = Database(engine='django.db.backends.sqlite3', name=db_path)
         self.db.delete_all_tournaments()
         self.tournaments = []
         self.single_games = []
@@ -401,7 +402,7 @@ class MatchMaker:
 # MatchmakerService class for RPC to call methods externally from the game_service
 class MatchmakerService:
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
         protocol = JSONRPCProtocol()
 
         transport_game = RabbitMQClientTransport(self.connection, 'game_service')
@@ -416,6 +417,7 @@ class MatchmakerService:
 
 # Global variables
 connected_clients = {}
+time.sleep(10)
 
 dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
@@ -481,8 +483,9 @@ async def send_message_to_client(client_id, message):
 
 # Start the websocket server
 async def start_websocket_server():
-    async with websockets.serve(handler, "10.12.7.1", 8765, create_protocol=WebsocketClient):
+    async with websockets.serve(handler, "0.0.0.0", 8765, create_protocol=WebsocketClient):
         print("WebSocket server started on ws://10.12.7.1:8765")
+
         await asyncio.Future()
 
 # Start the RPC server
@@ -491,12 +494,17 @@ async def run_servers():
         # Do anything else here
         await Future()
 
+async def keep_connection_alive():
+    while True:
+        matchmaker_service.connection.process_data_events(time_limit=0.100)
+        await sleep(20)
 
 async def main():
     try:
-        task1 = asyncio.create_task(start_websocket_server())
-        task2 = asyncio.create_task(run_servers())
-        await asyncio.gather(task1, task2)
+        async with asyncio.TaskGroup() as tg:
+            task1 = tg.create_task(start_websocket_server())
+            task2 = tg.create_task(run_servers())
+            task3 = tg.create_task(keep_connection_alive())
     except asyncio.CancelledError:
         print("Main task cancelled.")
 
