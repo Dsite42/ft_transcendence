@@ -20,6 +20,9 @@ COPY . /code/
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+RUN chmod -R 755 /code/static
+RUN chown -R www-data:www-data /code/static
+
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
