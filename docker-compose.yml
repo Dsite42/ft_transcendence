@@ -27,6 +27,7 @@ services:
 
 
   web:
+    container_name: web
     build: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -37,6 +38,7 @@ services:
      
 
   nginx:
+    container_name: nginx
     build:
       context: ./nginx
     ports:
