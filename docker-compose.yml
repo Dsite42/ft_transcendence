@@ -16,7 +16,7 @@ services:
       - DEBUG_ONLY:/app
   game:
     init: true
-    build: ../../gamev3
+    build: ../gamev3
     ports:
       - ${PORT_RANGE}:${PORT_RANGE}
     environment:
@@ -25,20 +25,34 @@ services:
       PORT_RANGE: ${PORT_RANGE}
       JWT_SECRET: ${JWT_SECRET}
 
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on: []
+     
+
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
+      - web
       - matchmaker
       - game
-
+    
+  
 volumes:
   DEBUG_ONLY:
     driver: local
     driver_opts:
       type: none
-      device: /home/cgodecke/Desktop/Core/ft_transcendence/frontend_draft
+      device: ${PWD}
       o: bind
