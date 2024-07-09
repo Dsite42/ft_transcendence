@@ -22,8 +22,8 @@ RUN python manage.py collectstatic --noinput
 
 RUN chmod -R 755 /code/static
 RUN chown -R www-data:www-data /code/static
-RUN chown -R www-data:www-data /code/avatars/
-RUN chmod -R 755 /code/avatars/
+#RUN chown -R www-data:www-data /code/avatars/
+#RUN chmod -R 755 /code/avatars/
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
