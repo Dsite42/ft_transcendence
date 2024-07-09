@@ -16,12 +16,8 @@ from tinyrpc import RPCClient
 import websockets
 from websockets.exceptions import ConnectionClosed
 from asgiref.sync import sync_to_async
-from datetime import datetime
-from jwt import decode as jwt_decode
-from typing import Optional, Tuple
 
 
-from itertools import combinations
 from .websocket_client import WebsocketClient
 from .game_types import SingleGame, Tournament
 from .database import Database
@@ -404,7 +400,7 @@ class MatchMaker:
 # MatchmakerService class for RPC to call methods externally from the game_service
 class MatchmakerService:
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv('RPC_HOST')))
         protocol = JSONRPCProtocol()
 
         transport_game = RabbitMQClientTransport(self.connection, 'game_service')
@@ -488,14 +484,14 @@ async def send_message_to_client(client_id, message):
 
 # Start the websocket server
 async def start_websocket_server():
-    async with websockets.serve(handler, "0.0.0.0", 8765, create_protocol=WebsocketClient):
-        print("WebSocket server started on ws://10.12.7.1:8765")
+    async with websockets.serve(handler, os.getenv('MATCHMAKER_WEBSOCKET_IP'), os.getenv('MATCHMAKER_WEBSOCKET_PORT'), create_protocol=WebsocketClient):
+        print("WebSocket server started on ws://", os.getenv('MATCHMAKER_WEBSOCKET_IP'), ":", os.getenv('MATCHMAKER_WEBSOCKET_PORT'))
 
         await asyncio.Future()
 
 # Start the RPC server
 async def run_servers():
-    async with AioRPC('rabbitmq', 'matchmaker_service_queue', MatchmakerService()):
+    async with AioRPC(os.getenv('RPC_HOST'), os.getenv('MATCHMAKER_SERVICE'), MatchmakerService()):
         # Do anything else here
         await Future()
 

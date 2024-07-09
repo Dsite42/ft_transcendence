@@ -9,6 +9,7 @@ services:
       - '15672:15672'
   matchmaker:
     init: true
+    env_file: .env
     build: .
     ports:
       - "8765:8765"
