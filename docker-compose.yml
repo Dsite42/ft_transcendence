@@ -1,12 +1,19 @@
 # This file is only for testing the game service
 # NOTE: The RPC_HOST environment variable is ignored because a RabbitMQ container is provided
 
+networks:
+  network:
+    driver: bridge
+
 services:
   rabbitmq:
     image: 'rabbitmq:latest'
     ports: 
       - '5672:5672'
       - '15672:15672'
+    networks:
+      - network
+    
   matchmaker:
     init: true
     build: .
@@ -14,6 +21,9 @@ services:
       - "8765:8765"
     volumes:
       - DEBUG_ONLY:/app
+    networks:
+      - network
+
   game:
     init: true
     build: ../gamev3
@@ -24,6 +34,8 @@ services:
       GAME_HOST: ${GAME_HOST}
       PORT_RANGE: ${PORT_RANGE}
       JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - network
 
 
   web:
@@ -39,6 +51,8 @@ services:
     env_file:
       - .env
     depends_on: []
+    networks:
+      - network
      
 
   nginx:
@@ -54,6 +68,8 @@ services:
       - web
       - matchmaker
       - game
+    networks:
+      - network
     
   
 volumes:
