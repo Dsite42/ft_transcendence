@@ -25,6 +25,16 @@ services:
       PORT_RANGE: ${PORT_RANGE}
       JWT_SECRET: ${JWT_SECRET}
 
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - matchmaker
+      - game
+
 volumes:
   DEBUG_ONLY:
     driver: local
