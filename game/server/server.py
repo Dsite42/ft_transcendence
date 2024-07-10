@@ -35,7 +35,6 @@ class Server:
                     winner = self.player_order[self.game_state.winning_side]
                 case _:
                     winner = -1
-            print(winner)
             self.notifier.notify_finished(
                 winner,
                 self.game_state.paddle_a.score,
