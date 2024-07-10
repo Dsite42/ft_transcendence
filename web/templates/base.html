@@ -227,6 +227,9 @@
             else if (data.action === 'single_game_aborted') {
                 document.getElementById('main-content').innerHTML = '<h1>' + '{% trans "Single Game" %}' + '</h1> <p>' + '{% trans "Game aborted!" %}' + ' </p>';
             }
+            else if (data.action === 'already_playing') {
+                alert('{% trans "You are already playing a game." %}');
+            }
         };
 
         globalSocket.onclose = function(event) {
@@ -264,6 +267,9 @@
             if (data.action === 'game_address') {
                 document.getElementById('main-content').innerHTML = '<h1>{% trans "Keyboard Game" %}</h1> <p>{% trans "Game started. Have fun!" %}</p>';
                 Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
+            }
+            else if (data.action === 'already_playing') {
+                alert('{% trans "You are already playing a game." %}');
             }
         };
 
@@ -403,7 +409,9 @@
                 else if (data.action === 'tournament_aborted') {
                     updatePageTournamentAborted();
                 }
-
+                else if (data.action === 'already_playing') {
+                    alert('{% trans "You are already playing a game." %}');
+                }
 
             };
             globalSocket.onclose = function(event) {
