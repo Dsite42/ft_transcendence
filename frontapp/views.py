@@ -13,11 +13,32 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.images import ImageFile
+from django.template.defaulttags import register
+from django import template
 import os
 from django.contrib import messages
 from typing import Callable
 from PIL import Image
 
+@register.tag(name='env')
+def env(parser, token):
+    try:
+        # Split the token to get the environment variable name
+        tag_name, env_var_name = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError(
+            "%r tag requires a single argument" % token.contents.split()[0]
+        )
+
+    return EnvNode(env_var_name)
+
+class EnvNode(template.Node):
+    def __init__(self, env_var_name):
+        self.env_var_name = env_var_name
+
+    def render(self, context):
+        # Retrieve the environment variable value
+        return os.environ.get(self.env_var_name, '')
 
 from .rpc_client import get_matchmaker_service
 
@@ -354,7 +375,7 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
             # Save the uploaded file and get its URL
             if not is_image(avatar_file):
                 return JsonResponse({'success': False, 'reason': _('File is not an image.')})
-            file_name = default_storage.save(os.path.join('avatars', user.username, avatar_file.name), avatar_file)
+            file_name = default_storage.save(os.path.join('static/avatars', user.username, avatar_file.name), avatar_file)
             avatar_url = os.path.join(settings.MEDIA_URL, file_name)
             user.avatar = avatar_url
         elif avatar_url:

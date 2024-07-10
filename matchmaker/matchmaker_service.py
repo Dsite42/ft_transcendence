@@ -484,8 +484,9 @@ async def send_message_to_client(client_id, message):
 
 # Start the websocket server
 async def start_websocket_server():
-    async with websockets.serve(handler, os.getenv('MATCHMAKER_WEBSOCKET_IP'), os.getenv('MATCHMAKER_WEBSOCKET_PORT'), create_protocol=WebsocketClient):
-        print("WebSocket server started on ws://", os.getenv('MATCHMAKER_WEBSOCKET_IP'), ":", os.getenv('MATCHMAKER_WEBSOCKET_PORT'))
+
+    async with websockets.serve(handler, '0.0.0.0', 8765, create_protocol=WebsocketClient):
+        print("WebSocket server started on ws://0.0.0.0:8765")
 
         await asyncio.Future()
 

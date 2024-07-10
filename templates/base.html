@@ -197,7 +197,7 @@
         };
 
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
-            globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+            globalSocket = new WebSocket('ws://{% env GAME_HOST %}:8765?with_token=' + getCookie('session'));
             globalSocket.onopen = function(event) {
                 console.log('{% trans "WebSocket is open now." %}');
                 handleOpen();
@@ -241,7 +241,7 @@
         };
 
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
-            globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+            globalSocket = new WebSocket('ws://{% env GAME_HOST %}:8765?with_token=' + getCookie('session'));
             globalSocket.onopen = function(event) {
                 console.log('{% trans "WebSocket is open now." %}');
                 handleOpen();
@@ -311,7 +311,7 @@
         };
     
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
-            globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+            globalSocket = new WebSocket('ws://{% env GAME_HOST %}:8765?with_token=' + getCookie('session'));
             globalSocket.onopen = function(event) {
                 console.log('{% trans "WebSocket is open now." %}');
                 handleOpen();
@@ -353,7 +353,7 @@
         };
 
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
-            globalSocket = new WebSocket('ws://10.12.7.1:8765?with_token=' + getCookie('session'));
+            globalSocket = new WebSocket('ws://{% env GAME_HOST %}:8765?with_token=' + getCookie('session'));
             globalSocket.onopen = function(event) {
                 console.log('{% trans "WebSocket is open now." %}');
                 handleOpen();
