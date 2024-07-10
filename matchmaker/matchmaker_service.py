@@ -36,7 +36,7 @@ class Client:
 class MatchMaker:
     def __init__(self):
         self.db_path = os.path.join(os.getcwd(), 'db.sqlite3')
-        self.db = Database(engine='django.db.backends.sqlite3', name=self.db_path)
+        self.db = Database()
         print("db_path1: ", self.db_path)
         self.db.delete_all_tournaments()
         self.tournaments = []
@@ -294,7 +294,7 @@ class MatchMaker:
                 # As the tournament has ended, delete it from the database
                 await sync_to_async(self.db.delete_tournament)(tournament.id)
                 self.tournaments.remove(tournament)
-                print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}")
+                print(f"Tournament {tournament.id} has ended. Winner: {tournament.winner}", file=stderr)
             else:
                 #Draw matches
                 self.start_next_match(tournament)

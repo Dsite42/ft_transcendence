@@ -32,7 +32,7 @@ services:
   game:
     hostname: game
     init: true
-    build: ../gamev3
+    build: ../../gamev3
     ports:
       - ${PORT_RANGE}:${PORT_RANGE}
     environment:
@@ -59,7 +59,8 @@ services:
       - GAME_HOST=${GAME_HOST}
     env_file:
       - .env
-    depends_on: []
+    depends_on:
+      - postgres
     networks:
       - network
      
@@ -80,7 +81,24 @@ services:
     networks:
       - network
     
-  
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: 'postgres:latest'
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: test_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+      - DEBUG_ONLY:/app:rw
+    networks:
+      - network
+
 volumes:
   DEBUG_ONLY:
     driver: local
