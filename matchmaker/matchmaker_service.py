@@ -489,10 +489,9 @@ async def send_message_to_client(client_id, message):
 # Start the websocket server
 async def start_websocket_server():
 
-    async with websockets.serve(handler, os.getenv('GAME_HOST').strip(), 8765, create_protocol=WebsocketClient):
+    async with websockets.serve(handler, '0.0.0.0', 8765, create_protocol=WebsocketClient):
         game_host = os.getenv('GAME_HOST').strip()
-        print(f"GAME_HOST: '{game_host}'")
-        print("WebSocket server started on ws://", os.getenv('GAME_HOST').strip(), ":8765")
+        print("WebSocket server started on ws://0.0.0.0:8765")
 
         await asyncio.Future()
 
