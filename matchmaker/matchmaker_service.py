@@ -21,6 +21,7 @@ from asgiref.sync import sync_to_async
 from .websocket_client import WebsocketClient
 from .game_types import SingleGame, Tournament
 from .database import Database
+from datetime import datetime
 from . import my_global_vars
 
 # Class definitions
@@ -413,6 +414,14 @@ class MatchMaker:
             await send_message_to_client(player_id, message)
 
         return is_already_playing
+    
+    async def remove_long_open_tournaments(self):
+        while True:
+            for tournament in self.tournaments:
+                if tournament.status == 'waiting' and len(tournament.players) == 0 and (datetime.now() - tournament.start_time).seconds > 3600: 
+                    print(f"Removing long open tournament {tournament.id}")
+                    await self.abort_tournament(tournament)
+            await sleep(350)
 
 
 
@@ -530,6 +539,7 @@ async def main():
             task1 = tg.create_task(start_websocket_server())
             task2 = tg.create_task(run_servers())
             task3 = tg.create_task(keep_connection_alive())
+            task4 = tg.create_task(matchmaker.remove_long_open_tournaments())
     except asyncio.CancelledError:
         print("Main task cancelled.")
 
