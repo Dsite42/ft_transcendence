@@ -145,19 +145,26 @@
         </div>
     </nav>
     <!-- Language Selector -->
-    <form action="{% url 'set_language' %}" method="post">
-    {% csrf_token %}
-    <select name="language">
-        {% get_current_language as LANGUAGE_CODE %}
-        {% get_available_languages as LANGUAGES %}
-        {% for lang in LANGUAGES %}
-            <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
-                {{ lang.1 }} ({{ lang.0 }})
-            </option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="{% trans 'Change language' %}">
-</form>
+    <form action="{% url 'set_language' %}" method="post" class="form-inline my-2 my-lg-0">
+        {% csrf_token %}
+        <div class="input-group">
+            <div class="input-group-prepend">
+                
+            </div>
+            <select name="language" id="language" class="custom-select">
+                {% get_current_language as LANGUAGE_CODE %}
+                {% get_available_languages as LANGUAGES %}
+                {% for lang in LANGUAGES %}
+                    <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                        {{ lang.1 }} ({{ lang.0 }})
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">{% trans 'Change language' %}</button>
+            </div>
+        </div>
+    </form>
     <!-- Main Content -->
     <div id="main-content" class="container mt-5">
     </div>
@@ -171,20 +178,19 @@
     </div>
 </div>
 
-<!-- Matchmaker Test Section -->
+
+ {% if user.is_authenticated %}
+<!-- Matchmaker Section -->
     <script>
             var globalSocket = null;
     </script>
 
     <div class="container mt-5 text-center">
-        {% if user.is_authenticated %}
+       
         <button id="startGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Game' %}</button>
         <button id="startKeyboardGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Keyboard Game' %}</button>
         <br>
         <br>
-        {% else %}
-        <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
-        {% endif %}
     </div>
 
 <!-- Single Game -->
@@ -272,7 +278,6 @@
 
     <!-- Tournament Section -->
     <div class="container mt-5 text-center">
-        {% if user.is_authenticated %}
         <form method="post" id="tournamentForm">
             {% csrf_token %}
             <div class="row">
@@ -291,9 +296,6 @@
         </form>
         <br>
         <br>
-        {% else %}
-        <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
-        {% endif %}
     </div>
 
 
@@ -408,6 +410,12 @@
         });
     }
 </script>
+{% else %}
+<br>
+<div class="d-flex justify-content-center mt-5">
+    <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
+</div>
+{% endif %}
 
     <!-- Footer -->
     <footer class="footer text-center mt-auto" style="z-index: 1030; position: relative;">

@@ -169,7 +169,6 @@ msgid "Single Game"
 msgstr "Jeu individuel"
 
 #: templates/base.html:193
-#, fuzzy
 #| msgid "Waiting for second player. Don\\'t leave this page!"
 msgid "Waiting for second player. Don\\'t leave this page!"
 msgstr "En attente du deuxième joueur. Ne quittez pas cette page !"
@@ -322,7 +321,6 @@ msgid "Enter OTP"
 msgstr "Entrer OTP"
 
 #: templates/game_sessions.html:5
-#, fuzzy
 #| msgid "Game Sessions"
 msgid "Show only my Game Sessions"
 msgstr "Afficher uniquement mes sessions de jeu"

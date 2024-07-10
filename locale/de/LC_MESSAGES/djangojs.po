@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-08 17:56+0200\n"
+"POT-Creation-Date: 2024-07-10 18:36+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,42 +18,54 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: static/js/spa.js:201
+#: static/js/dashboard.js:35 static/js/dashboard.js:39
+msgid "Wins"
+msgstr "Siege"
+
+#: static/js/dashboard.js:35
+msgid "Losses"
+msgstr "Niederlagen"
+
+#: static/js/dashboard.js:129
+msgid "Amount of matches over time"
+msgstr "Anzahl der Spiele im Laufe der Zeit"
+
+#: static/js/spa.js:201 staticfiles/js/spa.js:201
 msgid ""
 "Info changed successfully, refresh site for avatar changes to take effect!"
 msgstr ""
 "Informationen erfolgreich geändert, aktualisieren Sie die Seite, damit die "
 "Änderungen am Avatar wirksam werden!"
 
-#: static/js/spa.js:203
+#: static/js/spa.js:203 staticfiles/js/spa.js:203
 msgid "Error changing info! : "
 msgstr "Fehler beim Ändern der Informationen! : "
 
-#: static/js/spa.js:226
+#: static/js/spa.js:226 staticfiles/js/spa.js:226
 msgid "Friend request sent successfully!"
 msgstr "Freundschaftsanfrage erfolgreich gesendet!"
 
-#: static/js/spa.js:228
+#: static/js/spa.js:228 staticfiles/js/spa.js:228
 msgid "Error sending friend request: "
 msgstr "Fehler beim Senden der Freundschaftsanfrage: "
 
-#: static/js/spa.js:233
+#: static/js/spa.js:233 staticfiles/js/spa.js:233
 msgid "An error occurred while sending the friend request."
 msgstr "Beim Senden der Freundschaftsanfrage ist ein Fehler aufgetreten."
 
-#: static/js/spa.js:249
+#: static/js/spa.js:249 staticfiles/js/spa.js:249
 msgid "Friend request accepted successfully!"
 msgstr "Freundschaftsanfrage erfolgreich angenommen!"
 
-#: static/js/spa.js:267
+#: static/js/spa.js:267 staticfiles/js/spa.js:267
 msgid "Friend request declined successfully!"
 msgstr "Freundschaftsanfrage erfolgreich abgelehnt!"
 
-#: static/js/spa.js:285
+#: static/js/spa.js:285 staticfiles/js/spa.js:285
 msgid "Friend removed successfully!"
 msgstr "Freund erfolgreich entfernt!"
 
-#: static/js/spa.js:302
+#: static/js/spa.js:302 staticfiles/js/spa.js:302
 msgid ""
 "You have a pending friend requests, refresh the site in order to see it!"
 msgstr ""

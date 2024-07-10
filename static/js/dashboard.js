@@ -32,11 +32,11 @@ function createDetailChart(player) {
     if (chart) {
         chart.destroy();
     }
-    const names = ['Wins', 'Losses'];
+    const names = [gettext('Wins'), gettext('Losses')];
     const wins = [player.games_won, player.games_lost];
     var options = {
         title: {
-            text: 'Wins',
+            text: gettext('Wins'),
             align: 'center',
             style: {
                 fontSize: '30px',
@@ -126,7 +126,7 @@ function createGameSessionChart(data) {
             enabled: false
         },
         title: {
-            text: 'Amount of matches over time',
+            text: gettext('Amount of matches over time'),
             align: 'left'
         },
         markers: {
