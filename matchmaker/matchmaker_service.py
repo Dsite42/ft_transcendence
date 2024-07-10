@@ -400,7 +400,7 @@ class MatchMaker:
 # MatchmakerService class for RPC to call methods externally from the game_service
 class MatchmakerService:
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv('RPC_HOST')))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters("matchmaker_service_queue"))
         protocol = JSONRPCProtocol()
 
         transport_game = RabbitMQClientTransport(self.connection, 'game_service')
@@ -421,9 +421,6 @@ dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
-print("db_path: ", matchmaker.db_path)
-print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx")
-
 
 # Websocket handler gets called on a new connection
 async def handler(websocket):
@@ -486,7 +483,7 @@ async def send_message_to_client(client_id, message):
 async def start_websocket_server():
 
     async with websockets.serve(handler, '0.0.0.0', 8765, create_protocol=WebsocketClient):
-        print("WebSocket server started on ws://0.0.0.0:8765")
+        print("Matchmaker WebSocket server started on ws://0.0.0.0:8765")
 
         await asyncio.Future()
 

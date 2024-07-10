@@ -5,20 +5,21 @@ from datetime import datetime
 import json
 from .game_types import Tournament
 from sys import stderr
+import os
 
 
 # Database class for handling database operations via Django database connection
 class Database:
-    def __init__(self, engine='django.db.backends.postgresql_psycopg2', name='test_db', user=None, password=None, host=None, port=None):
+    def __init__(self, engine='django.db.backends.postgresql_psycopg2'):
         self.Model = None
 
         databases = {
             'default': {
                 'ENGINE': engine,
-                'NAME': name,
-                'USER': 'postgres',
-                'PASSWORD': 'root',
-                'HOST': 'postgres',
+                'NAME': os.getenv('POSTGRES_DB'),
+                'USER': os.getenv('POSTGRES_USER'),
+                'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+                'HOST': os.getenv('POSTGRES_HOST'),
                 'PORT': '5432',
                 'APP_LABEL': 'frontapp',
             }

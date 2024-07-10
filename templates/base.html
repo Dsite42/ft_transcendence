@@ -194,6 +194,7 @@
 
         const handleOpen = () => {
             globalSocket.send(JSON.stringify({ action: 'request_single_game', player_id: "{{ user.user_id }}" }));
+            console.log('Single Game request sent: { "action": "request_single_game", "player_id": "{{ user.user_id }}" }');
         };
 
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
@@ -209,7 +210,6 @@
         globalSocket.onmessage = function(event) {
             const data = JSON.parse(event.data);
             console.log('{% trans "WebSocket message received:" %}', data);
-            alert('{% trans "Message from server: " %}' + data.message);
             if (data.action === 'game_address') {
                 document.getElementById('main-content').innerHTML = '<h1>' + '{% trans "Single Game" %}' + '</h1> <p>' + '{% trans "Game started. Have fun!" %}' + '</p>';
                 Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
@@ -238,6 +238,7 @@
 
         const handleOpen = () => {
             globalSocket.send(JSON.stringify({ action: 'request_keyboard_game', player_id: "{{ user.user_id }}" }));
+            console.log('Keyboard Game request sent: { "action": "request_keyboard_game", "player_id": "{{ user.user_id }}" }');
         };
 
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
@@ -253,7 +254,6 @@
         globalSocket.onmessage = function(event) {
             const data = JSON.parse(event.data);
             console.log('{% trans "WebSocket message received:" %}', data);
-            alert('{% trans "Message from server: " %}' + data.message + data.game_address);
             if (data.action === 'game_address') {
                 document.getElementById('main-content').innerHTML = '<h1>{% trans "Keyboard Game" %}</h1> <p>{% trans "Game started. Have fun!" %}</p>';
                 Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
@@ -308,6 +308,7 @@
     
         const handleOpen = () => {
             globalSocket.send(JSON.stringify({ action: 'request_tournament', player_id: "{{ user.user_id }}", tournament_name: tournamentName, number_of_players: numberOfPlayers }));
+            console.log('Tournament request sent": { "action": "request_tournament", "player_id": "{{ user.user_id }}", "tournament_name": "' + tournamentName + '", "number_of_players": ' + numberOfPlayers + ' }');
         };
     
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
@@ -323,11 +324,10 @@
         globalSocket.onmessage = function(event) {
             const data = JSON.parse(event.data);
             console.log('{% trans "WebSocket message received:" %}', data);
-            alert('{% trans "Message from server: " %}' + data.message + data.tournament_id);
             if (data.action === 'game_address') {
                 Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
             } else if (data.action === 'tournament_created') {
-                alert('{% trans "Tournament created: " %}' + data.tournament_id);
+                alert('{% trans "Tournament created: " %}' + data.tournament_id + ',' + ' {% trans "Name: " %}' + data.tournament_name);
                 globalSocket.close();
                 window.location.href = "{% url 'home' %}" + '#tournament_list';
             }
@@ -350,6 +350,7 @@
 
         const handleOpen = () => {
             globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
+            console.log('Join Tournament request sent: { "action": "join_tournament", "player_id": "{{ user.user_id }}", "tournament_id": ' + tournament_id + ' }');
         };
 
         if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
@@ -365,12 +366,11 @@
             globalSocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 console.log('{% trans "WebSocket message received:" %}', data);
-                alert('{% trans "Message from server: " %}' + data.message);
                 if (data.action === 'game_address') {
                     Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session')]);
                 }
                 else if (data.action === 'tournament_not_found') {
-                    alert('{% trans "Tournament not found or not longer available: " %}' + data.tournament_id);
+                    alert('{% trans "Tournament not found or not longer available: " %}' + data.tournament_id + ' {% trans "Name: " %}' + data.tournament_name);
                     window.location.href = "{% url 'home' %}" + '#tournament_list';
                 }
                 else if (data.action === 'tournament_full') {

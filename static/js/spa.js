@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.text())
             .then(data => {
-                console.log("Received data:", data);
                 if (chart) {
                     chart.destroy();
                 }
@@ -63,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.text())
         .then(data => {
-            console.log("Received data:", data);
             if (chart) {
                 chart.destroy();
             }
@@ -98,7 +96,6 @@ function generate_otp_QR()
             return response.json();
         })
         .then(data => {
-            console.log('Received data', data);
             const img = document.getElementById('qr-code');
             img.src = 'data:image/png;base64,' + data.qr_code;
             img.style.display = 'block';
@@ -122,7 +119,6 @@ function send_otp_code()
     })
     .then(response => response.text())
     .then(data => {
-        console.log('Received data', data);
         alert(data);
         if (data === 'OTP is valid') {
             window.location.href = '/';
@@ -148,7 +144,6 @@ function send_otp_code_login()
     })
     .then(response => response.text())
     .then(data => {
-        console.log('Received data', data);
         alert(data);
         if (data === 'OTP is valid') {
             window.location.href = '/';
