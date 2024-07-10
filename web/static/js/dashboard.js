@@ -10,7 +10,6 @@ function populateTable(data, tag) {
             if (tag == '#player-table')
                 createDetailChart(row);
             else if (tag == '#tournament-table') {
-                alert('Clicked on row: ' + row.id);
                 join_tournament(row.id);
             }
         }
