@@ -1,6 +1,7 @@
 from websockets import WebSocketServerProtocol, Headers, HeadersLike
 from typing import Optional, Tuple
 from jwt import decode as jwt_decode
+import os
 
 # WebsocketClient class for handling websocket connections via create_protocol and checking if the token is valid (means can be decoded)
 class WebsocketClient(WebSocketServerProtocol):
@@ -27,7 +28,7 @@ class WebsocketClient(WebSocketServerProtocol):
 
     def process_token(self, token: str) -> bool:
         try:
-            payload = jwt_decode(token, "super-secret", algorithms=['HS256'])
+            payload = jwt_decode(token, os.getenv('JWT_SECRET'), algorithms=['HS256'])
             self.user_id = payload['user_id']
         except:
             return False
