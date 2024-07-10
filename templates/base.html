@@ -283,7 +283,7 @@
                 </div>
                 <div class="col-md-4">
                     <label for="numberOfPlayers" class="form-label">{% trans 'Number of Players' %}</label>
-                    <input type="number" class="form-control" id="numberOfPlayers" name="number_of_players" min="2" max="10" required>
+                    <input type="number" class="form-control" id="numberOfPlayers" name="number_of_players" min="{% env MIN_TOURNAMENT_PLAYERS %}" max="{% env MAX_TOURNAMENT_PLAYERS %}" required>
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-dark btn-lg w-100" style="border-radius: 0;">{% trans 'Create a new Tournament' %}</button>
@@ -327,10 +327,14 @@
             console.log('{% trans "WebSocket message received:" %}', data);
             if (data.action === 'game_address') {
                 Game.start(document.getElementById('gameCanvas'), data.game_address, [getCookie('session'), 'guest']);
-            } else if (data.action === 'tournament_created') {
+            }
+            else if (data.action === 'tournament_created') {
                 alert('{% trans "Tournament created: " %}' + data.tournament_id + ',' + ' {% trans "Name: " %}' + data.tournament_name);
                 globalSocket.close();
                 window.location.href = "{% url 'home' %}" + '#tournament_list';
+            }
+            else if (data.action === 'max_amount_of_tournaments_reached') {
+                alert('{% trans "Max amount of tournaments reached." %}');
             }
         };
     

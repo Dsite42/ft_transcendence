@@ -37,7 +37,6 @@ class MatchMaker:
     def __init__(self):
         self.db_path = os.path.join(os.getcwd(), 'db.sqlite3')
         self.db = Database()
-        print("db_path1: ", self.db_path)
         self.db.delete_all_tournaments()
         self.tournaments = []
         self.single_games = []
@@ -46,6 +45,14 @@ class MatchMaker:
 
     # Creates a new tournament and sends the tournament ID to the creator
     async def create_tournament(self, creator, tournament_name, number_of_players):
+        if len(self.tournaments) >= int(os.getenv('MAX_TOURNAMENTS')):
+            message = {
+                'action': 'max_amount_of_tournaments_reached',
+                'message': f'Maximum amount of tournaments reached.',
+            }
+            await send_message_to_client(creator, message)
+            return
+        
         new_tournament = Tournament(0, creator, tournament_name, number_of_players)
         new_tournament.id = await sync_to_async(self.db.add_tournament)(new_tournament)
         self.tournaments.append(new_tournament)
@@ -53,6 +60,7 @@ class MatchMaker:
             'action': 'tournament_created',
             'message': f'tournament successfully created. ID: ',
             'tournament_id': new_tournament.id,
+            'tournament_name': new_tournament.name,
         }
         await send_message_to_client(creator, message)
 

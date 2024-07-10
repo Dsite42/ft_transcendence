@@ -24,6 +24,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      MAX_TOURNAMENTS: ${MAX_TOURNAMENTS}
     build: 
       context: .
       dockerfile: Dockerfile.matchmaker
@@ -61,7 +62,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - GAME_HOST=${GAME_HOST}
+      GAME_HOST: ${GAME_HOST}
+      MIN_TOURNAMENT_PLAYERS: ${MIN_TOURNAMENT_PLAYERS}
+      MAX_TOURNAMENT_PLAYERS: ${MAX_TOURNAMENT_PLAYERS}
     env_file:
       - .env
     depends_on:
