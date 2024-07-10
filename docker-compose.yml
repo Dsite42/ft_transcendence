@@ -32,7 +32,7 @@ services:
   game:
     hostname: game
     init: true
-    build: ../../gamev3
+    build: game
     ports:
       - ${PORT_RANGE}:${PORT_RANGE}
     environment:
