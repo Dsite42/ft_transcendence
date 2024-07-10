@@ -19,6 +19,11 @@ services:
     hostname: matchmaker
     init: true
     env_file: .env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     build: 
       context: .
       dockerfile: Dockerfile.matchmaker

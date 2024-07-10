@@ -180,6 +180,7 @@
         {% if user.is_authenticated %}
         <button id="startGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Game' %}</button>
         <button id="startKeyboardGameMM" class="btn btn-dark btn-lg" style="border-radius: 0;">{% trans 'Start Keyboard Game' %}</button>
+        <button id="removeFromWaitingQueues" class="btn btn-danger btn-lg" style="border-radius: 0;">{% trans 'Remove me from Waiting Queues' %}</button>
         <br>
         <br>
         {% else %}
@@ -408,6 +409,45 @@
         });
     }
 </script>
+
+<script>
+    document.getElementById('removeFromWaitingQueues').addEventListener('click', function() {
+        const handleOpen = () => {
+            globalSocket.send(JSON.stringify({ action: 'remove_from_waiting_queues', player_id: "{{ user.user_id }}" }));
+            console.log('Remove from Waiting Lists request sent: { "action": "remove_from_waiting_lists", "player_id": "{{ user.user_id }}" }');
+        };
+
+        if (globalSocket === null || globalSocket.readyState !== WebSocket.OPEN) {
+            globalSocket = new WebSocket('ws://{% env GAME_HOST %}:8765?with_token=' + getCookie('session'));
+            globalSocket.onopen = function(event) {
+                console.log('{% trans "WebSocket is open now." %}');
+                handleOpen();
+            };
+        } else if (globalSocket.readyState === WebSocket.OPEN) {
+            handleOpen();
+        }
+
+        globalSocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('{% trans "WebSocket message received:" %}', data);
+            if (data.action === 'removed_from_waiting_queues') {
+                alert(' {% trans "Removed from the waiting queues." %}');
+            }
+        };
+
+        globalSocket.onclose = function(event) {
+            console.log('{% trans "WebSocket is closed now." %}');
+        };
+    
+        globalSocket.onerror = function(error) {
+            console.error('{% trans "WebSocket error:" %}', error);
+        };
+    });
+</script>
+
+
+
+
 
     <!-- Footer -->
     <footer class="footer text-center mt-auto" style="z-index: 1030; position: relative;">

@@ -367,6 +367,19 @@ class MatchMaker:
                 }
                 for player in tournament.players:
                     await send_message_to_client(player, message)
+    
+    async def remove_from_waiting_queues(self, player_id):
+        if player_id in self.single_games_queue:
+            self.single_games_queue.remove(player_id)
+            print(f"Player {player_id} removed from single game queue.")
+        await self.check_and_delete_player_from_waiting_tournament(player_id)
+
+        message = {
+            'action': 'removed_from_waiting_queues',
+            'message': f'You have been removed from the waiting queues.',
+        }
+        await send_message_to_client(player_id, message)
+        
 
     async def is_client_already_playing(self, player_id):
         is_already_playing = False
@@ -400,7 +413,7 @@ class MatchMaker:
 # MatchmakerService class for RPC to call methods externally from the game_service
 class MatchmakerService:
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters("matchmaker_service_queue"))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
         protocol = JSONRPCProtocol()
 
         transport_game = RabbitMQClientTransport(self.connection, 'game_service')
@@ -460,7 +473,11 @@ async def consume_messages(websocket, client_id):
                 player_id = websocket.user_id
                 tournament_id = data.get('tournament_id')
                 print(f"Joining tournament {tournament_id} for player {player_id}.")
-                await matchmaker.join_tournament(player_id, tournament_id)      
+                await matchmaker.join_tournament(player_id, tournament_id)   
+            elif data.get('action') == 'remove_from_waiting_queues':
+                player_id = websocket.user_id
+                print(f"Player {player_id} remove from waiting queues.")
+                await matchmaker.remove_from_waiting_queues(player_id)  
             elif data.get('action') == 'game_address':
                 print(f"Game address received: {data}")
         except ConnectionClosed:
