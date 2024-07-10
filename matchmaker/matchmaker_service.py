@@ -443,6 +443,7 @@ matchmaker = MatchMaker()
 matchmaker_service = MatchmakerService()
 dispatcher.register_instance(matchmaker_service)
 
+
 # Websocket handler gets called on a new connection
 async def handler(websocket):
     try:

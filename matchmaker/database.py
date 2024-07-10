@@ -7,7 +7,6 @@ from .game_types import Tournament
 from sys import stderr
 import os
 
-
 # Database class for handling database operations via Django database connection
 class Database:
     def __init__(self, engine='django.db.backends.postgresql_psycopg2'):
