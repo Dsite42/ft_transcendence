@@ -18,7 +18,7 @@ class Database:
                 'NAME': name,
                 'USER': 'chris',
                 'PASSWORD': 'chris',
-                'HOST': '127.0.0.1',
+                'HOST': 'web',
                 'PORT': '8000',
                 'APP_LABEL': 'frontapp',
             }

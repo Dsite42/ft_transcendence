@@ -8,6 +8,7 @@ networks:
 services:
   rabbitmq:
     image: 'rabbitmq:latest'
+    hostname: 'rabbitmq'
     ports: 
       - '5672:5672'
       - '15672:15672'
@@ -15,8 +16,12 @@ services:
       - network
     
   matchmaker:
+    hostname: matchmaker
     init: true
-    build: .
+    env_file: .env
+    build: 
+      context: .
+      dockerfile: Dockerfile.matchmaker
     ports:
       - "8765:8765"
     volumes:
@@ -25,6 +30,7 @@ services:
       - network
 
   game:
+    hostname: game
     init: true
     build: ../gamev3
     ports:
@@ -40,14 +46,17 @@ services:
 
   web:
     container_name: web
-    build: .
+    hostname: web
+    build: 
+      context: .
+      dockerfile: Dockerfile.web
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
       - "8000:8000"
     environment:
-      GAME_HOST: ${GAME_HOST}
+      - GAME_HOST=${GAME_HOST}
     env_file:
       - .env
     depends_on: []
