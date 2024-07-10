@@ -415,13 +415,7 @@
         });
     }
 </script>
-{% else %}
-<br>
-<div class="d-flex justify-content-center mt-5">
-    <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
-</div>
-{% endif %}
-
+<!-- Remove From Waitingque -->
 <script>
     document.getElementById('removeFromWaitingQueues').addEventListener('click', function() {
         const handleOpen = () => {
@@ -456,8 +450,12 @@
         };
     });
 </script>
-
-
+{% else %}
+<br>
+<div class="d-flex justify-content-center mt-5">
+    <a href="#login" class="nav-link" style="border-radius: 0; text-decoration: underline;">{% trans 'Login to play' %}</a>
+</div>
+{% endif %}
 
 
 

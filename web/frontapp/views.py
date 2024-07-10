@@ -78,7 +78,10 @@ def login_required(callable):
             user = CustomUser.objects.get(username=data['intra_name'])
         except Exception as e:
             logging.error("Error in login_required: %s", e)
-            return HttpResponseBadRequest('Invalid session')
+            response = HttpResponseRedirect('/')
+            response.delete_cookie('session')
+            return response
+
         if data['2FA_Activated'] and not data['2FA_Passed']:
             return render(request, 'otp_login.html')
         user.last_active = timezone.now()
@@ -105,7 +108,12 @@ def home(request):
     except:
         isAuthenticated = False
     if (isAuthenticated):
-        user = CustomUser.objects.get(username=data['intra_name'])
+        try:
+            user = CustomUser.objects.get(username=data['intra_name'])
+        except:
+            response = HttpResponseRedirect('/')
+            response.delete_cookie('session')
+            return response
         avatar = user.avatar
         friends = user.get_friends()
         pending_friend_requests = user.get_pending_friend_requests()
