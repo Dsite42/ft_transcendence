@@ -61,7 +61,7 @@
         <form id="addFriendForm" method="post" onsubmit="addFriend(event)" action="/send_friend_request/">
             {% csrf_token %}
             <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="{% trans 'Enter friends intra-name' %}" name="friend_username" required>
+                <input type="text" class="form-control" placeholder="{% trans 'Enter friends intra-name' %}" name="friend_username" maxlength="40" required>
                 <button class="btn btn-primary" type="submit">{% trans 'Add Friend' %}</button>
             </div>
         </form>

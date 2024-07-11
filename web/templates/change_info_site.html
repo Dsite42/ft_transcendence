@@ -6,7 +6,7 @@
         {% csrf_token %}
         <div class="form-group">
             <label for="displayName">{% trans "Display Name" %}</label>
-            <input type="text" class="form-control" id="displayName" name="display_name" value="{{ user.display_name }}">
+            <input type="text" class="form-control" id="displayName" name="display_name" value="{{ user.display_name }}" maxlength="40">
         </div>
         <div class="form-group">
             <label for="avatar">{% trans "Avatar" %}</label>
