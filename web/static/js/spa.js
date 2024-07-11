@@ -1,5 +1,7 @@
 var chart;
 document.addEventListener('DOMContentLoaded', function() {
+    // Block the screen for 2FA if activated and not authenticated
+    blockScreenFor2FA();
     document.querySelectorAll('a.nav-link').forEach(function(link) {
         link.addEventListener('click', function(event) {
             event.preventDefault(); // Prevent the default link behavior
@@ -119,34 +121,13 @@ function send_otp_code()
     })
     .then(response => response.text())
     .then(data => {
-        alert(data);
         if (data === 'OTP is valid') {
-            window.location.href = '/';
+            alert(gettext('OTP is valid!'));
+    
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-
-}
-
-function send_otp_code_login()
-{
-    const otp = document.getElementById('otp-input').value;
-        
-    fetch('/login_with_otp/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ otp: otp })
-    })
-    .then(response => response.text())
-    .then(data => {
-        alert(data);
-        if (data === 'OTP is valid') {
-            window.location.href = '/';
+        else
+        {
+            alert(gettext('Invalid OTP!'));
         }
     })
     .catch(error => {
@@ -344,9 +325,146 @@ function drawErrorScreen(error) {
     context.fillText('Error: ' + error, canvas.width / 2, canvas.height / 2);
 }
 
+
 // Set the functions called on game Events
 
 Game.onLoading = drawLoadingScreen;
 Game.onError = drawErrorScreen;
 
 
+
+// Function to block the screen if 2FA is activated and not authenticated
+
+
+
+// Function to decode JWT
+function decodeJWT(session) {
+    try {
+        const data = jwt_decode(session); // Use jwt_decode from the included library
+        return data;
+    } catch (err) {
+        console.error('Failed to decode JWT:', err);
+        return null;
+    }
+}
+    // Function to get a specific cookie value by name
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // Function to send OTP code for login
+    function send_otp_code_login(event) {
+        event.preventDefault(); // Prevent form submission
+
+        const otp = document.getElementById('otp-input').value;
+
+        fetch('/login_with_otp/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ otp: otp })
+        })
+        .then(response => response.text())
+        .then(data => {
+            
+             if (data === 'OTP is valid') {
+                alert(gettext('OTP is valid!'));
+                const overlay = document.getElementById('2fa-overlay');
+                if (overlay) {
+                    overlay.remove();
+            }
+            }
+            else
+            {
+                alert(gettext('Invalid OTP!'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Function to create and display the OTP form
+    function createOtpForm() {
+        // Create form
+        const form = document.createElement('form');
+        form.id = 'otp-form';
+        form.onsubmit = send_otp_code_login;
+
+        // Create form elements
+        const title = document.createElement('h2');
+        title.textContent = gettext('Enter OTP Code');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'otp-input';
+        input.placeholder = gettext('Enter OTP');
+        input.required = true;
+
+        const button = document.createElement('button');
+        button.type = 'submit';
+        button.id = 'otp-submit';
+        button.textContent = gettext('Submit');
+
+        // Append elements to form
+        form.appendChild(title);
+        form.appendChild(input);
+        form.appendChild(button);
+
+        // Style the form
+        form.style.backgroundColor = 'white';
+        form.style.padding = '20px';
+        form.style.borderRadius = '10px';
+        form.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+        form.style.textAlign = 'center';
+
+        // Append form to overlay
+        const overlay = document.getElementById('2fa-overlay');
+        overlay.appendChild(form);
+    }
+
+    // Function to block the screen for 2FA
+    function blockScreenFor2FA() {
+        // Get the session cookie
+        const sessionCookie = getCookie('session');
+        if (!sessionCookie) {
+            return;
+        }
+
+        // Decode the session cookie
+        const sessionData = decodeJWT(sessionCookie);
+        if (!sessionData) {
+            console.error('Failed to decode session cookie');
+            return;
+        }
+
+        // Check if 2FA is activated and not passed
+        const is2FAActivated = sessionData['2FA_Activated'] === true;
+        const is2FAPassed = sessionData['2FA_Passed'] === true;
+
+        if (is2FAActivated && !is2FAPassed) {
+            // Create the overlay
+            const overlay = document.createElement('div');
+            overlay.id = '2fa-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            overlay.style.zIndex = '10000';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+
+            // Append the overlay to the body
+            document.body.appendChild(overlay);
+            
+            createOtpForm();
+        }
+    }

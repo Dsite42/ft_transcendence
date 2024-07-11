@@ -267,7 +267,7 @@ msgstr "Vous êtes déjà inscrit à ce tournoi : "
 
 #: web/templates/base.html:449
 msgid "Removed from the waiting queues."
-msgstr "Retiré des files d'attente."
+msgstr "Retiré des files d//'attente."
 
 #: web/templates/base.html:465
 msgid "Login to play"
@@ -296,7 +296,7 @@ msgstr "Avatar actuel"
 
 #: web/templates/change_info_site.html:16
 msgid "Enter new avatar URL"
-msgstr "Entrez la nouvelle URL de l'avatar"
+msgstr "Entrez la nouvelle URL de l//'avatar"
 
 #: web/templates/change_info_site.html:18
 msgid "You can either upload a new avatar or provide a URL."
