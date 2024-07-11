@@ -311,7 +311,7 @@ msgstr "Avatar actuel"
 
 #: web/templates/change_info_site.html:16
 msgid "Enter new avatar URL"
-msgstr "Entrez la nouvelle URL de l//'avatar"
+msgstr "Entrez la nouvelle URL de l'avatar"
 
 #: web/templates/change_info_site.html:18
 msgid "You can either upload a new avatar or provide a URL."
