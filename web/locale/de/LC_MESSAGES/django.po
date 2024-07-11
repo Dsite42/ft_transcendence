@@ -107,6 +107,10 @@ msgstr "Freund hinzufügen"
 msgid "Online"
 msgstr "Online"
 
+#: web/templates/base.html:89
+msgid "Remove"
+msgstr "Entfernen"
+
 #: web/templates/base.html:84
 msgid "Last online:"
 msgstr "Zuletzt online:"

@@ -38,6 +38,10 @@ msgstr "Erreur interne du serveur"
 msgid "Username is not provided"
 msgstr "Nom d'utilisateur non fourni"
 
+#: web/templates/base.html:89
+msgid "Remove"
+msgstr "Supprimer"
+
 #: web/frontapp/views.py:329
 msgid "No TOTP Device associated with this user"
 msgstr "Aucun TOTP Device associé à cet utilisateur"
