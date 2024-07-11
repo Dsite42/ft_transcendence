@@ -4,6 +4,7 @@ from .notifier import FileNotifier, NullNotifier
 from sys import stderr
 from asyncio import run
 from argparse import ArgumentParser, Namespace
+from ssl import SSLContext, PROTOCOL_TLS_SERVER
 
 def process_arguments() -> Namespace:
     parser = ArgumentParser(description='Serves a game session')
@@ -37,6 +38,16 @@ def process_arguments() -> Namespace:
         type=int, default=-1,
         help="file descriptor"
     )
+    parser.add_argument(
+        '-c', '--ssl-cert',
+        type=str, default=None,
+        help="the server's SSL certificate file"
+    )
+    parser.add_argument(
+        '-k', '--ssl-key',
+        type=str, default=None,
+        help="the server's SSL private key file"
+    )
     arguments = parser.parse_args()
     # Check if the given port is valid
     if arguments.port < 0 or arguments.port > 65535:
@@ -50,6 +61,12 @@ def process_arguments() -> Namespace:
     # Check if the given notify file descriptor is valid
     if arguments.notify_fd < -1:
         parser.error('bad notify file descriptor')
+    # If SSL is desired, check if both the certificate and private key are provided
+    if arguments.ssl_cert != None or arguments.ssl_key != None:
+        if arguments.ssl_cert == None:
+            parser.error('missing SSL certificate')
+        if arguments.ssl_key == None:
+            parser.error('missing SSL private key')
     return arguments
 
 if __name__ == '__main__':
@@ -59,13 +76,19 @@ if __name__ == '__main__':
             notifier = FileNotifier.from_raw_fd(arguments.notify_fd)
         else:
             notifier = NullNotifier()
+        if arguments.ssl_cert != None and arguments.ssl_key != None:
+            ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
+            ssl_context.load_cert_chain(arguments.ssl_cert, arguments.ssl_key)
+        else:
+            ssl_context = None
         server = Server(
             arguments.host,
             arguments.port,
             arguments.jwt_secret,
             arguments.tick_rate,
             arguments.player_ids,
-            notifier
+            notifier,
+            ssl_context
         )
         run(server.main_loop())
     except Exception as exception:

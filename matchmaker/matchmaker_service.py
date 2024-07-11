@@ -12,6 +12,7 @@ from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 from tinyrpc.dispatch import public, RPCDispatcher
 from tinyrpc.transports.rabbitmq import RabbitMQClientTransport
 from tinyrpc import RPCClient
+from ssl import SSLContext, PROTOCOL_TLS_SERVER
 
 import websockets
 from websockets.exceptions import ConnectionClosed
@@ -445,7 +446,9 @@ class MatchmakerService:
 
 # Global variables
 connected_clients = {}
-time.sleep(10)
+
+ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
+ssl_context.load_cert_chain('/certificates/ssl.crt', '/certificates/ssl.key')
 
 dispatcher = RPCDispatcher()
 matchmaker = MatchMaker()
@@ -517,8 +520,8 @@ async def send_message_to_client(client_id, message):
 # Start the websocket server
 async def start_websocket_server():
 
-    async with websockets.serve(handler, '0.0.0.0', 8765, create_protocol=WebsocketClient):
-        print("Matchmaker WebSocket server started on ws://0.0.0.0:8765")
+    async with websockets.serve(handler, '0.0.0.0', 8765, create_protocol=WebsocketClient, ssl=ssl_context):
+        print("Matchmaker WebSocket server started on wss://0.0.0.0:8765")
 
         await asyncio.Future()
 

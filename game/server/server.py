@@ -4,12 +4,13 @@ from .game import GameState, GamePhase, PaddleState
 from .protocol import build_game_update, GAME_UPDATE_ALL
 
 from asyncio import sleep
+from ssl import SSLContext
 from functools import partial
-from typing import Set, List, Union
+from typing import Optional, Set, List, Union
 from websockets import WebSocketException, broadcast, serve
 
 class Server:
-    def __init__(self, host: str, port: int, jwt_secret: str, tick_rate: float, player_ids: List[int], notifier: AbstractNotifier) -> None:
+    def __init__(self, host: str, port: int, jwt_secret: str, tick_rate: float, player_ids: List[int], notifier: AbstractNotifier, ssl_context: Optional[SSLContext]) -> None:
         self.host = host
         self.port = port
         self.jwt_secret = jwt_secret
@@ -20,9 +21,10 @@ class Server:
         self.notifier = notifier
         self.game_state = GameState()
         self.clients: Set[Client] = set()
+        self.ssl_context = ssl_context
 
     async def main_loop(self) -> None:
-        async with serve(self.handle_client, self.host, self.port, create_protocol=partial(Client, self)):
+        async with serve(self.handle_client, self.host, self.port, create_protocol=partial(Client, self), ssl=self.ssl_context):
             self.notifier.notify_ready()
             # Simulate a game tick, broadcast a partial update and wait for the next tick
             while self.game_state.phase != GamePhase.Finished:

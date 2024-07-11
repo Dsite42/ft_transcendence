@@ -27,6 +27,16 @@ def parse_arguments() -> Namespace:
         type=str, required=True,
         help="the secret used to validate a JWT token's authenticity"
     )
+    parser.add_argument(
+        '-c', '--ssl-cert',
+        type=str, default=None,
+        help="the server's SSL certificate file"
+    )
+    parser.add_argument(
+        '-k', '--ssl-key',
+        type=str, default=None,
+        help="the server's SSL private key file"
+    )
     arguments = parser.parse_args()
     # Convert the port range into a range object
     try:
@@ -40,16 +50,25 @@ def parse_arguments() -> Namespace:
             raise ValueError()
     except ValueError:
         parser.error('invalid port range')
+    # If SSL is desired, check if both the certificate and private key are provided
+    if arguments.ssl_cert != None or arguments.ssl_key != None:
+        if arguments.ssl_cert == None:
+            parser.error('missing SSL certificate')
+        if arguments.ssl_key == None:
+            parser.error('missing SSL private key')
     return arguments
 
 if __name__ == '__main__':
     arguments = parse_arguments()
+
     try:
         service = GameService(
             arguments.rpc_host,
             arguments.game_host,
             arguments.port_range,
-            arguments.jwt_secret
+            arguments.jwt_secret,
+            arguments.ssl_cert,
+            arguments.ssl_key
         )
         run(service.main_loop())
     except Exception as exception:

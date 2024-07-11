@@ -7,13 +7,15 @@ from typing import Optional
 from tinyrpc.dispatch import public
 
 class GameService:
-    def __init__(self, rpc_host: str, game_host: str, ports: range, jwt_secret: str) -> None:
+    def __init__(self, rpc_host: str, game_host: str, ports: range, jwt_secret: str, ssl_cert: Optional[str], ssl_key: Optional[str]) -> None:
         self.rpc_host = rpc_host
         self.game_host = game_host
         self.ports = set(ports)
         self.jwt_secret = jwt_secret
         self.servers = set()
         self.transmitter = ResultTransmitter(rpc_host)
+        self.ssl_cert = ssl_cert
+        self.ssl_key = ssl_key
 
     @public
     async def create_game(self, game_id: int, player_a_id: int, player_b_id: int) -> Optional[dict]:
@@ -22,7 +24,7 @@ class GameService:
             return None
         port = self.ports.pop()
         try:
-            settings = GameServerSettings(port, self.jwt_secret, player_a_id, player_b_id)
+            settings = GameServerSettings(port, self.jwt_secret, player_a_id, player_b_id, self.ssl_cert, self.ssl_key)
             server = GameServer(game_id, settings, self.on_server_finished, self.on_server_quit)
             await server.ready_future
             self.servers.add(server)

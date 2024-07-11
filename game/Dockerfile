@@ -1,6 +1,6 @@
 FROM alpine:3.19.2
 RUN apk add python3 py3-pip
-ENTRYPOINT sh -c "source .venv/bin/activate && exec python3 -m service -r ${RPC_HOST} -g ${GAME_HOST} -p ${PORT_RANGE} -j ${JWT_SECRET}"
+ENTRYPOINT sh -c "source .venv/bin/activate && exec python3 -m service -r ${RPC_HOST} -g ${GAME_HOST} -p ${PORT_RANGE} -j ${JWT_SECRET} -c /certificates/ssl.crt -k /certificates/ssl.key"
 
 # Install Python dependencies
 COPY --chown=root:root requirements.txt /opt/game/

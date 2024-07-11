@@ -1,7 +1,7 @@
 from struct import unpack
-from typing import Callable
 from subprocess import Popen
 from dataclasses import dataclass
+from typing import Callable, Optional
 from asyncio import Future, get_event_loop
 from os import close, pipe2, read, O_NONBLOCK
 
@@ -17,9 +17,15 @@ class GameServerSettings:
     jwt_secret: str
     player_a_id: int
     player_b_id: int
+    ssl_cert: Optional[str]
+    ssl_key: Optional[str]
 
 class GameServerProcess:
     def __init__(self, settings: GameServerSettings, on_readable: Callable[[], None]) -> None:
+        if settings.ssl_cert != None and settings.ssl_key != None:
+            ssl_arguments = ['-c', settings.ssl_cert, '-k', settings.ssl_key]
+        else:
+            ssl_arguments = []
         read_end, write_end = pipe2(O_NONBLOCK)
         try:
             self.fileno = read_end
@@ -29,7 +35,7 @@ class GameServerProcess:
                  '-p', str(settings.port),
                  '-j', settings.jwt_secret,
                  '-I', str(settings.player_a_id), str(settings.player_b_id),
-                 '-n', str(write_end)],
+                 '-n', str(write_end)] + ssl_arguments,
                 pass_fds=(write_end, )
             )
         finally:
