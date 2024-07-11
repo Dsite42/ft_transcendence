@@ -86,7 +86,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx.template:/etc/nginx/templates/default.conf.template
       - ./web/static:/app/static
       - certificates:/certificates
     depends_on:
@@ -94,6 +94,10 @@ services:
         condition: service_started
       web:
         condition: service_started
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST}
+    env_file:
+      - .env
   postgres:
     container_name: postgres
     hostname: postgres
