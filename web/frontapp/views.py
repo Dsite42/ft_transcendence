@@ -19,6 +19,8 @@ import os
 from django.contrib import messages
 from typing import Callable
 from PIL import Image
+from cryptography.fernet import Fernet
+from base64 import b64decode, b64encode
 
 @register.tag(name='env')
 def env(parser, token):
@@ -47,6 +49,11 @@ import logging
 from frontapp.models import Game, Tournament
 class APIError(Exception):
     pass
+
+
+# Encryption setup
+fernet = Fernet(os.environ.get('ENCRYPTION_KEY'))
+
 
 # JSON POST request Wrapper
 def json_request(callable: Callable[[HttpRequest, dict], dict]):
@@ -211,13 +218,12 @@ def auth(request: HttpRequest) -> HttpResponse:
                 existing_user.display_name = existing_user.username
                 existing_user.save()
         session_token = {
-        'access_token': oauth_response['access_token'],
+        'access_token': b64encode(fernet.encrypt(oauth_response['access_token'].encode('utf-8'))).decode('utf-8'),
         '2FA_Activated': False,
         '2FA_Passed': False,
         'intra_name': user_info['login'],
         'user_id': CustomUser.objects.get(username=user_info['login']).id
     }
-            
 
         if user.two_factor_auth_enabled:
             response = HttpResponseRedirect('/')
@@ -236,7 +242,7 @@ def auth(request: HttpRequest) -> HttpResponse:
 @login_required
 def get_user_info(request: HttpRequest, data: dict) -> HttpResponse:
     response = requests.get('https://api.intra.42.fr/v2/me', headers={
-        'Authorization': 'Bearer ' + data['access_token']
+        'Authorization': 'Bearer ' + fernet.decrypt(b64decode(data['access_token'])).decode('utf-8')
     })
     return JsonResponse(response.json(), safe=False)
 
@@ -329,7 +335,7 @@ def login_with_otp(request):
     encoded_session = request.COOKIES['session']
     session = jwt.decode(encoded_session, os.environ['JWT_SECRET'], algorithms=['HS256'])
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
-        'Authorization': 'Bearer ' + session['access_token']
+        'Authorization': 'Bearer ' + fernet.decrypt(b64decode(session['access_token'])).decode('utf-8')
     }).json()
 
     if not user_info:
