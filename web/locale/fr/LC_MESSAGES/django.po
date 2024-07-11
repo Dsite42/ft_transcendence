@@ -283,7 +283,7 @@ msgstr "Vous êtes déjà inscrit à ce tournoi : "
 
 #: web/templates/base.html:469
 msgid "Removed from the waiting queues."
-msgstr "Retiré des files d//'attente."
+msgstr "Retiré des files d\\'attente."
 
 #: web/templates/base.html:485
 msgid "Login to play"
