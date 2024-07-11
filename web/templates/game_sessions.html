@@ -31,8 +31,6 @@
 <script type="text/javascript">
     var gameSessionData = JSON.parse('{{ game_sessions|escapejs }}');
     var currentUser = '{{ current_user|escapejs  }}';
-    console.log('html_currentUser:', currentUser);
-
     populateTable(gameSessionData, '#game_sessions-table');
     chartData = prepareDataForGameSessionChart(gameSessionData);
     createGameSessionChart(chartData);
