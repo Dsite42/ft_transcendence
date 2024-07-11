@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-11 16:49+0200\n"
+"POT-Creation-Date: 2024-07-11 22:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: web/frontapp/views.py:62 web/frontapp/views.py:403
+#: web/frontapp/views.py:62 web/frontapp/views.py:424
 msgid "Method not allowed"
 msgstr "Methode nicht erlaubt"
 
@@ -34,247 +34,249 @@ msgstr "Fehlerhaftes JSON"
 msgid "Internal server error"
 msgstr "Interner Serverfehler"
 
-#: web/frontapp/views.py:240 web/frontapp/views.py:293
+#: web/frontapp/views.py:261 web/frontapp/views.py:314
 msgid "Username is not provided"
 msgstr "Benutzername nicht angegeben"
 
-#: web/frontapp/views.py:308
+#: web/frontapp/views.py:329
 msgid "No TOTP Device associated with this user"
 msgstr "Kein TOTP Device mit diesem Nutzer verbunden"
 
-#: web/frontapp/views.py:313 web/frontapp/views.py:357
+#: web/frontapp/views.py:334 web/frontapp/views.py:378
 msgid "OTP is valid"
 msgstr "OTP ist gültig"
 
-#: web/frontapp/views.py:316 web/frontapp/views.py:363
+#: web/frontapp/views.py:337 web/frontapp/views.py:384
 msgid "OTP is invalid"
 msgstr "OTP ist ungültig"
 
-#: web/frontapp/views.py:328
+#: web/frontapp/views.py:349
 msgid "All OTP devices have been removed."
 msgstr "Alle OTP-Geräte wurden entfernt."
 
-#: web/frontapp/views.py:330
+#: web/frontapp/views.py:351
 msgid "User {} does not exist."
 msgstr "Benutzer {} existiert nicht."
 
-#: web/frontapp/views.py:382
+#: web/frontapp/views.py:403
 msgid "Display name is already in use."
 msgstr "Anzeigename ist bereits vergeben."
 
-#: web/frontapp/views.py:385
+#: web/frontapp/views.py:406
 msgid "Display name is someones intra name."
 msgstr "Anzeigename ist jemandes Intraname."
 
-#: web/frontapp/views.py:391 web/frontapp/views.py:397
+#: web/frontapp/views.py:412 web/frontapp/views.py:418
 msgid "File is not an image."
 msgstr "Datei ist kein Bild."
 
-#: web/frontapp/views.py:417 web/frontapp/views.py:452
+#: web/frontapp/views.py:448 web/frontapp/views.py:484
 msgid "User does not exist"
 msgstr "Benutzer existiert nicht"
 
-#: web/frontapp/views.py:422
+#: web/frontapp/views.py:453
 msgid "Could not add friend"
 msgstr "Konnte Freund nicht hinzufügen"
 
-#: web/frontapp/views.py:424 web/frontapp/views.py:439
-#: web/frontapp/views.py:461
+#: web/frontapp/views.py:455 web/frontapp/views.py:472
+#: web/frontapp/views.py:493
 msgid "Invalid request method"
 msgstr "Ungültige Anfragemethode"
 
-#: web/frontapp/views.py:437
+#: web/frontapp/views.py:470
 msgid "Could not accept friend request"
 msgstr "Konnte Freundschaftsanfrage nicht annehmen"
 
-#: web/frontapp/views.py:459
+#: web/frontapp/views.py:491
 msgid "Could not decline friend request"
 msgstr "Konnte Freundschaftsanfrage nicht ablehnen"
 
-#: web/templates/base.html:57 web/templates/base.html:108
+#: web/templates/base.html:64 web/templates/base.html:117
 msgid "Friends"
 msgstr "Freunde"
 
-#: web/templates/base.html:64
+#: web/templates/base.html:71
 msgid "Enter friends intra-name"
 msgstr "Intraname des Freundes"
 
-#: web/templates/base.html:65
+#: web/templates/base.html:72
 msgid "Add Friend"
 msgstr "Freund hinzufügen"
 
-#: web/templates/base.html:75
+#: web/templates/base.html:82
 msgid "Online"
 msgstr "Online"
 
-#: web/templates/base.html:77
+#: web/templates/base.html:84
 msgid "Last online:"
 msgstr "Zuletzt online:"
 
-#: web/templates/base.html:86
+#: web/templates/base.html:93
 msgid "No friends yet:"
 msgstr "Noch keine Freunde:"
 
-#: web/templates/base.html:90
+#: web/templates/base.html:97
 msgid "Pending Friend Requests"
 msgstr "Ausstehende Freundschaftsanfragen"
 
-#: web/templates/base.html:94
+#: web/templates/base.html:102
 msgid "(Pending)"
 msgstr "(Ausstehend)"
 
-#: web/templates/base.html:125 web/templates/login.html:9
+#: web/templates/base.html:135 web/templates/login.html:9
 msgid "Login"
 msgstr "Anmelden"
 
-#: web/templates/base.html:129 web/templates/tournament_list.html:4
-#: web/templates/tournament_list.html:8
+#: web/templates/base.html:139 web/templates/tournament_list.html:3
+#: web/templates/tournament_list.html:7
 msgid "Tournaments"
 msgstr "Turniere"
 
-#: web/templates/base.html:133 web/templates/game_sessions.html:4
+#: web/templates/base.html:143 web/templates/game_sessions.html:4
 msgid "Game Sessions"
 msgstr "Spiel Sessions"
 
-#: web/templates/base.html:136
+#: web/templates/base.html:146
 msgid "Rank List"
 msgstr "Rangliste"
 
-#: web/templates/base.html:164
+#: web/templates/base.html:174
 msgid "Change language"
 msgstr "Sprache ändern"
 
-#: web/templates/base.html:174
+#: web/templates/base.html:184
 msgid "Welcome to the Pong Game!"
 msgstr "Willkommen beim Pong-Spiel!"
 
-#: web/templates/base.html:175
-msgid "Use the W and S or the Arrow keys to move, for a keyboard game the other player uses O and L keys."
-msgstr "Verwenden Sie die Tasten W und S oder die Pfeiltasten, um sich zu bewegen. Für ein Tastaturspiel verwendet der andere Spieler die Tasten O und L."
+#: web/templates/base.html:185
+msgid ""
+"Use the W and S or the Arrow keys to move, for a keyboard game the other "
+"player uses O and L keys."
+msgstr ""
+"Verwenden Sie die Tasten W und S oder die Pfeiltasten, um sich zu bewegen. "
+"Für ein Tastaturspiel verwendet der andere Spieler die Tasten O und L."
 
-#: web/templates/base.html:191
+#: web/templates/base.html:201
 msgid "Start Game"
 msgstr "Spiel starten"
 
-#: web/templates/base.html:192
+#: web/templates/base.html:202
 msgid "Start Keyboard Game"
 msgstr "Tastaturspiel starten"
 
-#: web/templates/base.html:193
+#: web/templates/base.html:203
 msgid "Remove me from Waiting Queues"
 msgstr "Entferne mich aus den Warteschlangen"
 
-#: web/templates/base.html:201 web/templates/base.html:222
-#: web/templates/base.html:226 web/templates/base.html:229
+#: web/templates/base.html:214 web/templates/base.html:235
+#: web/templates/base.html:239 web/templates/base.html:242
 msgid "Single Game"
 msgstr "Einzelspiel"
 
-#: web/templates/base.html:201
+#: web/templates/base.html:214
 #| msgid "Waiting for second player. Don\\'t leave this page!"
 msgid "Waiting for second player. Don\\'t leave this page!"
 msgstr "Warten auf den zweiten Spieler. Diese Seite nicht verlassen!"
 
-#: web/templates/base.html:211 web/templates/base.html:258
-#: web/templates/base.html:327 web/templates/base.html:373
-#: web/templates/base.html:438
+#: web/templates/base.html:224 web/templates/base.html:275
+#: web/templates/base.html:344 web/templates/base.html:393
+#: web/templates/base.html:458
 msgid "WebSocket is open now."
 msgstr "WebSocket ist jetzt geöffnet."
 
-#: web/templates/base.html:220 web/templates/base.html:267
-#: web/templates/base.html:336 web/templates/base.html:382
-#: web/templates/base.html:447
+#: web/templates/base.html:233 web/templates/base.html:284
+#: web/templates/base.html:353 web/templates/base.html:402
+#: web/templates/base.html:467
 msgid "WebSocket message received:"
 msgstr "WebSocket-Nachricht empfangen:"
 
-#: web/templates/base.html:222 web/templates/base.html:269
+#: web/templates/base.html:235 web/templates/base.html:286
 msgid "Game started. Have fun!"
 msgstr "Spiel gestartet. Viel Spaß!"
 
-#: web/templates/base.html:226
+#: web/templates/base.html:239
 msgid "Game ended."
 msgstr "Spiel beendet."
 
-#: web/templates/base.html:226
+#: web/templates/base.html:239
 msgid "won and earned"
 msgstr "hat gewonnen und verdient"
 
-#: web/templates/base.html:226
+#: web/templates/base.html:239
 msgid "points."
 msgstr "Punkte."
 
-#: web/templates/base.html:229
+#: web/templates/base.html:242
 msgid "Game aborted!"
 msgstr "Spiel abgebrochen!"
 
-#: web/templates/base.html:232 web/templates/base.html:273
-#: web/templates/base.html:414
-#| msgid "You are already in this tournament: "
+#: web/templates/base.html:245 web/templates/base.html:290
+#: web/templates/base.html:434
 msgid "You are already playing a game."
 msgstr "Sie spielen bereits ein Spiel."
 
-#: web/templates/base.html:237 web/templates/base.html:278
-#: web/templates/base.html:351 web/templates/base.html:419
-#: web/templates/base.html:454
+#: web/templates/base.html:250 web/templates/base.html:295
+#: web/templates/base.html:368 web/templates/base.html:439
+#: web/templates/base.html:474
 msgid "WebSocket is closed now."
 msgstr "WebSocket ist jetzt geschlossen."
 
-#: web/templates/base.html:241 web/templates/base.html:282
-#: web/templates/base.html:355 web/templates/base.html:422
-#: web/templates/base.html:458
+#: web/templates/base.html:254 web/templates/base.html:299
+#: web/templates/base.html:372 web/templates/base.html:442
+#: web/templates/base.html:478
 msgid "WebSocket error:"
 msgstr "WebSocket-Fehler:"
 
-#: web/templates/base.html:248 web/templates/base.html:269
+#: web/templates/base.html:265 web/templates/base.html:286
 msgid "Keyboard Game"
 msgstr "Tastaturspiel starten"
 
-#: web/templates/base.html:293
+#: web/templates/base.html:310
 msgid "Tournament Name"
 msgstr "Turniername"
 
-#: web/templates/base.html:297
+#: web/templates/base.html:314
 msgid "Number of Players"
 msgstr "Anzahl der Spieler"
 
-#: web/templates/base.html:301
+#: web/templates/base.html:318
 msgid "Create a new Tournament"
 msgstr "Neues Turnier erstellen"
 
-#: web/templates/base.html:341
+#: web/templates/base.html:358
 msgid "Tournament created: "
 msgstr "Turnier erstellt:"
 
-#: web/templates/base.html:341 web/templates/base.html:387
-#: web/templates/base.html:391 web/templates/base.html:395
+#: web/templates/base.html:358 web/templates/base.html:407
+#: web/templates/base.html:411 web/templates/base.html:415
 msgid "Name: "
 msgstr "Name: "
 
-#: web/templates/base.html:346
+#: web/templates/base.html:363
 msgid "Max amount of tournaments reached."
 msgstr "Maximale Anzahl von Turnieren erreicht."
 
-#: web/templates/base.html:387
+#: web/templates/base.html:407
 msgid "Tournament not found or not longer available: "
 msgstr "Turnier nicht gefunden oder nicht mehr verfügbar: "
 
-#: web/templates/base.html:391
+#: web/templates/base.html:411
 msgid "Tournament is full: "
 msgstr "Turnier ist voll: "
 
-#: web/templates/base.html:395
+#: web/templates/base.html:415
 msgid "You are already in this tournament: "
 msgstr "Sie sind bereits in diesem Turnier: "
 
-#: web/templates/base.html:449
+#: web/templates/base.html:469
 msgid "Removed from the waiting queues."
 msgstr "Aus den Warteschlangen entfernt."
 
-#: web/templates/base.html:465
+#: web/templates/base.html:485
 msgid "Login to play"
 msgstr "Zum Spielen einloggen"
 
-#: web/templates/base.html:473
-#| msgid "2024 Transcendence. All Rights Reserved."
+#: web/templates/base.html:493
 msgid "2024 Pong und Pilsner. All Rights Reserved."
 msgstr "2024 Pong und Pilsner. Alle Rechte vorbehalten."
 
@@ -345,11 +347,11 @@ msgstr "OTP eingeben"
 msgid "Show only my Game Sessions"
 msgstr "Zeige nur meine Spielsitzungen"
 
-#: web/templates/game_sessions.html:13 web/templates/tournament_list.html:16
+#: web/templates/game_sessions.html:13 web/templates/tournament_list.html:15
 msgid "ID"
 msgstr "ID"
 
-#: web/templates/game_sessions.html:14 web/templates/tournament_list.html:21
+#: web/templates/game_sessions.html:14 web/templates/tournament_list.html:20
 msgid "Date"
 msgstr "Datum"
 
@@ -401,43 +403,43 @@ msgstr "Aktuelles OTP-Gerät entfernen"
 msgid "Change Profile Info"
 msgstr "Profilinformationen ändern"
 
-#: web/templates/rank_list.html:4
+#: web/templates/rank_list.html:5
 msgid "Player Ranking"
 msgstr "Spieler-Rangliste"
 
-#: web/templates/rank_list.html:12 web/templates/tournament_list.html:17
+#: web/templates/rank_list.html:13 web/templates/tournament_list.html:16
 msgid "Name"
 msgstr "Name"
 
-#: web/templates/rank_list.html:13
+#: web/templates/rank_list.html:14
 msgid "Score"
 msgstr "Punktzahl"
 
-#: web/templates/rank_list.html:14
+#: web/templates/rank_list.html:15
 msgid "Wins"
 msgstr "Siege"
 
-#: web/templates/rank_list.html:15
+#: web/templates/rank_list.html:16
 msgid "Losses"
 msgstr "Niederlagen"
 
-#: web/templates/rank_list.html:16
+#: web/templates/rank_list.html:17
 msgid "Games Played"
 msgstr "Gespielte Spiele"
 
-#: web/templates/tournament_list.html:5
+#: web/templates/tournament_list.html:4
 msgid "Join our exciting tournaments!"
 msgstr "Nehmen Sie an unseren spannenden Turnieren teil!"
 
-#: web/templates/tournament_list.html:18
+#: web/templates/tournament_list.html:17
 msgid "Free slots"
 msgstr "Freie Plätze"
 
-#: web/templates/tournament_list.html:19
+#: web/templates/tournament_list.html:18
 msgid "Number of players"
 msgstr "Anzahl der Spieler"
 
-#: web/templates/tournament_list.html:20
+#: web/templates/tournament_list.html:19
 msgid "Status"
 msgstr "Status"
 

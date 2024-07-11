@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-10 18:36+0200\n"
+"POT-Creation-Date: 2024-07-11 23:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,116 +18,171 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: static/js/dashboard.js:35 static/js/dashboard.js:39
+#: web/static/js/dashboard.js:38 web/static/js/dashboard.js:42
 msgid "Wins"
 msgstr "Siege"
 
-#: static/js/dashboard.js:35
+#: web/static/js/dashboard.js:38
 msgid "Losses"
 msgstr "Niederlagen"
 
-#: static/js/dashboard.js:129
+#: web/static/js/dashboard.js:132
 msgid "Amount of matches over time"
 msgstr "Anzahl der Spiele im Laufe der Zeit"
 
-#: static/js/spa.js:201 staticfiles/js/spa.js:201
+#: web/static/js/spa.js:125 web/static/js/spa.js:432
+msgid "OTP is valid!"
+msgstr "OTP ist gültig!"
+
+#: web/static/js/spa.js:130 web/static/js/spa.js:440
+msgid "Invalid OTP!"
+msgstr "OTP ist ungültig!"
+
+#: web/static/js/spa.js:177
 msgid ""
 "Info changed successfully, refresh site for avatar changes to take effect!"
 msgstr ""
 "Informationen erfolgreich geändert, aktualisieren Sie die Seite, damit die "
 "Änderungen am Avatar wirksam werden!"
 
-#: static/js/spa.js:203 staticfiles/js/spa.js:203
+#: web/static/js/spa.js:179
 msgid "Error changing info! : "
 msgstr "Fehler beim Ändern der Informationen! : "
 
-#: static/js/spa.js:226 staticfiles/js/spa.js:226
+#: web/static/js/spa.js:206
+msgid "Friends"
+msgstr "Freunde"
+
+#: web/static/js/spa.js:212
+msgid "No friends yet:"
+msgstr "Noch keine Freunde:"
+
+#: web/static/js/spa.js:218
+msgid "Last online:"
+msgstr "Zuletzt online:"
+
+#: web/static/js/spa.js:219
+msgid "Online"
+msgstr "Online"
+
+#: web/static/js/spa.js:225
+msgid "Remove"
+msgstr "Entfernen"
+
+#: web/static/js/spa.js:233
+msgid "Pending Friend Requests"
+msgstr "Ausstehende Freundschaftsanfragen"
+
+#: web/static/js/spa.js:237
+msgid "(Pending)"
+msgstr "(Ausstehend)"
+
+#: web/static/js/spa.js:239
+msgid "Accept"
+msgstr "Akzeptieren"
+
+#: web/static/js/spa.js:242
+msgid "Decline"
+msgstr "Ablehnen"
+
+#: web/static/js/spa.js:270
 msgid "Friend request sent successfully!"
 msgstr "Freundschaftsanfrage erfolgreich gesendet!"
 
-#: static/js/spa.js:228 staticfiles/js/spa.js:228
+#: web/static/js/spa.js:272
 msgid "Error sending friend request: "
 msgstr "Fehler beim Senden der Freundschaftsanfrage: "
 
-#: static/js/spa.js:233 staticfiles/js/spa.js:233
+#: web/static/js/spa.js:277
 msgid "An error occurred while sending the friend request."
 msgstr "Beim Senden der Freundschaftsanfrage ist ein Fehler aufgetreten."
 
-#: static/js/spa.js:249 staticfiles/js/spa.js:249
+#: web/static/js/spa.js:293
 msgid "Friend request accepted successfully!"
 msgstr "Freundschaftsanfrage erfolgreich angenommen!"
 
-#: static/js/spa.js:267 staticfiles/js/spa.js:267
+#: web/static/js/spa.js:311
 msgid "Friend request declined successfully!"
 msgstr "Freundschaftsanfrage erfolgreich abgelehnt!"
 
-#: static/js/spa.js:285 staticfiles/js/spa.js:285
+#: web/static/js/spa.js:329
 msgid "Friend removed successfully!"
 msgstr "Freund erfolgreich entfernt!"
 
-#: static/js/spa.js:302 staticfiles/js/spa.js:302
-msgid ""
-"You have a pending friend requests, refresh the site in order to see it!"
-msgstr ""
-"Sie haben ausstehende Freundschaftsanfragen, aktualisieren Sie die Seite, um "
-"sie zu sehen!"
+#: web/static/js/spa.js:457
+msgid "Enter OTP Code"
+msgstr "OTP-Code eingeben"
 
-#: static/js/tournament.js:2
+#: web/static/js/spa.js:462
+msgid "Enter OTP"
+msgstr "OTP eingeben"
+
+#: web/static/js/spa.js:468
+msgid "Submit"
+msgstr "Absenden"
+
+#: web/static/js/tournament.js:2
 msgid "Updating page with tournament data:"
 msgstr "Seite wird mit Turnierdaten aktualisiert:"
 
-#: static/js/tournament.js:5
+#: web/static/js/tournament.js:5
 msgid "Matches:"
 msgstr "Spiele:"
 
-#: static/js/tournament.js:10
+#: web/static/js/tournament.js:10
 msgid "Players:"
 msgstr "Spieler:"
 
-#: static/js/tournament.js:10
+#: web/static/js/tournament.js:10
 msgid "vs"
 msgstr "gegen"
 
-#: static/js/tournament.js:11 static/js/tournament.js:30
+#: web/static/js/tournament.js:11 web/static/js/tournament.js:30
 msgid "Status:"
 msgstr "Status:"
 
-#: static/js/tournament.js:12
+#: web/static/js/tournament.js:12
 msgid "Winner:"
 msgstr "Gewinner:"
 
-#: static/js/tournament.js:12
+#: web/static/js/tournament.js:12
 msgid "N/A"
 msgstr "k.A."
 
-#: static/js/tournament.js:22
+#: web/static/js/tournament.js:22
 msgid "And the Tournament winner is:"
 msgstr "Und der Turniersieger ist:"
 
-#: static/js/tournament.js:22
+#: web/static/js/tournament.js:22
 msgid "Congratulations!"
 msgstr "Herzlichen Glückwunsch!"
 
-#: static/js/tournament.js:26
+#: web/static/js/tournament.js:26
 msgid "Welcome to Tournament:"
 msgstr "Willkommen zum Turnier:"
 
-#: static/js/tournament.js:27
+#: web/static/js/tournament.js:27
 msgid "Creator:"
 msgstr "Ersteller:"
 
-#: static/js/tournament.js:28
+#: web/static/js/tournament.js:28
 msgid "Number of Players joined:"
 msgstr "Anzahl der beigetretenen Spieler:"
 
-#: static/js/tournament.js:29
+#: web/static/js/tournament.js:29
 msgid "Players joined:"
 msgstr "Beigetretene Spieler:"
 
-#: static/js/tournament.js:40
+#: web/static/js/tournament.js:40
 msgid "Tournament has been aborted"
 msgstr "Das Turnier wurde abgebrochen"
 
-#: static/js/tournament.js:41
+#: web/static/js/tournament.js:41
 msgid "A player has left the tournament."
 msgstr "Ein Spieler hat das Turnier verlassen."
+
+#~ msgid ""
+#~ "You have a pending friend requests, refresh the site in order to see it!"
+#~ msgstr ""
+#~ "Sie haben ausstehende Freundschaftsanfragen, aktualisieren Sie die Seite, "
+#~ "um sie zu sehen!"
