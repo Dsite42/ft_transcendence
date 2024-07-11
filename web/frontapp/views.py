@@ -96,6 +96,27 @@ def login_required(callable):
         return callable(request, data, *args, **kwargs)
     return wrapper
 
+#Login Required Wrapper
+def login_required2(callable):
+    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        if (session := request.COOKIES.get('session', None)) == None:
+            return render(request, 'login.html')
+        try:
+            data = jwt.decode(session, os.environ['JWT_SECRET'], algorithms=['HS256'])
+            user = CustomUser.objects.get(username=data['intra_name'])
+        except Exception as e:
+            logging.error("Error in login_required: %s", e)
+            response = HttpResponseRedirect('/')
+            response.delete_cookie('session')
+            return response
+
+        if data['2FA_Activated'] and not data['2FA_Passed']:
+            return render(request, 'otp_login.html')
+        user.last_active = timezone.now()
+        user.save()
+        return callable(request, data, user, *args, **kwargs)
+    return wrapper
+
 #Simple Website Renderer Functions
 
 def home(request):
@@ -405,6 +426,16 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
 
 #Friendship Functions
 
+@login_required2
+def get_friends(request, data, user):
+    friends = []
+    for friend in user.get_friends():
+        friends.append({ 'username': friend.username, 'last_active': friend.last_active })
+    pending_friends = []
+    for friend in user.get_pending_friend_requests():
+        pending_friends.append({ 'username': friend.username })
+    return JsonResponse({'friends': friends, 'pending_friends': pending_friends})
+
 @login_required
 def send_friend_request(request, data):
     if request.method == 'POST':
@@ -426,11 +457,13 @@ def send_friend_request(request, data):
 @login_required
 def accept_friend_request(request, data):
     if request.method == 'POST':
-        user_intra_name = request.POST.get('user_intra_name')
         friend_username = request.POST.get('friend_username')
-        user = CustomUser.objects.get(username=user_intra_name)
-        friend = CustomUser.objects.get(username=friend_username)
-        success = user.accept_friend_request(friend)
+        try:
+            user = CustomUser.objects.get(username=data['intra_name'])
+            friend = CustomUser.objects.get(username=friend_username)
+            success = user.accept_friend_request(friend)
+        except Exception:
+            success = False
         if success:
             return JsonResponse({'status': 'success'})
         else:
@@ -443,10 +476,9 @@ def accept_friend_request(request, data):
 def decline_friend_request(request, data):
     if request.method == 'POST':
         remove = request.POST.get('remove')
-        user_intra_name = request.POST.get('user_intra_name')
         friend_username = request.POST.get('friend_username')
         try:
-            user = CustomUser.objects.get(username=user_intra_name)
+            user = CustomUser.objects.get(username=data['intra_name'])
             friend = CustomUser.objects.get(username=friend_username)
         except CustomUser.DoesNotExist:
             return JsonResponse({'status': 'error', 'error': _('User does not exist')})
