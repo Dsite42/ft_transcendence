@@ -67,7 +67,7 @@ class Server:
         finally:
             self.clients.discard(client)
             # Finish the game prematurely when all players have disconnected
-            if len(self.clients) == 0:
+            if len(self.clients) == 0 and len(self.waiting_ids) == 0:
                 self.game_state.phase = GamePhase.Finished
                 self.game_state.next_update_flags |= GameUpdateFlag.Phase
 
