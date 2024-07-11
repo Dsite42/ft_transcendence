@@ -389,7 +389,7 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
             # Save the uploaded file and get its URL
             if not is_image(avatar_file):
                 return JsonResponse({'success': False, 'reason': _('File is not an image.')})
-            file_name = default_storage.save(os.path.join('static/avatars', user.username, avatar_file.name), avatar_file)
+            file_name = default_storage.save(os.path.join('staticfiles/avatars', user.username, avatar_file.name), avatar_file)
             avatar_url = os.path.join(settings.MEDIA_URL, file_name)
             user.avatar = avatar_url
         elif avatar_url:
