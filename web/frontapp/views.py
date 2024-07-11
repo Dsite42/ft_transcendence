@@ -74,7 +74,7 @@ def login_required(callable):
         if (session := request.COOKIES.get('session', None)) == None:
             return render(request, 'login.html')
         try:
-            data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
+            data = jwt.decode(session, os.environ['JWT_SECRET'], algorithms=['HS256'])
             user = CustomUser.objects.get(username=data['intra_name'])
         except Exception as e:
             logging.error("Error in login_required: %s", e)
@@ -103,7 +103,7 @@ def home(request):
     intra_name = None
     user_id = None
     try:
-        data = jwt.decode(session, settings.JWT_SECRET, algorithms=['HS256'])
+        data = jwt.decode(session, os.environ['JWT_SECRET'], algorithms=['HS256'])
         isAuthenticated = True
     except:
         isAuthenticated = False
@@ -169,7 +169,7 @@ def logout(request):
 
 @login_required
 def change_info_site(request, data):
-    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    data = jwt.decode(request.COOKIES['session'], os.environ['JWT_SECRET'], algorithms=['HS256'])
     user = CustomUser.objects.get(username=data['intra_name'])
     return render(request, 'change_info_site.html', {
         'user' : user,
@@ -187,9 +187,9 @@ def auth(request: HttpRequest) -> HttpResponse:
     oauth_response = requests.post('https://api.intra.42.fr/oauth/token', data={
         'code': code,
         'grant_type': 'authorization_code',
-        'client_id': settings.OAUTH2_CLIENT_ID,
-        'client_secret': settings.OAUTH2_SECRET,
-        'redirect_uri': 'http://127.0.0.1:8000/auth'
+        'client_id': os.environ['OAUTH2_UID'],
+        'client_secret': os.environ['OAUTH2_SECRET'],
+        'redirect_uri': f'http://{os.environ["PUBLIC_HOST"]}/auth'
     }).json()
     if (oauth_response.get('error')):
         alert = oauth_response.get('error_description')
@@ -223,12 +223,12 @@ def auth(request: HttpRequest) -> HttpResponse:
             response = HttpResponseRedirect('/')
             response.headers['Content-Type'] = 'text/html'
             session_token['2FA_Activated'] = True
-            response.set_cookie('session', jwt.encode(session_token, settings.JWT_SECRET, algorithm='HS256'))
+            response.set_cookie('session', jwt.encode(session_token, os.environ['JWT_SECRET'], algorithm='HS256'))
             return response
         else:
             response = HttpResponseRedirect('/')
             response.headers['Content-Type'] = 'text/html'
-            response.set_cookie('session', jwt.encode(session_token, settings.JWT_SECRET, algorithm='HS256'))
+            response.set_cookie('session', jwt.encode(session_token, os.environ['JWT_SECRET'], algorithm='HS256'))
             return response
     else:
         return HttpResponse({'error': _('Username is not provided')}, status=400)
@@ -327,7 +327,7 @@ def remove_all_otp_devices(request, data):
 def login_with_otp(request):
 
     encoded_session = request.COOKIES['session']
-    session = jwt.decode(encoded_session, settings.JWT_SECRET, algorithms=['HS256'])
+    session = jwt.decode(encoded_session, os.environ['JWT_SECRET'], algorithms=['HS256'])
     user_info = requests.get('https://api.intra.42.fr/v2/me', headers={
         'Authorization': 'Bearer ' + session['access_token']
     }).json()
@@ -350,7 +350,7 @@ def login_with_otp(request):
         # OTP is valid
         response = HttpResponse(_('OTP is valid'))
         session['2FA_Passed'] = True
-        response.set_cookie('session', jwt.encode(session, settings.JWT_SECRET, algorithm='HS256'))
+        response.set_cookie('session', jwt.encode(session, os.environ['JWT_SECRET'], algorithm='HS256'))
         return response
     else:
         # OTP is invalid
@@ -369,7 +369,7 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
         display_name = request.POST.get('displayName', '')
         avatar_url = request.POST.get('avatarUrl', '')
 
-        data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+        data = jwt.decode(request.COOKIES['session'], os.environ['JWT_SECRET'], algorithms=['HS256'])
         user = CustomUser.objects.get(username=data['intra_name'])
         if display_name:
             if CustomUser.objects.filter(display_name=display_name).exists() and user.display_name != display_name:
@@ -403,7 +403,7 @@ def change_info(request: HttpRequest, data) -> JsonResponse:
 def send_friend_request(request, data):
     if request.method == 'POST':
         friend_username = request.POST.get('friend_username')
-        data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+        data = jwt.decode(request.COOKIES['session'], os.environ['JWT_SECRET'], algorithms=['HS256'])
         user = CustomUser.objects.get(username=data['intra_name'])
         try:
             friend_user = CustomUser.objects.get(username=friend_username)
@@ -456,7 +456,7 @@ def decline_friend_request(request, data):
 
 @login_required
 def get_pending_friend_requests(request, data):
-    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    data = jwt.decode(request.COOKIES['session'], os.environ['JWT_SECRET'], algorithms=['HS256'])
     user = CustomUser.objects.get(username=data['intra_name'])
     pending_requests = Friendship.objects.filter(to_user=user, accepted=False)
 
@@ -500,7 +500,7 @@ def tournament_view(request, data, tournament_id):
 
 @login_required
 def game_sessions(request, data):
-    data = jwt.decode(request.COOKIES['session'], settings.JWT_SECRET, algorithms=['HS256'])
+    data = jwt.decode(request.COOKIES['session'], os.environ['JWT_SECRET'], algorithms=['HS256'])
     user = CustomUser.objects.get(username=data['intra_name'])
     games = Game.objects.all().order_by('-date')
     game_sessions = [game.to_dict() for game in games]
