@@ -102,8 +102,8 @@
                         {{ friend.username }} {% trans '(Pending)' %}
                     </div>
                     <div>
-                        <button class="btn btn-primary btn-sm me-2" onclick="acceptFriendRequest('{{ friend.username }}')">Add</button>
-                        <button class="btn btn-danger btn-sm" onclick="declineFriendRequest('{{ friend.username }}')">Decline</button>
+                        <button class="btn btn-primary btn-sm me-2" onclick="acceptFriendRequest('{{ friend.username }}')">{% trans 'Accept' %}</button>
+                        <button class="btn btn-danger btn-sm" onclick="declineFriendRequest('{{ friend.username }}')">{% trans 'Decline' %}</button>
                     </div>
                 </li>
                 {% endfor %}
