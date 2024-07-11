@@ -148,6 +148,15 @@ msgstr "Liste des Classements"
 msgid "Change language"
 msgstr "Changer de langue"
 
+#: web/templates/base.html:105
+msgid "Accept"
+msgstr "Accepter"
+
+#: web/templates/base.html:106
+msgid "Decline"
+msgstr "Refuser"
+
+
 #: web/templates/base.html:184
 msgid "Welcome to the Pong Game!"
 msgstr "Bienvenue dans le jeu Pong !"

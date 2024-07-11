@@ -115,6 +115,14 @@ msgstr "Entfernen"
 msgid "Last online:"
 msgstr "Zuletzt online:"
 
+#: web/templates/base.html:105
+msgid "Accept"
+msgstr "Akzeptieren"
+
+#: web/templates/base.html:106
+msgid "Decline"
+msgstr "Ablehnen"
+
 #: web/templates/base.html:93
 msgid "No friends yet:"
 msgstr "Noch keine Freunde:"
