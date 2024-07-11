@@ -181,6 +181,74 @@ function changeInfoSave() {
     });
 }
 
+function component(tag, attributes, ...next) {
+    const element = document.createElement(tag);
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key === 'class')
+            element.className = value;
+        else if (key.startsWith('on'))
+            element[key] = value;
+        else
+            element.setAttribute(key, value);
+    }
+    if (next.length === 1 && typeof next[0] === 'string')
+        element.textContent = next[0];
+    else
+        element.replaceChildren(...next);
+    return element;
+}
+
+function refreshFriends() {
+    fetch('/get_friends/')
+        .then(response => response.json())
+        .then(data => {
+            const button = document.getElementById('friends_button');
+            button.replaceChildren(component('span', {}, gettext('Friends') + ' '));
+            if (data.pending_friends.length > 0)
+                button.appendChild(component('span', {'class': 'badge bg-danger'}, data.pending_friends.length.toString()));
+            const friendList = document.getElementById('friend_list');
+            friendList.replaceChildren(
+                ...(data.friends.length === 0
+                        ? [component('li', {'class': 'list-group-item'}, gettext('No friends yet:'))]
+                        : data.friends.map(friend => component('li', {'class': 'list-group-item d-flex align-items-center justify-content-between'},
+                            component('div', {},
+                                component('span', {}, friend.username),
+                                component('p', {'class': 'mb-0'},
+                                    component('small', {}, Date.now() - (new Date(friend.last_active).getTime()) > 300000
+                                        ? (gettext('Last online:') + ' ' + friend.last_active)
+                                        : gettext('Online')
+                                    )
+                                )
+                            ),
+                            component('div', {},
+                                component('button', {'class': 'btn btn-danger btn-sm', 'onclick': () => { removeFriend(friend.username); }},
+                                    gettext('Remove')
+                                )
+                            )
+                        )
+                    )
+                ),
+                component('hr', {}),
+                component('br', {}),
+                component('h5', {}, gettext('Pending Friend Requests')),
+                component('div', {},
+                    ...data.pending_friends.map(pendingFriend => 
+                        component('li', { 'class': 'list-group-item d-flex align-items-center justify-content-between' },
+                            component('div', {}, pendingFriend.username + ' ' + gettext('(Pending)'),
+                                component('button', {'class': 'btn btn-success btn-sm', 'onclick': () => { acceptFriendRequest(pendingFriend.username); }},
+                                    gettext('Accept')
+                                ),
+                                component('button', {'class': 'btn btn-danger btn-sm', 'onclick': () => { declineFriendRequest(pendingFriend.username); }},
+                                    gettext('Decline')
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        });
+}
+
 function addFriend(event) {
 
     event.preventDefault();
@@ -210,74 +278,62 @@ function addFriend(event) {
     });
 }
 
-function acceptFriendRequest(userIntraName, friendUsername) {
+function acceptFriendRequest(friendUsername) {
     fetch('/accept_friend_request/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCookie('csrftoken')  
         },
-        body: 'user_intra_name=' + userIntraName + '&friend_username=' + friendUsername
+        body: 'friend_username=' + friendUsername
     })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
             alert(gettext('Friend request accepted successfully!'));
-            window.location.reload();
+            refreshFriends();
         }
     });
 }
 
-function declineFriendRequest(userIntraName, friendUsername) {
+function declineFriendRequest(friendUsername) {
     fetch('/decline_friend_request/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCookie('csrftoken')  
         },
-        body: 'user_intra_name=' + userIntraName + '&friend_username=' + friendUsername + '&remove=false'
+        body: 'friend_username=' + friendUsername + '&remove=false'
     })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
             alert(gettext('Friend request declined successfully!'));
-            window.location.reload();
+            refreshFriends();
         }
     });
 }
 
-function removeFriend(userIntraName, friendUsername) {
+function removeFriend(friendUsername) {
     fetch('/decline_friend_request/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCookie('csrftoken')  
         },
-        body: 'user_intra_name=' + userIntraName + '&friend_username=' + friendUsername + '&remove=true'
+        body: 'friend_username=' + friendUsername + '&remove=true'
     })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
             alert(gettext('Friend removed successfully!'));
-            window.location.reload();
+            refreshFriends();
         }
     });
 }
 
 function checkPendingFriendRequests() {
-    fetch('/get_pending_friend_requests/', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')  
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.length > 0) {
-            alert(gettext('You have a pending friend requests, refresh the site in order to see it!'));
-        }
-    });
+    refreshFriends();
 }
 
 // Game Functions   

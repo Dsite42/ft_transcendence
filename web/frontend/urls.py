@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from django.urls import path , include
 from frontapp import views
-from frontapp.views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices, change_info_site, change_info, accept_friend_request, send_friend_request
+from frontapp.views import learn_view, root_view, profile_view, auth, get_user_info, remove_all_otp_devices, change_info_site, change_info, accept_friend_request, send_friend_request, get_friends
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
@@ -45,6 +45,7 @@ urlpatterns = [
     path('rank_list.html', views.rank_list, name='rank_list'),
     path('game_sessions.html', views.game_sessions, name='game_sessions'),
     path('request_single_game/', request_single_game_view, name='request_single_game'),
+    path('get_friends/', get_friends, name='get_friends'),
 
 
 

@@ -26,8 +26,8 @@ server {
         alias /app/static/;
     }
 
-    location /avatars/ {
-        alias /app/avatars/;
+    location /staticfiles/ {
+        alias /app/static/;
     }
 
     error_page   500 502 503 504  /50x.html;

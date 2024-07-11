@@ -1,7 +1,7 @@
 from .client import Client
 from .notifier import AbstractNotifier
-from .game import GameState, GamePhase, PaddleState
 from .protocol import build_game_update, GAME_UPDATE_ALL
+from .game import GameUpdateFlag, GameState, GamePhase, PaddleState
 
 from asyncio import sleep
 from ssl import SSLContext
@@ -66,6 +66,10 @@ class Server:
             pass
         finally:
             self.clients.discard(client)
+            # Finish the game prematurely when all players have disconnected
+            if len(self.clients) == 0 and len(self.waiting_ids) == 0:
+                self.game_state.phase = GamePhase.Finished
+                self.game_state.next_update_flags |= GameUpdateFlag.Phase
 
     def handle_client_message(self, message: Union[bytes, str], paddles: list['PaddleState']) -> None:
         if not isinstance(message, bytes) or len(message) != 1:

@@ -72,7 +72,7 @@
                 <button class="btn btn-primary" type="submit">{% trans 'Add Friend' %}</button>
             </div>
         </form>
-        <ul class="list-group">
+        <ul class="list-group" id="friend_list">
             {% for friend in user.friends %}
                 <li class="list-group-item d-flex align-items-center justify-content-between">
                     <div>
@@ -86,7 +86,7 @@
                             </small></p>
                     </div>
                     <div>
-                        <button class="btn btn-danger btn-sm" onclick="removeFriend('{{ user.intra_name }}', '{{ friend.username }}')">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeFriend('{{ friend.username }}')">Remove</button>
                     </div>
                 </li>
             {% empty %}
@@ -95,23 +95,25 @@
             <hr> <!-- Divider -->
             <br>
             <h5>{% trans 'Pending Friend Requests' %}</h5>
-            {% for friend in user.pending_friend_requests %}
-            <li class="list-group-item d-flex align-items-center justify-content-between">
-                <div>
-                    {{ friend.username }} {% trans '(Pending)' %}
-                </div>
-                <div>
-                    <button class="btn btn-primary btn-sm me-2" onclick="acceptFriendRequest('{{ user.intra_name }}', '{{ friend.username }}')">Add</button>
-                    <button class="btn btn-danger btn-sm" onclick="declineFriendRequest('{{ user.intra_name }}', '{{ friend.username }}')">Decline</button>
-                </div>
-            </li>
-        {% endfor %}
+            <div id="pending_friends">
+                {% for friend in user.pending_friend_requests %}
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div>
+                        {{ friend.username }} {% trans '(Pending)' %}
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-sm me-2" onclick="acceptFriendRequest('{{ friend.username }}')">Add</button>
+                        <button class="btn btn-danger btn-sm" onclick="declineFriendRequest('{{ friend.username }}')">Decline</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </div>
     </ul>
         </ul>
     </div>
 </div>
 <!-- Friendslist Button -->
-<button class="btn btn-primary position-fixed" style="bottom: 52px; left: -0.1%; z-index: 1029;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFriends" aria-controls="offcanvasFriends">
+<button class="btn btn-primary position-fixed" style="bottom: 52px; left: -0.1%; z-index: 1029;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFriends" aria-controls="offcanvasFriends" id="friends_button">
     {% trans 'Friends' %}
     {% if user.pending_friend_requests|length > 0 %}
     <span class="badge bg-danger">{{ user.pending_friend_requests|length }}</span>

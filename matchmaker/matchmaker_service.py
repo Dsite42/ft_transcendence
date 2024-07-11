@@ -390,10 +390,12 @@ class MatchMaker:
         }
         await send_message_to_client(player_id, message)
         
-
     async def is_client_already_playing(self, player_id):
         is_already_playing = False
-
+        
+        if player_id in self.single_games_queue:
+            print(f"Player {player_id} is already in the single game queue.")
+            is_already_playing = True
         for game in self.keyboard_games:
             if game.player1 == player_id:
                 print(f"Player {player_id} is already playing a keyboard game.")

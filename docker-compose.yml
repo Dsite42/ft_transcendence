@@ -79,6 +79,7 @@ services:
       start_period: 30s
     volumes:
       - certificates:/certificates
+      - staticfiles:/app/staticfiles
   nginx:
     container_name: nginx
     image: nginx
@@ -87,7 +88,7 @@ services:
       - "443:443"
     volumes:
       - ./docker/nginx.template:/etc/nginx/templates/default.conf.template
-      - ./web/static:/app/static
+      - staticfiles:/app/static
       - certificates:/certificates
     depends_on:
       matchmaker:
@@ -118,5 +119,6 @@ services:
       start_period: 30s
 
 volumes:
+  staticfiles:
   certificates:
   postgres_data:
