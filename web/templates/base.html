@@ -198,6 +198,9 @@
 <!-- Single Game -->
 <script>
     document.getElementById('startGameMM').addEventListener('click', function() {
+        if (chart) {
+            chart.destroy();
+        }
         document.getElementById('main-content').innerHTML = '<h1>' + '{% trans "Single Game" %}' + '</h1> <p>' + '{% trans "Waiting for second player. Don\\\'t leave this page!" %}' + '</p>';
 
         const handleOpen = () => {
@@ -245,6 +248,10 @@
 <!-- Keyboard Game -->
 <script>
     document.getElementById('startKeyboardGameMM').addEventListener('click', function() {
+        if (chart) {
+            chart.destroy();
+        }
+
         document.getElementById('main-content').innerHTML = '<h1>{% trans "Keyboard Game" %}</h1>';
 
         const handleOpen = () => {
@@ -360,6 +367,9 @@
   <!-- Join Tournament -->
 <script>
     function join_tournament(tournament_id) {
+        if (chart) {
+            chart.destroy();
+        }
         document.getElementById('tournament-table').addEventListener('click', function() {
 
         const handleOpen = () => {
