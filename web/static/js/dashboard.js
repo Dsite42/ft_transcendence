@@ -2,6 +2,10 @@ var chart;
 
 // Function to populate the table
 function populateTable(data, tag) {
+    if (chart) {
+        chart.destroy();
+    }
+    
     // Initialize Bootstrap Table with data
     $(tag).bootstrapTable('destroy').bootstrapTable({
         data: data,
