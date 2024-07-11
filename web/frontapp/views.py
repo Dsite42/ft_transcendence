@@ -196,7 +196,7 @@ def auth(request: HttpRequest) -> HttpResponse:
         'grant_type': 'authorization_code',
         'client_id': os.environ['OAUTH2_UID'],
         'client_secret': os.environ['OAUTH2_SECRET'],
-        'redirect_uri': f'http://{os.environ["PUBLIC_HOST"]}/auth'
+        'redirect_uri': f'https://{os.environ["PUBLIC_HOST"]}/auth'
     }).json()
     if (oauth_response.get('error')):
         alert = oauth_response.get('error_description')
