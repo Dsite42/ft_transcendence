@@ -30,6 +30,7 @@ class GameUpdateFlag(Flag):
 
 @dataclass
 class GameState:
+    WINNING_SCORE = 11
     WAITING_TIMEOUT = 30.0
     INTERMISSION_TIMEOUT = 1.5
 
@@ -89,7 +90,7 @@ class GameState:
                 # Wait for the intermission timeout to expire, then switch phase
                 self.timeout -= delta_time
                 if self.timeout <= 0.0:
-                    if self.paddle_a.score > 10 or self.paddle_b.score > 10:
+                    if self.paddle_a.score >= GameState.WINNING_SCORE or self.paddle_b.score >= GameState.WINNING_SCORE:
                         self.phase = GamePhase.Finished
                         self.winning_side = 0 if self.paddle_a.score > self.paddle_b.score else 1
                     else:

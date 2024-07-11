@@ -305,6 +305,7 @@ const Game = (() => {
         const mask = kButtonMap[event.key];
         if (mask === undefined)
             return;
+        event.preventDefault();
         if (isDown)
             mInputState |= mask;
         else
