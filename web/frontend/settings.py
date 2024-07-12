@@ -22,6 +22,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', os.environ['PUBLIC_HOST']]
 
+CSRF_TRUSTED_ORIGINS=['https://'+os.environ['PUBLIC_HOST']]
+
 SECRET_KEY = os.environ['ENCRYPTION_KEY']
 
 # Application definition
