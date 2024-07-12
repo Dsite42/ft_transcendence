@@ -380,7 +380,6 @@
         if (chart) {
             chart.destroy();
         }
-        document.getElementById('tournament-table').addEventListener('click', function() {
 
         const handleOpen = () => {
             globalSocket.send(JSON.stringify({ action: 'join_tournament', player_id: "{{ user.user_id }}", tournament_id: tournament_id }));
@@ -441,7 +440,6 @@
             globalSocket.onerror = function(error) {
                 console.error('{% trans "WebSocket error:" %}', error);
             };
-        });
     }
 </script>
 <!-- Remove From Waitingque -->
