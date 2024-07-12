@@ -21,6 +21,7 @@ from typing import Callable
 from PIL import Image
 from cryptography.fernet import Fernet
 from base64 import b64decode, b64encode
+from django_otp.oath import TOTP
 
 @register.tag(name='env')
 def env(parser, token):
@@ -327,7 +328,8 @@ def verify_otp(request, data):
 
     if device is None:
         return HttpResponse(_('No TOTP Device associated with this user'))
-    if device.verify_token(otp):
+    totp = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift)
+    if totp.verify(int(otp), 2):
         # OTP is valid
         user.two_factor_auth_enabled = True
         user.save()
@@ -373,7 +375,8 @@ def login_with_otp(request):
 
     if device is None:
         return HttpResponse('No TOTPDevice associated with this user')
-    if device.verify_token(otp):
+    totp = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift)
+    if totp.verify(int(otp), 2):
         # OTP is valid
         response = HttpResponse(_('OTP is valid'))
         session['2FA_Passed'] = True
