@@ -119,9 +119,9 @@ function send_otp_code()
         },
         body: JSON.stringify({ otp: otp })
     })
-    .then(response => response.text())
+    .then(response => response.json())
     .then(data => {
-        if (data === 'OTP is valid') {
+        if (data['success']) {
             alert(gettext('OTP is valid!'));
     
         }
@@ -425,10 +425,10 @@ function decodeJWT(session) {
             },
             body: JSON.stringify({ otp: otp })
         })
-        .then(response => response.text())
+        .then(response => response.json())
         .then(data => {
             
-             if (data === 'OTP is valid') {
+             if (data['success']) {
                 alert(gettext('OTP is valid!'));
                 const overlay = document.getElementById('2fa-overlay');
                 if (overlay) {

@@ -333,10 +333,10 @@ def verify_otp(request, data):
         # OTP is valid
         user.two_factor_auth_enabled = True
         user.save()
-        return HttpResponse(_('OTP is valid'))
+        return JsonResponse({'success': True})
     else:
         # OTP is invalid
-        return HttpResponse(_('OTP is invalid'))
+        return JsonResponse({'success': False})
 
 @login_required
 def remove_all_otp_devices(request, data):
@@ -378,13 +378,13 @@ def login_with_otp(request):
     totp = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift)
     if totp.verify(int(otp), 2):
         # OTP is valid
-        response = HttpResponse(_('OTP is valid'))
+        response = JsonResponse({'success': True})
         session['2FA_Passed'] = True
         response.set_cookie('session', jwt.encode(session, os.environ['JWT_SECRET'], algorithm='HS256'))
         return response
     else:
         # OTP is invalid
-        return HttpResponse(_('OTP is invalid'))
+        return JsonResponse({'success': False})
 
 #Profile Editing Functions
 
